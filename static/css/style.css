@@ -978,3 +978,331 @@ footer {
     color: #ea4335;
     margin-top: 2px;
 }
+
+/* ==========================================================================
+   FASHION WORLD PRO — MASTER MOBILE RESPONSIVE ENHANCEMENTS
+   ========================================================================== */
+
+/* Universal Viewport & Reset Safeguards */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    -webkit-text-size-adjust: 100%;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Mobile & Tablet Responsive Media Queries */
+@media screen and (max-width: 992px) {
+    .products-section {
+        padding: 50px 4%;
+    }
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+    }
+    .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    /* 1. Global Containers & Section Spacing */
+    .products-section {
+        padding: 30px 14px !important;
+    }
+    
+    .product_grid_container {
+        padding: 0 10px !important;
+    }
+
+    .section-header {
+        margin-bottom: 24px !important;
+        text-align: center;
+    }
+
+    .section-header h2 {
+        font-size: 1.6rem !important;
+    }
+
+    /* 2. Modern 2-Column Mobile Product Grid */
+    .product-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .product-card {
+        background: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #ede8df;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-image {
+        width: 100% !important;
+        aspect-ratio: 4/5 !important;
+        height: auto !important;
+        position: relative;
+    }
+
+    .product-image img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+
+    .product-info {
+        padding: 10px 8px 6px !important;
+        text-align: left !important;
+    }
+
+    .product-info h3 {
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        line-height: 1.3 !important;
+        margin-bottom: 4px !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        min-height: 2.2em !important;
+        color: #1a1a1a !important;
+    }
+
+    .product-info .price {
+        font-size: 0.92rem !important;
+        font-weight: 700 !important;
+        color: #111 !important;
+        display: flex !important;
+        align-items: baseline !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+
+    .product-info .price .original-price {
+        font-size: 0.75rem !important;
+        color: #888 !important;
+    }
+
+    .product-info .price .discount-price {
+        font-size: 0.92rem !important;
+        margin-left: 0 !important;
+    }
+
+    .sale-badge {
+        top: 8px !important;
+        right: 8px !important;
+        left: auto !important;
+        padding: 3px 6px !important;
+        font-size: 0.62rem !important;
+        border-radius: 4px !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    /* Mobile Quick Add Button */
+    .add-to-cart-overlay {
+        display: none !important;
+    }
+
+    .product-card > div:last-child {
+        padding: 0 8px 10px !important;
+        margin-top: auto !important;
+    }
+
+    .product-card > div:last-child .btn,
+    .product-card .btn-dark {
+        padding: 8px 10px !important;
+        font-size: 0.72rem !important;
+        border-radius: 6px !important;
+        height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* 3. Horizontal Scrollable Category Filter Bars */
+    .men-sub-filter-bar,
+    .kids-sub-filter-bar {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        padding: 10px 12px !important;
+        margin-bottom: 20px !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+    }
+
+    .men-sub-filter-bar::-webkit-scrollbar,
+    .kids-sub-filter-bar::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    .men-sub-filter-bar a,
+    .kids-sub-filter-bar a {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* 4. Shopping Bag / Cart Page Responsive */
+    .cart-section {
+        padding: 80px 14px 40px !important;
+    }
+
+    .cart-section h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 24px !important;
+        text-align: center !important;
+    }
+
+    .cart-section > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .cart-items > div {
+        gap: 14px !important;
+        padding: 18px 0 !important;
+        position: relative !important;
+    }
+
+    .cart-items > div > div:first-child {
+        width: 80px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .cart-summary {
+        padding: 20px 16px !important;
+        border-radius: 12px !important;
+    }
+
+    /* 5. Checkout Page Responsive */
+    .checkout-page {
+        padding: 80px 14px 40px !important;
+    }
+
+    .checkout-container {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+
+    .checkout-sec {
+        padding-bottom: 24px !important;
+        margin-bottom: 24px !important;
+    }
+
+    .sec-header h3 {
+        font-size: 1.2rem !important;
+    }
+
+    #address-fields > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .payment-options-sec {
+        padding: 20px 16px !important;
+        border-radius: 12px !important;
+    }
+
+    .pay-header-title {
+        font-size: 1.25rem !important;
+    }
+
+    .pay-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .pay-trust-strip {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .btn-place {
+        padding: 16px 20px !important;
+        font-size: 0.95rem !important;
+        height: 52px !important;
+    }
+
+    .sidebar {
+        position: static !important;
+        top: 0 !important;
+    }
+
+    /* 6. Auth Pages Responsive */
+    .auth-page-wrapper {
+        padding: 80px 14px 40px !important;
+        min-height: auto !important;
+    }
+
+    .auth-card {
+        padding: 24px 16px !important;
+        border-radius: 14px !important;
+        max-width: 100% !important;
+    }
+
+    .auth-title {
+        font-size: 1.45rem !important;
+    }
+
+    .auth-subtitle {
+        font-size: 0.82rem !important;
+    }
+
+    .form-input {
+        font-size: 0.92rem !important;
+        padding: 12px 12px 12px 38px !important;
+    }
+
+    .btn-auth-submit {
+        padding: 13px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* 7. Footer Responsive */
+    footer {
+        padding: 40px 18px 80px !important;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr !important;
+        gap: 28px !important;
+        text-align: left !important;
+    }
+
+    .footer-section h4 {
+        margin-bottom: 14px !important;
+        font-size: 1rem !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .product-grid {
+        gap: 8px !important;
+    }
+
+    .product-info h3 {
+        font-size: 0.8rem !important;
+    }
+
+    .product-info .price {
+        font-size: 0.85rem !important;
+    }
+
+    .btn-hero-luxury {
+        min-width: 120px !important;
+        font-size: 10px !important;
+        padding: 0 8px !important;
+    }
+}

@@ -772,46 +772,54 @@
         grid-template-columns: 1fr;
         gap: 25px;
     }
-    
     .tryon-title {
         font-size: 2.2rem;
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .tryon-studio-wrapper {
-        padding: 90px 4% 60px;
+        padding: 80px 14px 40px;
     }
-
     .tryon-title {
         font-size: 1.8rem;
     }
-
     .tryon-subtitle {
-        font-size: 0.92rem;
+        font-size: 0.88rem;
     }
-
+    .tryon-steps-bar {
+        gap: 8px;
+    }
+    .tryon-step-item {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
     .tryon-card-panel {
-        padding: 20px 16px;
+        padding: 20px 14px;
     }
-
+    .photo-upload-zone {
+        min-height: 220px;
+        padding: 24px 14px;
+    }
     .tryon-product-scroll-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
+        max-height: 320px;
     }
-
     .tryon-generate-btn {
         width: 100%;
-        padding: 16px 20px;
+        padding: 15px 20px;
         font-size: 0.9rem;
+        letter-spacing: 1px;
     }
-
-    .tryon-actions-disabled-bar {
+    .tryon-actions-bar {
         flex-direction: column;
+        width: 100%;
+        gap: 10px;
     }
-
-    .tryon-action-disabled-btn {
+    .tryon-action-btn {
         width: 100%;
         justify-content: center;
+        height: 46px;
     }
 }

@@ -1014,15 +1014,37 @@
 /* ==========================================================================
    7. RESPONSIVE BREAKPOINTS
    ========================================================================== */
-@media (max-width: 1200px) {
-    .promo-center {
-        display: none;
-    }
+@media (max-width: 1560px) {
     .brand-script-phrase {
         display: none;
     }
     .brand-mood-badge {
         display: none;
+    }
+    .header-search-wrapper {
+        max-width: 340px;
+        min-width: 200px;
+    }
+    .header-nav-actions {
+        gap: 12px;
+    }
+    .nav-action-label {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .promo-center {
+        display: none;
+    }
+    .header-search-wrapper {
+        max-width: 260px;
+    }
+    .header-nav-actions {
+        gap: 10px;
+    }
+    .nav-action-label {
+        font-size: 9px;
     }
 }
 
@@ -1031,10 +1053,10 @@
         display: none;
     }
     .header-search-wrapper {
-        max-width: 220px;
+        max-width: 200px;
     }
     .header-nav-actions {
-        gap: 10px;
+        gap: 8px;
     }
     .nav-action-label {
         font-size: 8.5px;
@@ -1042,18 +1064,87 @@
 }
 
 @media (max-width: 768px) {
-    .mobile-nav-toggle {
-        display: block;
+    .main-brand-header {
+        padding: 10px 14px;
+        min-height: 62px;
+        height: auto;
     }
-    .header-nav-actions {
-        display: none;
+    .main-header-container {
+        gap: 10px;
+    }
+    .mobile-nav-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 20px;
+        padding: 8px;
+        color: var(--fw-black);
+        border-radius: 8px;
+        background: transparent;
+    }
+    .header-brand-group {
+        gap: 8px;
+    }
+    .brand-logo-anchor {
+        gap: 8px;
+    }
+    .brand-emblem-gem {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+    .brand-name-main {
+        font-size: 17px;
+        letter-spacing: 1px;
+    }
+    .brand-pro-pill {
+        font-size: 8px;
+        padding: 1.5px 5px;
     }
     .brand-sub-slogan {
         display: none;
     }
+    .brand-script-phrase {
+        display: none;
+    }
+    .brand-mood-badge {
+        display: none;
+    }
+    .header-nav-actions {
+        display: none;
+    }
     .header-search-wrapper {
+        flex: 1 1 auto;
         max-width: 100%;
-        margin-left: 10px;
+        min-width: 140px;
+        margin-left: 4px;
+    }
+    .header-search-form {
+        height: 38px;
+        padding: 2px 4px 2px 12px;
+        border-radius: 25px;
+    }
+    .search-leading-icon {
+        font-size: 13px;
+        margin-right: 6px;
+    }
+    .search-input-field {
+        font-size: 12px;
+        padding: 4px 0;
+    }
+    .search-submit-btn {
+        height: 30px;
+        padding: 0 12px;
+        font-size: 11px;
+        border-radius: 20px;
+    }
+    .search-suggestions-dropdown {
+        min-width: 280px;
+        max-width: calc(100vw - 28px);
+        left: -40px;
     }
     .storefront-trust-strip {
         padding: 6px 12px;
@@ -1063,6 +1154,33 @@
         justify-content: center;
     }
     .trust-desc {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-brand-header {
+        padding: 8px 10px;
+        min-height: 56px;
+    }
+    .header-brand-group {
+        gap: 6px;
+    }
+    .brand-emblem-gem {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+    .brand-name-main {
+        font-size: 15px;
+        letter-spacing: 0.5px;
+    }
+    .brand-pro-pill {
+        font-size: 7.5px;
+        padding: 1px 4px;
+    }
+    .header-search-wrapper {
         display: none;
     }
 }
