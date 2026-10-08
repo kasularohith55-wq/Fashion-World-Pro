@@ -1,0 +1,58 @@
+# ==========================================
+# Fashion World Pro - .gitignore
+# ==========================================
+
+# Environment & Secrets (CRITICAL: NEVER COMMIT)
+.env
+.env.local
+.env.*.local
+*.env
+*.env.*
+!.env.example
+*.key
+*.pem
+*credentials*.json
+firebase-key*.json
+google-credentials*.json
+serviceAccountKey*.json
+
+# Databases & Runtime Data
+instance/
+instance/*
+*.db
+*.sqlite
+*.sqlite3
+
+# Python bytecode & environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Scratch, Profiles & Temporary Test Dumps
+scratch/
+scratch_*
+scratch_chrome_profile/
+tryon_test/
+_backup/
+*.bak
+*.zip
+*.log
+FASHION in html, FASHION
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+ehthumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

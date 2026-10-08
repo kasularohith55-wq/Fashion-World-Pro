@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Track Package | Fashion World Pro{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --amazon-green: #067D62;
+        --amazon-orange: #FF9900;
+        --text-dark: #111;
+        --text-light: #565959;
+    }
+
+    .track-page-container {
+        padding: 120px 5% 60px;
+        max-width: 1200px;
+        margin: 0 auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .track-header {
+        margin-bottom: 30px;
+    }
+
+    .track-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 5px;
+    }
+
+    .track-main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    /* Left Column: Progress & Timeline */
+    .track-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .status-banner {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    .status-banner h2 {
+        font-size: 1.4rem;
+        color: var(--amazon-green);
+        margin-bottom: 5px;
+    }
+
+    .status-banner p {
+        color: var(--text-light);
+        font-size: 0.95rem;
+    }
+
+    /* Progress Bar */
+    .amazon-progress-container {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin: 40px 0;
+    }
+
+    .amazon-progress-line-bg {
+        position: absolute;
+        top: 6px;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: #e7e9ec;
+        border-radius: 3px;
+        z-index: 1;
+    }
+
+    .amazon-progress-line-fill {
+        position: absolute;
+        top: 6px;
+        left: 0;
+        height: 6px;
+        background: var(--amazon-green);
+        border-radius: 3px;
+        z-index: 2;
+        transition: width 1s ease;
+        width: var(--prog-width, 0%);
+    }
+
+    .amazon-step {
+        z-index: 3;
+        text-align: center;
+        width: 100px;
+    }
+
+    .amazon-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid #e7e9ec;
+        margin: 0 auto 10px;
+        transition: 0.3s;
+    }
+
+    .amazon-dot[data-active="true"] {
+        border-color: var(--amazon-green);
+        background: var(--amazon-green);
+    }
+
+    .amazon-step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #888;
+    }
+
+    .amazon-step-label[data-active="true"] {
+        color: var(--text-dark);
+    }
+
+    /* Timeline Section */
+    .updates-timeline {
+        padding-top: 20px;
+    }
+
+    .timeline-item {
+        display: flex;
+        gap: 20px;
+        padding-bottom: 30px;
+        position: relative;
+    }
+
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 20px;
+        bottom: 0;
+        width: 2px;
+        background: #eee;
+    }
+
+    .timeline-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #ddd;
+        flex-shrink: 0;
+        z-index: 2;
+        position: relative;
+        top: 4px;
+    }
+
+    .timeline-dot.active {
+        background: var(--amazon-green);
+    }
+
+    .timeline-content .time {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-light);
+    }
+
+    .timeline-content .desc {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 2px 0;
+    }
+
+    .timeline-content .loc {
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+
+    /* Right Column: Order Info */
+    .side-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .side-card h4 {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        color: var(--text-dark);
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .side-card p {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        line-height: 1.5;
+        margin-bottom: 5px;
+    }
+
+    .btn-amazon {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        background: #FFD814;
+        border: 1px solid #FCD200;
+        border-radius: 8px;
+        color: #0F1111;
+        font-weight: 500;
+        text-decoration: none;
+        margin-top: 15px;
+        box-shadow: 0 2px 5px rgba(213,217,217,.5);
+    }
+
+    .btn-amazon:hover {
+        background: #f7ca00;
+        border-color: #f2c200;
+    }
+
+    .product-thumb {
+        width: 60px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #eee;
+    }
+</style>
+
+<div class="track-page-container">
+    <div class="track-header">
+        <h1>Track Package</h1>
+        <p style="font-size: 0.9rem; color: #565959;">Order #FW-{{ order.id }} | Placed on {{ order.date_ordered.strftime('%B %d, %Y') }}</p>
+    </div>
+
+    <div class="track-main-grid">
+        <!-- Left Column -->
+        <div class="main-content">
+            <div class="track-card">
+                <div class="status-banner">
+                    <h2>
+                        {% if order.status == 'Pending' %}Order Received{% endif %}
+                        {% if order.status == 'Paid' %}Payment Verified & Processing{% endif %}
+                        {% if order.status == 'Shipped' %}Shipped with Carrier{% endif %}
+                        {% if order.status == 'Out for Delivery' %}Out for Delivery today{% endif %}
+                        {% if order.status == 'Delivered' %}Delivered{% endif %}
+                    </h2>
+                    <p>Estimated delivery: <strong>{{ delivery_date }}</strong></p>
+                    {% if order.status in ['Shipped', 'Out for Delivery'] %}
+                    <a href="{{ url_for('live_tracking', order_id=order.id) }}" class="btn-amazon" style="display: inline-block; width: auto; padding: 10px 25px; margin-top: 15px; background: #c9a486; border-color: #b08d70; color: white;">
+                        <i class="fa fa-map-marker-alt"></i> View Live Tracking
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Amazon Style Horizontal Bar -->
+                <div class="amazon-progress-container">
+                    <div class="amazon-progress-line-bg"></div>
+                    {% set prog_val = { 'Pending': 10, 'Paid': 30, 'Shipped': 55, 'Out for Delivery': 80, 'Delivered': 100 }.get(order.status, 0) %}
+                    <div class="amazon-progress-line-fill" style="--prog-width: {{ prog_val }}%;"></div>
+
+                    {% set steps = [('Ordered', 10), ('Paid', 30), ('Shipped', 55), ('Out for Delivery', 80), ('Delivered', 100)] %}
+                    {% for label, step_val in steps %}
+                        {% set is_active = prog_val >= step_val %}
+                        <div class="amazon-step">
+                            <div class="amazon-dot" data-active="{{ 'true' if is_active else 'false' }}"></div>
+                            <span class="amazon-step-label" data-active="{{ 'true' if is_active else 'false' }}">{{ label }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="updates-timeline">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 25px;">Latest Updates</h3>
+                    
+                    {% if order.status == 'Delivered' %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="time">Today, 2:45 PM</div>
+                            <div class="desc">Delivered</div>
+                            <div class="loc">Package was handed to resident</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.status in ['Out for Delivery', 'Delivered'] %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="time">Today, 9:20 AM</div>
+                            <div class="desc">Out for Delivery</div>
+                            <div class="loc">Mumbai, MH Delivery Station</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.status in ['Shipped', 'Out for Delivery', 'Delivered'] %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="time">Yesterday, 11:30 PM</div>
+                            <div class="desc">Arrived at sort facility</div>
+                            <div class="loc">Mumbai Hub</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="time">Yesterday, 4:00 PM</div>
+                            <div class="desc">Shipped</div>
+                            <div class="loc">Warehouse - Fashion World Pro</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.status in ['Paid', 'Shipped', 'Out for Delivery', 'Delivered'] %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="time">Verified Success</div>
+                            <div class="desc">Payment Received</div>
+                            <div class="loc">Online Secure Gateway</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="time">{{ order.date_ordered.strftime('%B %d, %H:%M %p') }}</div>
+                            <div class="desc">Order Received</div>
+                            <div class="loc">Online Store, India</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="track-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 20px;">Items in this package</h3>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    {% for item in order.items %}
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <img src="{{ item.product.image_url }}" class="product-thumb" alt="">
+                        <div>
+                            <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 5px;">{{ item.product.name }}</p>
+                            <p style="font-size: 0.85rem; color: #565959;">Qty: {{ item.quantity }} | Sold by: Fashion World Pro</p>
+                            <a href="{{ url_for('product_detail', product_id=item.product.id) }}" style="font-size: 0.85rem; color: #007185; text-decoration: none;">View item</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="sidebar">
+            <div class="side-card">
+                <h4>Shipping Address</h4>
+                <p><strong>{{ order.first_name }} {{ order.last_name }}</strong></p>
+                <p>{{ order.address }}</p>
+                <p>{{ order.city }}, {{ order.state }} {{ order.zip_code }}</p>
+                <p>India</p>
+            </div>
+
+            <div class="side-card">
+                <h4>Order Summary</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Items:</span>
+                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Shipping:</span>
+                    <span>FREE</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+                    <span>Grand Total:</span>
+                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <h4>Need help?</h4>
+                <a href="{{ url_for('customer_support', order_id='FW-' ~ order.id) }}" class="btn-amazon"><i class="fa-solid fa-headset" style="margin-right: 6px;"></i> Contact Support</a>
+                <a href="{{ url_for('invoice', order_id=order.id) }}" class="btn-amazon" style="background: #fff; border: 1px solid #D5D9D9; margin-top: 10px;">Download Invoice</a>
+            </div>
+
+            <a href="{{ url_for('dashboard') }}" style="display: block; text-align: center; color: #007185; text-decoration: none; font-size: 0.9rem; margin-top: 20px;">Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Coupons & Discounts | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-header-wrapper {
+        margin-bottom: 24px;
+    }
+
+    .page-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #64748b;
+        text-decoration: none;
+    }
+
+    .breadcrumb-item.active {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .breadcrumb-separator {
+        font-size: 9px;
+        color: #94a3b8;
+    }
+
+    .page-main-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .page-sub-title {
+        font-size: 13.5px;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    .coupon-code-pill {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 800;
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px dashed #94a3b8;
+        display: inline-block;
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header & Breadcrumb -->
+<div class="page-header-wrapper">
+    <div class="page-breadcrumb">
+        <span class="breadcrumb-item"><i class="fa-solid fa-bullhorn"></i> Marketing</span>
+        <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+        <span class="breadcrumb-item active">Coupons</span>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div>
+            <h1 class="page-main-title">Store Coupons & Discounts</h1>
+            <p class="page-sub-title">Configure customer discount promo codes, minimum spend conditions, and limits.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Coupons Table Card -->
+<div class="admin-card">
+    <div class="card-header-between" style="margin-bottom: 18px;">
+        <div>
+            <h3 class="card-title-lg" style="font-size: 16px;"><i class="fa-solid fa-ticket" style="color: var(--gold-500); margin-right: 6px;"></i> Active Store Coupons</h3>
+            <span class="card-subtitle-sm">Promotional discount codes redeemable at checkout</span>
+        </div>
+    </div>
+
+    <div class="table-responsive-wrapper">
+        <table class="admin-modern-table">
+            <thead>
+                <tr>
+                    <th>Coupon Code</th>
+                    <th>Discount Value</th>
+                    <th>Type</th>
+                    <th>Min. Spend</th>
+                    <th>Times Used</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for coupon in coupons %}
+                <tr>
+                    <td>
+                        <span class="coupon-code-pill">{{ coupon.code }}</span>
+                    </td>
+                    <td><strong style="color: #059669; font-size: 13.5px;">{{ coupon.discount }}</strong></td>
+                    <td><span style="color: #64748b; font-size: 12.5px;">{{ coupon.type }}</span></td>
+                    <td><strong style="color: #0f172a;">₹{{ "{:,.0f}".format(coupon.min_spend) }}</strong></td>
+                    <td><span class="status-badge" style="background: #f8fafc; color: #334155; font-weight: 700;">{{ coupon.usage_count }} redemptions</span></td>
+                    <td><span class="status-badge active"><i class="fa-solid fa-circle-check"></i> {{ coupon.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

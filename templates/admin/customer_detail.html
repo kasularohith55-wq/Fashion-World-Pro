@@ -1,0 +1,142 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Customer Purchases: {{ customer.username }} | Fashion World Pro{% endblock %}
+{% block page_title %}Customer Purchase History{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <a href="{{ url_for('admin_customers') }}" class="btn-admin-outline">
+        <i class="fa-solid fa-arrow-left"></i> Back to Customer Directory
+    </a>
+    <div style="font-size: 13px; color: var(--text-muted);">
+        Customer ID: <span style="font-family: monospace; font-weight: 700; color: var(--text-primary);">#USR-{{ customer.id }}</span>
+    </div>
+</div>
+
+<!-- Customer Profile Summary -->
+<div class="admin-card" style="margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 0%, #fcfbf9 100%); border: 1px solid var(--admin-border); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: 0; right: 0; width: 140px; height: 140px; background: radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%); pointer-events: none;"></div>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <div class="admin-avatar" style="width: 64px; height: 64px; font-size: 26px; border-radius: 16px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: var(--gold-400); border: 2px solid var(--gold-500); box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+                {{ customer.username[0]|upper }}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h2 style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">
+                        {{ customer.first_name ~ ' ' ~ customer.last_name if customer.first_name else customer.username }}
+                    </h2>
+                    <span class="status-badge active" style="font-size: 11px;">Active Customer</span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+                    <span><i class="fa-regular fa-envelope" style="color: var(--gold-600); margin-right: 4px;"></i> {{ customer.email }}</span>
+                    <span>&bull;</span>
+                    <span><i class="fa-solid fa-phone" style="color: var(--gold-600); margin-right: 4px;"></i> {{ customer.phone or 'No phone registered' }}</span>
+                    <span>&bull;</span>
+                    <span>Auth: <strong style="color: var(--text-primary);">{{ customer.auth_provider|upper if customer.auth_provider else 'LOCAL' }}</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 28px; background: var(--bg-body); padding: 14px 24px; border-radius: 12px; border: 1px solid var(--admin-border);">
+            <div style="text-align: right;">
+                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Total Orders</span>
+                <div style="font-size: 22px; font-weight: 800; color: var(--text-primary);">{{ orders|length }}</div>
+            </div>
+            <div style="width: 1px; background: var(--admin-border);"></div>
+            <div style="text-align: right;">
+                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Lifetime Spend</span>
+                <div style="font-size: 22px; font-weight: 800; color: #15803d;">₹{{ "{:,.2f}".format(total_spent) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order History List -->
+<div class="admin-card">
+    <div class="card-header-flex" style="margin-bottom: 20px;">
+        <div>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-receipt" style="color: var(--gold-500);"></i>
+                Purchase History ({{ orders|length }})
+            </h3>
+            <span class="card-subtitle">Complete chronological record of all items ordered by this client</span>
+        </div>
+    </div>
+
+    {% for order in orders %}
+    <div style="border: 1px solid var(--admin-border); border-radius: 12px; margin-bottom: 22px; overflow: hidden; box-shadow: var(--shadow-sm); background: #ffffff;">
+        <!-- Order Header -->
+        <div style="background: #f8fafc; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--admin-border); flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <span style="font-weight: 800; font-size: 15px; color: var(--text-primary);">Order #FW-{{ order.id }}</span>
+                <span style="font-size: 13px; color: var(--text-muted);"><i class="fa-regular fa-clock" style="margin-right: 4px;"></i>{{ order.date_ordered.strftime('%d %b %Y, %I:%M %p') if order.date_ordered else 'N/A' }}</span>
+                
+                {% if order.status == 'Delivered' or order.status == 'Completed' %}
+                    <span class="status-badge active"><i class="fa-solid fa-circle-check"></i> {{ order.status }}</span>
+                {% elif order.status == 'Shipped' %}
+                    <span class="status-badge" style="background:#eff6ff; color:#1d4ed8;"><i class="fa-solid fa-truck-fast"></i> {{ order.status }}</span>
+                {% elif order.status == 'Cancelled' %}
+                    <span class="status-badge inactive"><i class="fa-solid fa-circle-xmark"></i> {{ order.status }}</span>
+                {% else %}
+                    <span class="status-badge pending"><i class="fa-solid fa-clock"></i> {{ order.status }}</span>
+                {% endif %}
+
+                <span class="status-badge {% if order.payment_status == 'Completed' or order.payment_status == 'Paid' %}active{% else %}pending{% endif %}">
+                    <i class="fa-solid fa-credit-card"></i> {{ order.payment_status or 'Pending' }}
+                </span>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="font-size: 17px; font-weight: 800; color: var(--text-primary);">₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                <a href="{{ url_for('admin_order_detail', order_id=order.id) }}" class="btn-admin-outline btn-admin-sm">
+                    Manage Order <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Purchased Line Items -->
+        <div style="padding: 16px 20px;">
+            <div class="table-responsive">
+                <table class="admin-table" style="margin: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px;">Item</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th style="text-align: right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>
+                                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" style="width: 44px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid var(--admin-border);" onerror="this.src='/static/images/p1.jpg'">
+                            </td>
+                            <td>
+                                <strong style="color: var(--text-primary); font-size: 13.5px;">{{ item.product.name }}</strong>
+                            </td>
+                            <td><span style="color: var(--text-muted); font-size: 13px;">{{ item.product.category }}</span></td>
+                            <td style="font-size: 13px;">₹{{ "{:,.2f}".format(item.price_at_order) }}</td>
+                            <td><strong style="color: var(--text-primary);">x{{ item.quantity }}</strong></td>
+                            <td style="text-align: right;"><strong style="color: var(--text-primary); font-size: 14px;">₹{{ "{:,.2f}".format(item.price_at_order * item.quantity) }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 22px; color: #94a3b8;">
+            <i class="fa-solid fa-bag-shopping"></i>
+        </div>
+        <p style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">No purchases found</p>
+        <span style="font-size: 13px;">This customer has not placed any orders yet.</span>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

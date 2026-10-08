@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Invoice - FW-{{ order.id }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Outfit:wght@300;500;700&display=swap');
+
+        :root {
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --header-bg: #1e1b4b;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --border-light: #f1f5f9;
+            --brand-gold: #fbbf24;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f8fafc;
+            color: var(--text-dark);
+            padding: 50px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .no-print {
+            margin-bottom: 40px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-action {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.3);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Invoice Container */
+        .invoice-box {
+            width: 900px;
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255,255,255,1);
+        }
+
+        /* Colorful Decorative Side Bar */
+        .invoice-box::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: var(--accent-gradient);
+        }
+
+        /* Header Styling */
+        header {
+            background: var(--header-bg);
+            padding: 50px 60px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background: var(--accent-gradient);
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: 1;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 2;
+        }
+
+        .logo-square {
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #6366f1;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .logo-wrap h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
+
+        .invoice-txt {
+            text-align: right;
+            z-index: 2;
+        }
+
+        .invoice-txt h2 {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .invoice-txt p {
+            color: #94a3b8;
+            font-weight: 600;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        /* Meta Data */
+        .meta-container {
+            padding: 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            background: #fff;
+        }
+
+        .bill-col h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        .bill-col .name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .bill-col .details {
+            line-height: 1.6;
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        /* Items Table */
+        .items-section {
+            padding: 0 60px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 15px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-gray);
+            border-radius: 10px;
+        }
+
+        td {
+            padding: 20px;
+            background: #fff;
+            border-bottom: 1px solid #f1f5f9;
+            font-weight: 600;
+        }
+
+        .item-name {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+        }
+
+        .amount-col {
+            text-align: right;
+            font-weight: 700;
+            color: var(--header-bg);
+            font-size: 1.1rem;
+        }
+
+        /* Summary Area */
+        .footer-wrap {
+            padding: 40px 60px 80px;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 100px;
+        }
+
+        .notes {
+            padding: 30px;
+            background: #fcfcfc;
+            border-radius: 20px;
+            border: 1px dashed #e2e8f0;
+        }
+
+        .notes p {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        .sum-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sum-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-gray);
+        }
+
+        .sum-row.total-grand {
+            margin-top: 20px;
+            padding: 25px;
+            background: var(--header-bg);
+            color: #fff;
+            border-radius: 20px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            box-shadow: 0 15px 30px -10px rgba(30,27,75,0.3);
+        }
+
+        .sum-row.total-grand span:last-child {
+            color: var(--brand-gold);
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .invoice-box { box-shadow: none; border: none; width: 100%; border-radius: 0; }
+            .no-print { display: none; }
+            .invoice-box::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <button class="btn-action" onclick="window.print()">
+            <i class="fa fa-sparkles"></i> MAGIC DOWNLOAD
+        </button>
+        <a href="/dashboard" class="btn-action" style="background: #fff; color: var(--text-dark); border: 2px solid var(--border-light); font-size: 0.7rem; box-shadow: none;">
+            RETURN HOME
+        </a>
+    </div>
+
+    <div class="invoice-box">
+        <header>
+            <div class="logo-wrap">
+                <div class="logo-square">
+                    <i class="fa fa-dragon"></i>
+                </div>
+                <div>
+                    <h1>Fashion World Pro</h1>
+                    <p style="font-size: 0.7rem; color: #6366f1; text-transform: uppercase; letter-spacing: 2px;">Supreme Quality</p>
+                </div>
+            </div>
+            <div class="invoice-txt">
+                <h2>INVOICE</h2>
+                <p>#INV-{{ "%04d" | format(order.id + 1000) }}</p>
+            </div>
+        </header>
+
+        <div class="meta-container">
+            <div class="bill-col">
+                <h4>Bill To</h4>
+                <div class="name">{{ order.first_name }} {{ order.last_name }}</div>
+                <div class="details">
+                    {{ order.address }}<br>
+                    {{ order.city }}, {{ order.zip_code }}<br>
+                    {{ order.state }}, India<br>
+                    <span style="color:var(--text-dark); font-weight:700;">{{ order.payment_method | upper }} PAYMENT</span>
+                </div>
+            </div>
+            <div class="bill-col" style="text-align: right;">
+                <h4>Billing Date</h4>
+                <div class="name">{{ order.date_ordered.strftime('%B %d, %Y') }}</div>
+                <h4 style="margin-top: 20px;">Reference ID</h4>
+                <div class="details">{{ order.payment_id or 'COD-OFFLINE' }}</div>
+            </div>
+        </div>
+
+        <div class="items-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product Description</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th style="text-align: right;">Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items %}
+                    <tr>
+                        <td>
+                            <div class="item-name">
+                                <div class="item-dot"></div>
+                                {{ item.product.name }}
+                            </div>
+                        </td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₹{{ "{:,.2f}".format(item.price_at_order) }}</td>
+                        <td class="amount-col">₹{{ "{:,.2f}".format(item.price_at_order * item.quantity) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer-wrap">
+            <div class="notes">
+                <h4 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Important Notes</h4>
+                <p>Hello {{ order.first_name }}, thank you for choosing Fashion World Pro! Your premium package is currently being prepared with care. For any queries regarding this shipment, please quote your reference ID shown above.</p>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <div style="padding: 5px 12px; background: #e0e7ff; color: #4338ca; border-radius: 20px; font-size: 0.65rem; font-weight: 800;">VERIFIED</div>
+                    <div style="padding: 5px 12px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 0.65rem; font-weight: 800;">SECURE</div>
+                </div>
+            </div>
+
+            <div class="sum-rows">
+                <div class="sum-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+                <div class="sum-row">
+                    <span>Taxes (Included)</span>
+                    <span>₹0.00</span>
+                </div>
+                <div class="sum-row" style="color: var(--text-dark); font-weight: 700;">
+                    <span>Grand Total</span>
+                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+                
+                <div class="sum-row total-grand">
+                    <span>TOTAL</span>
+                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: var(--accent-gradient); height: 20px; width: 100%;"></div>
+    </div>
+
+    <p style="margin-top: 40px; color: var(--text-gray); font-size: 0.8rem; font-weight: 600;">Generated by Fashion World Pro AI Engines</p>
+
+</body>
+</html>

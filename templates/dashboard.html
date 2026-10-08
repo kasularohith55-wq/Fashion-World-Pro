@@ -1,0 +1,1760 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard | Fashion World Pro{% endblock %}
+
+{% block content %}
+<style>
+    /* =========================================================
+       FASHION WORLD PRO — LUXURY CUSTOMER DASHBOARD STYLES
+       ========================================================= */
+    :root {
+        --dash-bg: #f8fafc;
+        --dash-card-bg: #ffffff;
+        --dash-border: #e2e8f0;
+        --dash-gold: #c5a880;
+        --dash-gold-dark: #9a7b56;
+        --dash-gold-light: #fbf8f5;
+        --dash-text-dark: #0f172a;
+        --dash-text-muted: #64748b;
+        --dash-radius-lg: 16px;
+        --dash-radius-md: 12px;
+        --dash-radius-sm: 8px;
+        --dash-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+        --dash-shadow-hover: 0 10px 25px -3px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+    }
+
+    .fw-dashboard-wrapper {
+        background: var(--dash-bg);
+        min-height: 100vh;
+        padding: 40px 0 80px;
+        font-family: inherit;
+    }
+
+    .fw-dash-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+
+    /* --- Top Header Bar --- */
+    .fw-dash-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--dash-border);
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .fw-dash-top-left h1 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--dash-text-dark);
+        margin: 0 0 6px;
+        letter-spacing: -0.5px;
+    }
+
+    .fw-dash-top-left p {
+        color: var(--dash-text-muted);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .fw-dash-top-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .fw-user-greet-box {
+        text-align: right;
+    }
+
+    .fw-user-greet-box .greet-name {
+        font-size: 0.95rem;
+        color: var(--dash-text-dark);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .fw-user-greet-box .greet-sub {
+        font-size: 0.8rem;
+        color: var(--dash-text-muted);
+        margin: 0;
+    }
+
+    .fw-top-action-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid var(--dash-border);
+        color: var(--dash-text-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .fw-top-action-btn:hover {
+        background: #0f172a;
+        color: #fff;
+        border-color: #0f172a;
+    }
+
+    .fw-top-badge {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        border: 2px solid #fff;
+    }
+
+    .fw-logout-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 30px;
+        background: #0f172a;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid #0f172a;
+    }
+
+    .fw-logout-btn:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: #fff;
+    }
+
+    /* --- Dashboard Main Grid --- */
+    .fw-dash-layout {
+        display: grid;
+        grid-template-columns: 290px 1fr;
+        gap: 32px;
+        align-items: start;
+    }
+
+    /* --- Left Sidebar --- */
+    .fw-sidebar-card {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-border);
+        border-radius: var(--dash-radius-lg);
+        padding: 28px 20px;
+        box-shadow: var(--dash-shadow);
+        position: sticky;
+        top: 100px;
+    }
+
+    .fw-profile-hero {
+        text-align: center;
+        padding-bottom: 22px;
+        border-bottom: 1px solid #f1f5f9;
+        margin-bottom: 20px;
+    }
+
+    .fw-avatar-wrap {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 14px;
+    }
+
+    .fw-avatar-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border: 3px solid #c5a880;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        font-family: 'Playfair Display', Georgia, serif;
+        box-shadow: 0 4px 12px rgba(197, 168, 128, 0.25);
+    }
+
+    .fw-avatar-edit-badge {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #c5a880;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        border: 2px solid #fff;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .fw-avatar-edit-badge:hover {
+        transform: scale(1.1);
+        background: #0f172a;
+    }
+
+    .fw-user-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--dash-text-dark);
+        margin: 0 0 4px;
+    }
+
+    .fw-user-email {
+        font-size: 0.82rem;
+        color: var(--dash-text-muted);
+        margin: 0 0 12px;
+        word-break: break-all;
+    }
+
+    .fw-tier-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fdf8f0;
+        color: #b45309;
+        border: 1px solid #fde68a;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 20px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    /* Sidebar Nav List */
+    .fw-side-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .fw-side-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 16px;
+        border-radius: var(--dash-radius-sm);
+        color: #475569;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: left;
+    }
+
+    .fw-side-link-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .fw-side-link-left i {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+        color: #94a3b8;
+        transition: color 0.2s ease;
+    }
+
+    .fw-side-link:hover {
+        background: #f8fafc;
+        color: #0f172a;
+    }
+
+    .fw-side-link:hover .fw-side-link-left i {
+        color: var(--dash-gold);
+    }
+
+    .fw-side-link.active {
+        background: #0f172a;
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    .fw-side-link.active .fw-side-link-left i {
+        color: var(--dash-gold);
+    }
+
+    .fw-side-count-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .fw-side-link.active .fw-side-count-pill {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+
+    /* Need Help Card */
+    .fw-help-box {
+        background: var(--dash-gold-light);
+        border: 1px solid #f0e8dc;
+        border-radius: var(--dash-radius-md);
+        padding: 18px 16px;
+        text-align: center;
+    }
+
+    .fw-help-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #fff;
+        color: var(--dash-gold-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        box-shadow: 0 2px 8px rgba(197, 168, 128, 0.2);
+        font-size: 1.1rem;
+    }
+
+    .fw-help-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 4px;
+    }
+
+    .fw-help-sub {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin: 0 0 12px;
+        line-height: 1.4;
+    }
+
+    .fw-help-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        padding: 9px 12px;
+        border-radius: var(--dash-radius-sm);
+        background: #0f172a;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .fw-help-btn:hover {
+        background: var(--dash-gold-dark);
+        color: #fff;
+    }
+
+    /* --- Right Main Column --- */
+    .fw-main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    /* KPI Grid */
+    .fw-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    .fw-kpi-card {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-border);
+        border-radius: var(--dash-radius-lg);
+        padding: 22px 20px;
+        box-shadow: var(--dash-shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .fw-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--dash-shadow-hover);
+    }
+
+    .fw-kpi-icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: var(--dash-radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        flex-shrink: 0;
+    }
+
+    .fw-kpi-icon-box.orders {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .fw-kpi-icon-box.delivered {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    .fw-kpi-icon-box.pending {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    .fw-kpi-icon-box.wishlist {
+        background: #fdf2f8;
+        color: #db2777;
+    }
+
+    .fw-kpi-info {
+        flex: 1;
+    }
+
+    .fw-kpi-number {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: var(--dash-text-dark);
+        margin: 0 0 2px;
+        line-height: 1;
+        font-family: 'Playfair Display', Georgia, serif;
+    }
+
+    .fw-kpi-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #475569;
+        margin: 0 0 2px;
+    }
+
+    .fw-kpi-sub {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    /* Section Headers */
+    .fw-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .fw-section-header h2 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: var(--dash-text-dark);
+        margin: 0;
+    }
+
+    .fw-section-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--dash-gold-dark);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: gap 0.2s;
+    }
+
+    .fw-section-link:hover {
+        gap: 9px;
+        color: #0f172a;
+    }
+
+    /* Recent Orders Box */
+    .fw-orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .fw-order-card {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-border);
+        border-radius: var(--dash-radius-lg);
+        padding: 20px 24px;
+        box-shadow: var(--dash-shadow);
+        transition: all 0.2s ease;
+        display: grid;
+        grid-template-columns: 80px 1fr auto auto;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .fw-order-card:hover {
+        box-shadow: var(--dash-shadow-hover);
+        border-color: #cbd5e1;
+    }
+
+    .fw-order-thumb-wrap {
+        position: relative;
+        width: 80px;
+        height: 96px;
+        border-radius: var(--dash-radius-sm);
+        overflow: hidden;
+        background: #f1f5f9;
+        flex-shrink: 0;
+        border: 1px solid #e2e8f0;
+    }
+
+    .fw-order-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .fw-order-thumb-badge {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(15, 23, 42, 0.85);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 5px;
+        border-radius: 4px;
+        backdrop-filter: blur(4px);
+    }
+
+    .fw-order-details {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .fw-order-top-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .fw-order-id {
+        font-family: monospace;
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: 0.5px;
+    }
+
+    .fw-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .status-delivered {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+
+    .status-shipped {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+
+    .status-processing, .status-pending, .status-paid {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .fw-order-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .fw-order-sub-meta {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .fw-order-sub-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .fw-order-pricing {
+        text-align: right;
+        padding: 0 10px;
+    }
+
+    .fw-order-price-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin: 0 0 2px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .fw-order-price-val {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        font-family: 'Playfair Display', Georgia, serif;
+    }
+
+    .fw-order-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .fw-btn-track {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #0f172a;
+        color: #fff;
+        padding: 9px 16px;
+        border-radius: var(--dash-radius-sm);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .fw-btn-track:hover {
+        background: var(--dash-gold-dark);
+        color: #fff;
+    }
+
+    .fw-btn-invoice {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        padding: 8px 14px;
+        border-radius: var(--dash-radius-sm);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .fw-btn-invoice:hover {
+        background: #f8fafc;
+        border-color: #0f172a;
+        color: #0f172a;
+    }
+
+    .fw-btn-help-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--dash-radius-sm);
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .fw-btn-help-icon:hover {
+        background: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+
+    /* Empty Orders State */
+    .fw-empty-orders {
+        background: var(--dash-card-bg);
+        border: 1px dashed #cbd5e1;
+        border-radius: var(--dash-radius-lg);
+        padding: 56px 24px;
+        text-align: center;
+    }
+
+    .fw-empty-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: #f8fafc;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 16px;
+    }
+
+    .fw-empty-orders h3 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.3rem;
+        color: #0f172a;
+        margin: 0 0 6px;
+    }
+
+    .fw-empty-orders p {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0 0 20px;
+    }
+
+    .fw-shop-now-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #0f172a;
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .fw-shop-now-btn:hover {
+        background: var(--dash-gold-dark);
+        color: #fff;
+    }
+
+    /* --- Bottom Row: Quick Actions + Brand Banner --- */
+    .fw-bottom-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 24px;
+    }
+
+    /* Quick Actions Box */
+    .fw-quick-box {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-border);
+        border-radius: var(--dash-radius-lg);
+        padding: 24px;
+        box-shadow: var(--dash-shadow);
+    }
+
+    .fw-quick-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .fw-action-tile {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: var(--dash-radius-md);
+        padding: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+    }
+
+    .fw-action-tile:hover {
+        background: #ffffff;
+        border-color: #c5a880;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+        transform: translateY(-2px);
+    }
+
+    .fw-tile-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: var(--dash-gold-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        transition: all 0.2s;
+    }
+
+    .fw-action-tile:hover .fw-tile-icon {
+        background: #0f172a;
+        color: #fff;
+        border-color: #0f172a;
+    }
+
+    .fw-tile-content h4 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 3px;
+    }
+
+    .fw-tile-content p {
+        font-size: 0.76rem;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    /* Brand Banner Card */
+    .fw-brand-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-radius: var(--dash-radius-lg);
+        padding: 28px 24px;
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(197, 168, 128, 0.3);
+    }
+
+    .fw-brand-card::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(197, 168, 128, 0.2) 0%, rgba(197, 168, 128, 0) 70%);
+        pointer-events: none;
+    }
+
+    .fw-brand-top {
+        position: relative;
+        z-index: 1;
+    }
+
+    .fw-brand-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--dash-gold);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .fw-brand-card h3 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 8px;
+        line-height: 1.3;
+    }
+
+    .fw-brand-card p {
+        font-size: 0.82rem;
+        color: #94a3b8;
+        line-height: 1.5;
+        margin: 0 0 20px;
+    }
+
+    .fw-brand-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 1;
+    }
+
+    .fw-brand-action {
+        color: var(--dash-gold);
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: gap 0.2s;
+    }
+
+    .fw-brand-action:hover {
+        gap: 10px;
+        color: #fff;
+    }
+
+    .fw-brand-icon {
+        font-size: 2rem;
+        color: var(--dash-gold);
+        opacity: 0.8;
+    }
+
+    /* --- Modals Styling --- */
+    .fw-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .fw-modal.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .fw-modal-box {
+        background: #ffffff;
+        border-radius: var(--dash-radius-lg);
+        width: 100%;
+        max-width: 520px;
+        padding: 32px;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+        position: relative;
+        transform: translateY(20px);
+        transition: transform 0.2s ease;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .fw-modal.show .fw-modal-box {
+        transform: translateY(0);
+    }
+
+    .fw-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .fw-modal-header h3 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .fw-modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .fw-modal-close:hover {
+        background: #ef4444;
+        color: #fff;
+    }
+
+    .fw-form-group {
+        margin-bottom: 16px;
+    }
+
+    .fw-form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .fw-form-control {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        padding: 10px 14px;
+        border-radius: var(--dash-radius-sm);
+        font-size: 0.9rem;
+        color: #0f172a;
+        outline: none;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+    }
+
+    .fw-form-control:focus {
+        border-color: #0f172a;
+        box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .fw-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .fw-modal-btn-submit {
+        width: 100%;
+        padding: 12px;
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: var(--dash-radius-sm);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 10px;
+    }
+
+    .fw-modal-btn-submit:hover {
+        background: var(--dash-gold-dark);
+    }
+
+    /* Notification List in Modal */
+    .fw-notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        border-radius: var(--dash-radius-sm);
+        background: #f8fafc;
+        margin-bottom: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .fw-notif-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #ecfdf5;
+        color: #059669;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .fw-notif-content h5 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin: 0 0 2px;
+        color: #0f172a;
+    }
+
+    .fw-notif-content p {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 1100px) {
+        .fw-dash-layout {
+            grid-template-columns: 1fr;
+        }
+        .fw-sidebar-card {
+            position: static;
+        }
+        .fw-kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .fw-bottom-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .fw-kpi-grid {
+            grid-template-columns: 1fr;
+        }
+        .fw-order-card {
+            grid-template-columns: 70px 1fr;
+            gap: 14px;
+        }
+        .fw-order-pricing {
+            text-align: left;
+            padding: 0;
+            grid-column: 2;
+        }
+        .fw-order-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        .fw-quick-grid {
+            grid-template-columns: 1fr;
+        }
+        .fw-dash-topbar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .fw-dash-top-right {
+            width: 100%;
+            justify-content: space-between;
+        }
+    }
+</style>
+
+<div class="fw-dashboard-wrapper">
+    <div class="fw-dash-container">
+        
+        <!-- Top Header Bar -->
+        <div class="fw-dash-topbar">
+            <div class="fw-dash-top-left">
+                <h1>My Dashboard</h1>
+                <p>Manage your orders, profile, saved items and account preferences</p>
+            </div>
+            
+            <div class="fw-dash-top-right">
+                <div class="fw-user-greet-box">
+                    <p class="greet-name">Welcome back, <strong>{{ current_user.first_name if current_user.first_name else current_user.username }}</strong></p>
+                    <p class="greet-sub">Stay stylish, keep shopping!</p>
+                </div>
+
+                <!-- Notifications Modal Trigger -->
+                <button type="button" class="fw-top-action-btn" onclick="openModal('fwNotifModal')" title="View Notifications">
+                    <i class="fa-regular fa-bell"></i>
+                    {% if orders and orders|length > 0 %}
+                    <span class="fw-top-badge">{{ orders|length }}</span>
+                    {% endif %}
+                </button>
+
+                <!-- Logout -->
+                <a href="{{ url_for('logout') }}" class="fw-logout-btn" title="Sign Out of Fashion World">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                </a>
+            </div>
+        </div>
+
+        <!-- 2-Column Main Layout -->
+        <div class="fw-dash-layout">
+            
+            <!-- Left Sidebar -->
+            <aside class="fw-sidebar-column">
+                <div class="fw-sidebar-card">
+                    <!-- Profile Card -->
+                    <div class="fw-profile-hero">
+                        <div class="fw-avatar-wrap">
+                            <div class="fw-avatar-circle">
+                                {{ current_user.username[0] | upper }}
+                            </div>
+                            <div class="fw-avatar-edit-badge" onclick="openModal('fwProfileModal')" title="Edit Profile Details">
+                                <i class="fa-solid fa-pencil"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-user-name">{{ current_user.first_name ~ ' ' ~ current_user.last_name if (current_user.first_name and current_user.last_name) else current_user.username }}</h3>
+                        <p class="fw-user-email">{{ current_user.email }}</p>
+                        <div class="fw-tier-pill">
+                            <i class="fa-solid fa-crown" style="color: #d97706;"></i> Preferred Client
+                        </div>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <ul class="fw-side-nav">
+                        <li>
+                            <button class="fw-side-link active" onclick="scrollToSection('dashOverview')">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-table-cells-large"></i>
+                                    <span>My Dashboard</span>
+                                </span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="fw-side-link" onclick="scrollToSection('ordersSection')">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-bag-shopping"></i>
+                                    <span>My Orders</span>
+                                </span>
+                                <span class="fw-side-count-pill">{{ total_orders_count }}</span>
+                            </button>
+                        </li>
+                        <li>
+                            <a href="{{ url_for('wishlist') }}" class="fw-side-link">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-heart"></i>
+                                    <span>Wishlist</span>
+                                </span>
+                                <span class="fw-side-count-pill">{{ wishlist_count }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <button class="fw-side-link" onclick="openModal('fwAddressModal')">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    <span>My Addresses</span>
+                                </span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="fw-side-link" onclick="openModal('fwProfileModal')">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-user-gear"></i>
+                                    <span>Account Settings</span>
+                                </span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="fw-side-link" onclick="openModal('fwPaymentModal')">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                    <span>Payment Methods</span>
+                                </span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="fw-side-link" onclick="openModal('fwNotifModal')">
+                                <span class="fw-side-link-left">
+                                    <i class="fa-solid fa-bell"></i>
+                                    <span>Notifications</span>
+                                </span>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Need Help Concierge Box -->
+                    <div class="fw-help-box">
+                        <div class="fw-help-icon-wrap">
+                            <i class="fa-solid fa-headset"></i>
+                        </div>
+                        <h4 class="fw-help-title">Need Help?</h4>
+                        <p class="fw-help-sub">Our style concierge & support desk is available 24/7 to assist you.</p>
+                        <a href="{{ url_for('customer_support') }}" class="fw-help-btn">
+                            <i class="fa-solid fa-comments"></i> Contact Support
+                        </a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Main Area -->
+            <main class="fw-main-content" id="dashOverview">
+                
+                <!-- 4 KPI Stat Cards Row -->
+                <div class="fw-kpi-grid">
+                    <!-- Total Orders -->
+                    <div class="fw-kpi-card">
+                        <div class="fw-kpi-icon-box orders">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </div>
+                        <div class="fw-kpi-info">
+                            <h3 class="fw-kpi-number">{{ total_orders_count }}</h3>
+                            <p class="fw-kpi-label">Total Orders</p>
+                            <p class="fw-kpi-sub">All-time purchases</p>
+                        </div>
+                    </div>
+
+                    <!-- Delivered -->
+                    <div class="fw-kpi-card">
+                        <div class="fw-kpi-icon-box delivered">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="fw-kpi-info">
+                            <h3 class="fw-kpi-number">{{ delivered_count }}</h3>
+                            <p class="fw-kpi-label">Delivered</p>
+                            <p class="fw-kpi-sub">Successfully received</p>
+                        </div>
+                    </div>
+
+                    <!-- In Progress / Pending -->
+                    <div class="fw-kpi-card">
+                        <div class="fw-kpi-icon-box pending">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <div class="fw-kpi-info">
+                            <h3 class="fw-kpi-number">{{ pending_count }}</h3>
+                            <p class="fw-kpi-label">In Progress</p>
+                            <p class="fw-kpi-sub">Active shipments</p>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist Items -->
+                    <div class="fw-kpi-card">
+                        <div class="fw-kpi-icon-box wishlist">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <div class="fw-kpi-info">
+                            <h3 class="fw-kpi-number">{{ wishlist_count }}</h3>
+                            <p class="fw-kpi-label">Wishlist Items</p>
+                            <p class="fw-kpi-sub">Saved for later</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Section -->
+                <section class="fw-orders-section" id="ordersSection">
+                    <div class="fw-section-header">
+                        <h2>Recent Orders</h2>
+                        <a href="{{ url_for('products') }}" class="fw-section-link">
+                            Explore Collections <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    {% if not orders %}
+                    <div class="fw-empty-orders">
+                        <div class="fw-empty-icon">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                        </div>
+                        <h3>No Orders Yet</h3>
+                        <p>You haven't placed any orders yet. Discover our latest designer collections today.</p>
+                        <a href="{{ url_for('products') }}" class="fw-shop-now-btn">
+                            <i class="fa-solid fa-compass"></i> Start Shopping
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="fw-orders-list">
+                        {% for order in orders %}
+                        <div class="fw-order-card">
+                            <!-- Order Product Thumbnail -->
+                            <div class="fw-order-thumb-wrap">
+                                {% if order.items and order.items[0].product and order.items[0].product.image_url %}
+                                <img src="{{ order.items[0].product.image_url }}" alt="Order Product" class="fw-order-thumb">
+                                {% else %}
+                                <img src="{{ url_for('static', filename='images/hero-fashion-1.jpg') }}" alt="Fashion Item" class="fw-order-thumb">
+                                {% endif %}
+                                
+                                {% if order.items|length > 1 %}
+                                <span class="fw-order-thumb-badge">+{{ order.items|length - 1 }}</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Order Details -->
+                            <div class="fw-order-details">
+                                <div class="fw-order-top-meta">
+                                    <span class="fw-order-id">#FW-{{ order.id }}</span>
+                                    {% if order.payment_status == 'Paid' %}
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; background: #dcfce7; color: #15803d; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">
+                                        <i class="fa-solid fa-circle-check"></i> Paid
+                                    </span>
+                                    {% else %}
+                                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; background: #fef9c3; color: #854d0e; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">
+                                        {{ order.payment_status or 'Pending' }}
+                                    </span>
+                                    {% endif %}
+                                    {% set ord_status = (order.status or 'Pending').lower() %}
+                                    <span class="fw-status-pill status-{{ ord_status }}">
+                                        {% if ord_status == 'delivered' %}
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        {% elif ord_status == 'shipped' %}
+                                        <i class="fa-solid fa-truck-fast"></i>
+                                        {% elif ord_status == 'cancelled' %}
+                                        <i class="fa-solid fa-ban"></i>
+                                        {% else %}
+                                        <i class="fa-solid fa-clock"></i>
+                                        {% endif %}
+                                        {{ order.status or 'Pending' }}
+                                    </span>
+                                </div>
+                                
+                                <h4 class="fw-order-title">
+                                    {% if order.items and order.items[0].product %}
+                                    {{ order.items[0].product.name }}
+                                    {% if order.items|length > 1 %}
+                                    <span style="font-weight: 400; color: #64748b; font-size: 0.85rem;"> and {{ order.items|length - 1 }} more item{% if order.items|length > 2 %}s{% endif %}</span>
+                                    {% endif %}
+                                    {% else %}
+                                    Fashion World Luxury Order
+                                    {% endif %}
+                                </h4>
+
+                                <div class="fw-order-sub-meta">
+                                    <span><i class="fa-regular fa-calendar"></i> {{ order.date_ordered.strftime('%d %b, %Y') }}</span>
+                                    <span>•</span>
+                                    <span><i class="fa-solid fa-box"></i> {{ order.items|length }} item(s)</span>
+                                    <span>•</span>
+                                    <span><i class="fa-regular fa-credit-card"></i> {{ order.payment_method or 'Card / UPI' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Order Pricing -->
+                            <div class="fw-order-pricing">
+                                <p class="fw-order-price-label">Total Amount</p>
+                                <p class="fw-order-price-val">₹{{ "{:,.2f}".format(order.total_price) }}</p>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="fw-order-actions">
+                                <a href="{{ url_for('track_order', order_id=order.id) }}" class="fw-btn-track" title="Track Live Status">
+                                    <i class="fa-solid fa-location-dot"></i> Track Order
+                                </a>
+                                <a href="{{ url_for('invoice', order_id=order.id) }}" class="fw-btn-invoice" title="Download Official Tax Invoice">
+                                    <i class="fa-solid fa-file-invoice"></i> Invoice
+                                </a>
+                                <a href="{{ url_for('customer_support', order_id='FW-' ~ order.id) }}" class="fw-btn-help-icon" title="Get Help on this Order">
+                                    <i class="fa-regular fa-circle-question"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </section>
+
+                <!-- Bottom Row: Quick Actions + Brand Card -->
+                <div class="fw-bottom-grid">
+                    
+                    <!-- Quick Actions Grid -->
+                    <div class="fw-quick-box">
+                        <div class="fw-section-header" style="margin-bottom: 8px;">
+                            <h2>Quick Actions</h2>
+                        </div>
+                        
+                        <div class="fw-quick-grid">
+                            <!-- Wishlist -->
+                            <a href="{{ url_for('wishlist') }}" class="fw-action-tile">
+                                <div class="fw-tile-icon">
+                                    <i class="fa-regular fa-heart"></i>
+                                </div>
+                                <div class="fw-tile-content">
+                                    <h4>View Wishlist</h4>
+                                    <p>{{ wishlist_count }} saved favorite items</p>
+                                </div>
+                            </a>
+
+                            <!-- Addresses -->
+                            <button type="button" class="fw-action-tile" onclick="openModal('fwAddressModal')">
+                                <div class="fw-tile-icon">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <div class="fw-tile-content">
+                                    <h4>Manage Addresses</h4>
+                                    <p>{{ current_user.city or 'Update shipping address' }}</p>
+                                </div>
+                            </button>
+
+                            <!-- Payment Methods -->
+                            <button type="button" class="fw-action-tile" onclick="openModal('fwPaymentModal')">
+                                <div class="fw-tile-icon">
+                                    <i class="fa-regular fa-credit-card"></i>
+                                </div>
+                                <div class="fw-tile-content">
+                                    <h4>Payment Methods</h4>
+                                    <p>Cards, UPI & NetBanking</p>
+                                </div>
+                            </button>
+
+                            <!-- Account Settings -->
+                            <button type="button" class="fw-action-tile" onclick="openModal('fwProfileModal')">
+                                <div class="fw-tile-icon">
+                                    <i class="fa-solid fa-sliders"></i>
+                                </div>
+                                <div class="fw-tile-content">
+                                    <h4>Account Settings</h4>
+                                    <p>Profile info & preferences</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Luxury Brand Statement Banner -->
+                    <div class="fw-brand-card">
+                        <div class="fw-brand-top">
+                            <div class="fw-brand-tag">
+                                <i class="fa-solid fa-sparkles"></i> Elegance Redefined
+                            </div>
+                            <h3>Thank you for choosing Fashion World</h3>
+                            <p>Enjoy complimentary priority express dispatch, curated personal styling recommendations, and hassle-free doorstep returns on all your designer selections.</p>
+                        </div>
+                        
+                        <div class="fw-brand-bottom">
+                            <a href="{{ url_for('products') }}" class="fw-brand-action">
+                                Discover New Arrivals <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                            <div class="fw-brand-icon">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+        </div>
+
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL 1: MY ADDRESSES & SHIPPING
+     ========================================================= -->
+<div class="fw-modal" id="fwAddressModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3>Delivery & Shipping Address</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('fwAddressModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <form action="{{ url_for('update_profile') }}" method="POST">
+            <div class="fw-form-group">
+                <label>Contact Phone Number</label>
+                <input type="text" name="phone" value="{{ current_user.phone or '' }}" placeholder="+91 98765 43210" class="fw-form-control">
+            </div>
+
+            <div class="fw-form-group">
+                <label>Street Address / Apartment / Suite</label>
+                <textarea name="address" rows="3" placeholder="Enter flat no, street, locality..." class="fw-form-control" style="resize: vertical;">{{ current_user.address or '' }}</textarea>
+            </div>
+
+            <div class="fw-form-row">
+                <div class="fw-form-group">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ current_user.city or '' }}" placeholder="City / Town" class="fw-form-control">
+                </div>
+                <div class="fw-form-group">
+                    <label>Pincode / Zip Code</label>
+                    <input type="text" name="zip_code" value="{{ current_user.zip_code or '' }}" placeholder="6-digit Pincode" class="fw-form-control">
+                </div>
+            </div>
+
+            <button type="submit" class="fw-modal-btn-submit">
+                <i class="fa-solid fa-floppy-disk"></i> Save Address Details
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL 2: ACCOUNT SETTINGS / EDIT PROFILE
+     ========================================================= -->
+<div class="fw-modal" id="fwProfileModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3>Account Settings & Profile</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('fwProfileModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <form action="{{ url_for('update_profile') }}" method="POST">
+            <div class="fw-form-row">
+                <div class="fw-form-group">
+                    <label>First Name</label>
+                    <input type="text" name="first_name" value="{{ current_user.first_name or '' }}" placeholder="First Name" class="fw-form-control">
+                </div>
+                <div class="fw-form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" value="{{ current_user.last_name or '' }}" placeholder="Last Name" class="fw-form-control">
+                </div>
+            </div>
+
+            <div class="fw-form-group">
+                <label>Username (System)</label>
+                <input type="text" value="{{ current_user.username }}" class="fw-form-control" disabled style="background: #f1f5f9; cursor: not-allowed;">
+            </div>
+
+            <div class="fw-form-group">
+                <label>Registered Email</label>
+                <input type="email" value="{{ current_user.email }}" class="fw-form-control" disabled style="background: #f1f5f9; cursor: not-allowed;">
+            </div>
+
+            <div class="fw-form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" value="{{ current_user.phone or '' }}" placeholder="+91 98765 43210" class="fw-form-control">
+            </div>
+
+            <button type="submit" class="fw-modal-btn-submit">
+                <i class="fa-solid fa-check"></i> Update Profile Information
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL 3: PAYMENT METHODS
+     ========================================================= -->
+<div class="fw-modal" id="fwPaymentModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3>Payment Methods & Security</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('fwPaymentModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <div class="fw-notif-item">
+                <div class="fw-notif-icon" style="background: #eff6ff; color: #2563eb;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="fw-notif-content">
+                    <h5>256-Bit SSL Encrypted</h5>
+                    <p>All transactions are verified via PCI-DSS compliant gateways.</p>
+                </div>
+            </div>
+
+            <div class="fw-notif-item">
+                <div class="fw-notif-icon" style="background: #fdf2f8; color: #db2777;">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="fw-notif-content">
+                    <h5>Supported Payment Modes</h5>
+                    <p>Google Pay, PhonePe, Paytm UPI, Credit/Debit Cards, NetBanking, and Cash on Delivery.</p>
+                </div>
+            </div>
+
+            <div class="fw-notif-item">
+                <div class="fw-notif-icon" style="background: #ecfdf5; color: #059669;">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="fw-notif-content">
+                    <h5>Default Checkout Preference</h5>
+                    <p>Your preferred payment method will be pre-selected during checkout for faster ordering.</p>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="fw-modal-btn-submit" onclick="closeModal('fwPaymentModal')">
+            Close
+        </button>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL 4: NOTIFICATIONS
+     ========================================================= -->
+<div class="fw-modal" id="fwNotifModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3>Notifications & Updates</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('fwNotifModal')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="fw-notif-item">
+                <div class="fw-notif-icon">
+                    <i class="fa-solid fa-crown" style="color: #d97706;"></i>
+                </div>
+                <div class="fw-notif-content">
+                    <h5>Welcome to Fashion World Pro</h5>
+                    <p>You have access to exclusive member perks and priority delivery.</p>
+                </div>
+            </div>
+
+            {% for order in orders[:3] %}
+            <div class="fw-notif-item">
+                <div class="fw-notif-icon" style="background: #e0f2fe; color: #0369a1;">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+                <div class="fw-notif-content">
+                    <h5>Order #FW-{{ order.id }} - {{ order.status or 'Pending' }}</h5>
+                    <p>Placed on {{ order.date_ordered.strftime('%d %b, %Y') }} for ₹{{ "{:,.2f}".format(order.total_price) }}.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="fw-modal-btn-submit" onclick="closeModal('fwNotifModal')" style="margin-top: 16px;">
+            Mark All as Read
+        </button>
+    </div>
+</div>
+
+<script>
+    function openModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+        }
+    }
+
+    function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    }
+
+    // Close modal when clicking outside box
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('fw-modal')) {
+            e.target.classList.remove('show');
+        }
+    });
+
+    function scrollToSection(sectionId) {
+        var el = document.getElementById(sectionId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+</script>
+{% endblock %}

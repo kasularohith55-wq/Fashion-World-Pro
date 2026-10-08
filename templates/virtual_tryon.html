@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Virtual Try-On Studio | Fashion World Pro{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/virtual_tryon.css') }}?v=2.2">
+{% endblock %}
+
+{% block content %}
+<div class="tryon-studio-wrapper">
+    <!-- Header Banner -->
+    <div class="tryon-header-banner">
+        <div class="tryon-badge-pill">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Virtual Fitting Studio
+        </div>
+        <h1 class="tryon-title">✨ VIRTUAL TRY-ON</h1>
+        <p class="tryon-subtitle">Upload your photo and preview how selected fashion looks on you.</p>
+
+        <!-- Steps Progress Bar -->
+        <div class="tryon-steps-bar">
+            <div class="tryon-step-item" id="stepPhotoIndicator">
+                <span class="tryon-step-circle">1</span>
+                <span>1. Upload Photo</span>
+            </div>
+            <div class="tryon-step-item {% if selected_product %}completed{% endif %}" id="stepProductIndicator">
+                <span class="tryon-step-circle">{% if selected_product %}✓{% else %}2{% endif %}</span>
+                <span>2. Select Garment</span>
+            </div>
+            <div class="tryon-step-item" id="stepGenerateIndicator">
+                <span class="tryon-step-circle">3</span>
+                <span>3. Preview Try-On</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace (Left Photo, Right Products) -->
+    <div class="tryon-workspace-grid">
+        <!-- LEFT PANEL: YOUR PHOTO -->
+        <div class="tryon-card-panel">
+            <div class="panel-header-row">
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-camera"></i> YOUR PHOTO
+                </h2>
+                <span class="panel-subtitle-tag">JPG, PNG, WEBP (Max 16MB)</span>
+            </div>
+
+            <input type="file" id="tryonPhotoInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" style="display: none;">
+
+            <!-- Error Banner -->
+            <div id="photoUploadError" style="display: none; padding: 10px 14px; background: #fdf2f2; border: 1px solid #f8d7da; border-radius: 6px; color: #c0392b; font-size: 0.82rem; font-weight: 600; margin-bottom: 14px;">
+            </div>
+
+            <!-- Upload Dropzone (Empty State) -->
+            <div class="photo-upload-zone" id="photoUploadDropzone">
+                <div id="photoUploadPrompt" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="upload-icon-circle">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <span style="font-size: 1rem; font-weight: 600; color: #222;">Drag & drop your full-body or upper-body photo</span>
+                    <span class="upload-hint-text">For best results, use good lighting and clear standing pose</span>
+                    <button type="button" class="upload-primary-btn" id="uploadPhotoBtn">
+                        <i class="fa-solid fa-plus"></i> Upload Photo
+                    </button>
+                </div>
+
+                <!-- Preview Container (Filled State) -->
+                <div class="user-photo-preview-container" id="photoPreviewContainer">
+                    <div class="user-photo-preview-card">
+                        <img id="userPhotoPreviewImg" src="" alt="Your uploaded photo">
+                    </div>
+                    <div class="photo-meta-bar">
+                        <span class="photo-file-info">
+                            <i class="fa-regular fa-image" style="color: #a47c36; margin-right: 4px;"></i>
+                            <span id="photoFileName">photo.jpg</span> (<span id="photoFileSize">0 KB</span>)
+                        </span>
+                        <button type="button" class="photo-change-btn" id="changePhotoBtn">
+                            <i class="fa-solid fa-rotate"></i> Change Photo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: SELECT A PRODUCT -->
+        <div class="tryon-card-panel">
+            <div class="panel-header-row">
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-shirt"></i> SELECT A PRODUCT
+                </h2>
+                <span class="panel-subtitle-tag">{{ available_products|length }} Available</span>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="product-search-row">
+                <div class="product-search-input-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="productSearchInput" placeholder="Search catalog by dress, shirt, blazer name...">
+                </div>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="tryon-cat-tabs">
+                <button type="button" class="tryon-cat-tab-btn active" data-category="all">All</button>
+                <button type="button" class="tryon-cat-tab-btn" data-category="women">Women</button>
+                <button type="button" class="tryon-cat-tab-btn" data-category="men">Men</button>
+                <button type="button" class="tryon-cat-tab-btn" data-category="kids">Kids</button>
+            </div>
+
+            <!-- Selected Garment Highlight -->
+            <div class="selected-garment-highlight {% if selected_product %}active{% endif %}" id="selectedGarmentBanner"
+                 {% if selected_product %}
+                 data-product-id="{{ selected_product.id }}"
+                 data-product-name="{{ selected_product.name }}"
+                 data-product-price="₹{{ '{:,.2f}'.format(selected_product.discount_price if selected_product.discount_price else selected_product.price) }}"
+                 data-product-img="{{ selected_product.image_url }}"
+                 {% endif %}>
+                <img src="{% if selected_product %}{{ selected_product.image_url }}{% else %}#{% endif %}" alt="Selected Garment" class="selected-garment-img" id="selectedGarmentImg">
+                <div class="selected-garment-details">
+                    <span class="selected-garment-tag">Selected Garment</span>
+                    <div class="selected-garment-name" id="selectedGarmentName">{% if selected_product %}{{ selected_product.name }}{% else %}No garment chosen{% endif %}</div>
+                    <div class="selected-garment-price" id="selectedGarmentPrice">
+                        {% if selected_product %}
+                            ₹{{ "{:,.2f}".format(selected_product.discount_price if selected_product.discount_price else selected_product.price) }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Product Catalog Grid -->
+            <div class="tryon-product-scroll-grid" id="tryonProductScrollGrid">
+                {% for p in available_products %}
+                {% set is_this_selected = (selected_product and selected_product.id == p.id) %}
+                <div class="tryon-product-card {% if is_this_selected %}selected{% endif %}" 
+                     data-product-id="{{ p.id }}" 
+                     data-product-name="{{ p.name }}"
+                     data-product-price="₹{{ '{:,.2f}'.format(p.discount_price if p.discount_price else p.price) }}"
+                     data-product-img="{{ p.image_url }}"
+                     data-product-category="{{ p.category }}">
+                    
+                    <span class="tryon-card-selected-badge">Selected</span>
+                    
+                    <div class="tryon-product-img-wrap">
+                        <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+                    </div>
+                    
+                    <div>
+                        <h4 class="tryon-product-name" title="{{ p.name }}">{{ p.name }}</h4>
+                        <div class="tryon-product-price-row">
+                            <span class="tryon-product-price">
+                                {% if p.discount_price %}
+                                <span class="original">₹{{ "{:,.0f}".format(p.price) }}</span>
+                                ₹{{ "{:,.0f}".format(p.discount_price) }}
+                                {% else %}
+                                ₹{{ "{:,.0f}".format(p.price) }}
+                                {% endif %}
+                            </span>
+                            <button type="button" class="tryon-select-btn">Select</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Bar: GENERATE TRY-ON -->
+    <div class="tryon-generate-action-bar">
+        <button type="button" class="tryon-generate-btn" id="generateTryonBtn" disabled>
+            <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ GENERATE TRY-ON
+        </button>
+        <div class="tryon-generate-status-msg" id="generateStatusMsg">
+            Please upload a photo and select a garment to enable try-on.
+        </div>
+    </div>
+
+    <!-- Result Area: YOUR TRY-ON PREVIEW -->
+    <section class="tryon-result-section" id="tryonResultSection">
+        <div class="result-section-header">
+            <h3 class="result-section-title">YOUR TRY-ON PREVIEW</h3>
+            <p style="font-size: 0.85rem; color: #888; margin: 0;">High-fidelity fitting simulation studio</p>
+        </div>
+
+        <div class="tryon-preview-box" id="tryonPreviewBox">
+            <!-- 1. Default Placeholder -->
+            <div id="previewDefaultPlaceholder">
+                <div class="preview-sparkle-icon">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <h4 class="preview-placeholder-title">✨ AI Preview will appear here</h4>
+                <p class="preview-placeholder-subtitle">Select your photo on the left and choose a luxury garment from the catalog on the right to start.</p>
+            </div>
+
+            <!-- 2. Preparing Loader State -->
+            <div id="previewPreparingState" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px;">
+                <div style="width: 48px; height: 48px; border: 4px solid #ebd9c2; border-top-color: #a47c36; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <h4 id="preparingStateTitle" style="font-size: 1.1rem; color: #1c1813; margin: 0; font-weight: 600;">Uploading photo...</h4>
+                <p id="preparingStateSubtitle" style="font-size: 0.85rem; color: #777; margin: 0;">Securing temporary photo upload for fitting session...</p>
+            </div>
+
+            <!-- 2b. Error State (Shown if Upload Fails) -->
+            <div id="previewErrorState" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; max-width: 480px;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #fdf2f2; color: #c0392b; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 4px;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+                <h4 id="previewErrorTitle" style="font-size: 1.1rem; color: #c0392b; margin: 0; font-weight: 600;">Unable to upload your photo. Please try again.</h4>
+                <p id="previewErrorMsg" style="font-size: 0.85rem; color: #666; margin: 0;">Please check your file format (JPG, PNG, WEBP) and size (max 16 MB).</p>
+                <button type="button" id="retryUploadBtn" style="margin-top: 10px; background: #1c1813; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Try Again</button>
+            </div>
+
+            <!-- 3. Honest Alert Card (Shown when API Token is not configured) -->
+            <div class="tryon-honest-alert-card" id="tryonHonestAlertCard">
+                <div class="honest-icon">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                </div>
+                <h4 class="honest-heading" id="honestAlertHeading">Virtual Try-On AI is not connected yet.</h4>
+                <p class="honest-desc" id="honestAlertDesc">Your photo and selected product are ready for the next AI integration step.</p>
+                
+                <div class="honest-readiness-row">
+                    <span id="honestPhotoReady">✓ Photo Ready (Uploaded)</span>
+                    <span id="honestProductReady">✓ Garment Selected</span>
+                </div>
+            </div>
+
+            <!-- 4. Real AI Result View (Rendered when Replicate prediction succeeds) -->
+            <div id="tryonRealResultView" style="display: none; flex-direction: column; align-items: center; width: 100%;">
+                <div class="tryon-generated-image-card" style="position: relative; max-width: 480px; width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 45px rgba(0,0,0,0.18); background: #000; border: 2px solid #d4af37;">
+                    <img id="tryonResultImage" src="" alt="Real AI Virtual Try-On Result" style="width: 100%; height: auto; max-height: 540px; object-fit: contain; display: block;">
+                    <div style="position: absolute; top: 12px; right: 12px; background: rgba(28, 24, 19, 0.85); backdrop-filter: blur(4px); border: 1px solid #d4af37; color: #f5d77f; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">
+                        ✨ AI Generated Fit
+                    </div>
+                </div>
+                <div style="margin-top: 14px; text-align: center;">
+                    <span id="tryonResultGarmentLabel" style="font-size: 0.95rem; font-weight: 600; color: #111;">Selected Garment Fitted</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons Bar -->
+        <div class="tryon-actions-bar" id="tryonActionsBar">
+            <button type="button" class="tryon-action-btn disabled" id="resultAddToWishlistBtn" disabled>
+                <i class="fa-regular fa-heart"></i> Add to Wishlist
+            </button>
+            <button type="button" class="tryon-action-btn btn-primary-action disabled" id="resultAddToCartBtn" disabled>
+                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+            </button>
+            <button type="button" class="tryon-action-btn disabled" id="resultTryAnotherBtn" disabled>
+                <i class="fa-solid fa-arrows-rotate"></i> Try Another
+            </button>
+            <button type="button" class="tryon-action-btn disabled" id="resultSavePreviewBtn" disabled>
+                <i class="fa-solid fa-download"></i> Save Preview
+            </button>
+        </div>
+    </section>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script src="{{ url_for('static', filename='js/virtual_tryon.js') }}?v=2.2"></script>
+{% endblock %}

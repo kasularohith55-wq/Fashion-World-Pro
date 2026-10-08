@@ -1,0 +1,447 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Store Settings | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ================= PAGE HEADER & BREADCRUMB ================= */
+    .page-header-wrapper {
+        margin-bottom: 24px;
+    }
+
+    .page-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #64748b;
+        text-decoration: none;
+    }
+
+    .breadcrumb-item.active {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .breadcrumb-separator {
+        font-size: 9px;
+        color: #94a3b8;
+    }
+
+    .page-main-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .page-sub-title {
+        font-size: 13.5px;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    /* ================= SETTINGS GRID LAYOUT ================= */
+    .settings-stack-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .settings-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .settings-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .header-title-flex {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .settings-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    .icon-store { background: #fef3c7; color: #b45309; }
+    .icon-payment { background: #ecfdf5; color: #059669; }
+    .icon-integrations { background: #eff6ff; color: #1d4ed8; }
+
+    .settings-card-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.2px;
+    }
+
+    .settings-card-desc {
+        font-size: 12.5px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .badge-live-store {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.3px;
+    }
+
+    /* Form Fields */
+    .store-form-inputs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 18px 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .form-input-styled {
+        width: 100%;
+        height: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #0f172a;
+        background: #ffffff;
+        box-sizing: border-box;
+    }
+
+    .form-input-styled.readonly-field {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #e2e8f0;
+        font-weight: 600;
+    }
+
+    /* Dual Column Grid */
+    .dual-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .status-list-box {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .status-row-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+    }
+
+    .status-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .status-item-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+    .status-item-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .status-item-desc {
+        font-size: 11px;
+        color: #64748b;
+    }
+
+    .pill-connected {
+        background: #ecfdf5;
+        color: #059669;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pill-active {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    @media (max-width: 1024px) {
+        .store-form-inputs-grid {
+            grid-template-columns: 1fr;
+        }
+        .dual-cards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header & Breadcrumb -->
+<div class="page-header-wrapper">
+    <div class="page-breadcrumb">
+        <span class="breadcrumb-item"><i class="fa-solid fa-gear"></i> Settings</span>
+        <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+        <span class="breadcrumb-item active">Store Settings</span>
+    </div>
+    <h1 class="page-main-title">Store Settings</h1>
+    <p class="page-sub-title">Store operational configurations, branding identity, and integration statuses.</p>
+</div>
+
+<div class="settings-stack-container">
+
+    <!-- Card 1: Store General Identity & Operations -->
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <div class="header-title-flex">
+                <div class="settings-card-icon icon-store">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <h2 class="settings-card-title">Store Identity & Operations</h2>
+                    <p class="settings-card-desc">Core business branding and fulfillment policies</p>
+                </div>
+            </div>
+            <div>
+                <span class="badge-live-store">
+                    <i class="fa-solid fa-circle" style="font-size: 7px; color: #10b981;"></i> Production Ready
+                </span>
+            </div>
+        </div>
+
+        <div class="store-form-inputs-grid">
+            <div class="form-group">
+                <label>Store Brand Name</label>
+                <input type="text" class="form-input-styled readonly-field" value="{{ store_meta.store_name }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Brand Tagline</label>
+                <input type="text" class="form-input-styled readonly-field" value="{{ store_meta.store_tagline }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Official Support Email</label>
+                <input type="text" class="form-input-styled readonly-field" value="{{ store_meta.support_email }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Base Operating Currency</label>
+                <input type="text" class="form-input-styled readonly-field" value="{{ store_meta.currency }}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Default Estimated Delivery</label>
+                <input type="text" class="form-input-styled readonly-field" value="{{ store_meta.delivery_days }} Business Days" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Low Stock Warning Threshold</label>
+                <input type="text" class="form-input-styled readonly-field" value="{{ store_meta.low_stock_threshold }} Units or Fewer" readonly>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dual Cards: Payment Gateway & Cloud Integrations -->
+    <div class="dual-cards-grid">
+
+        <!-- Card A: Payment & Checkout Methods -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="header-title-flex">
+                    <div class="settings-card-icon icon-payment">
+                        <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <div>
+                        <h2 class="settings-card-title">Payment & Checkout Gateways</h2>
+                        <p class="settings-card-desc">Customer checkout channels and payment processors</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-list-box">
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-solid fa-bolt" style="color: #059669;"></i></div>
+                        <div>
+                            <div class="status-item-name">Razorpay Gateway</div>
+                            <div class="status-item-desc">Cards, Net Banking & UPI</div>
+                        </div>
+                    </div>
+                    <span class="pill-connected">
+                        <i class="fa-solid fa-circle-check"></i> Connected
+                    </span>
+                </div>
+
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-solid fa-truck" style="color: #b45309;"></i></div>
+                        <div>
+                            <div class="status-item-name">Cash on Delivery (COD)</div>
+                            <div class="status-item-desc">Pay at doorstep on delivery</div>
+                        </div>
+                    </div>
+                    <span class="pill-connected">
+                        <i class="fa-solid fa-circle-check"></i> Enabled
+                    </span>
+                </div>
+
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-solid fa-mobile-screen-button" style="color: #2563eb;"></i></div>
+                        <div>
+                            <div class="status-item-name">UPI Fast Checkout</div>
+                            <div class="status-item-desc">Instant QR / VPA payment verification</div>
+                        </div>
+                    </div>
+                    <span class="pill-connected">
+                        <i class="fa-solid fa-circle-check"></i> Enabled
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card B: Cloud & API Integrations -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="header-title-flex">
+                    <div class="settings-card-icon icon-integrations">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <div>
+                        <h2 class="settings-card-title">Services & Cloud APIs</h2>
+                        <p class="settings-card-desc">External identity, communication, and postal APIs</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-list-box">
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-brands fa-google" style="color: #ea4335;"></i></div>
+                        <div>
+                            <div class="status-item-name">Google Cloud OAuth 2.0</div>
+                            <div class="status-item-desc">Customer single-sign-on service</div>
+                        </div>
+                    </div>
+                    <span class="pill-connected">
+                        <i class="fa-solid fa-circle-check"></i> Configured
+                    </span>
+                </div>
+
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-regular fa-envelope" style="color: #d97706;"></i></div>
+                        <div>
+                            <div class="status-item-name">Gmail SMTP Gateway</div>
+                            <div class="status-item-desc">Customer OTP & order confirmation dispatch</div>
+                        </div>
+                    </div>
+                    <span class="pill-connected">
+                        <i class="fa-solid fa-circle-check"></i> Active
+                    </span>
+                </div>
+
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-solid fa-map-location-dot" style="color: #7c3aed;"></i></div>
+                        <div>
+                            <div class="status-item-name">India Postal PIN Code API</div>
+                            <div class="status-item-desc">Address auto-fill & district normalization</div>
+                        </div>
+                    </div>
+                    <span class="pill-active">
+                        <i class="fa-solid fa-circle-check"></i> Active
+                    </span>
+                </div>
+
+                <div class="status-row-item">
+                    <div class="status-item-left">
+                        <div class="status-item-icon"><i class="fa-solid fa-satellite-dish" style="color: #0891b2;"></i></div>
+                        <div>
+                            <div class="status-item-name">Socket.IO Live Gateway</div>
+                            <div class="status-item-desc">Real-time cart sync & courier tracking</div>
+                        </div>
+                    </div>
+                    <span class="pill-active">
+                        <i class="fa-solid fa-circle-check"></i> Active
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

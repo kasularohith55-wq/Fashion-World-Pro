@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Live Tracking | Fashion World Pro{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    .tracking-container {
+        padding: 100px 8%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    .agent-info {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+    .agent-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-color);
+    }
+    .tracking-status {
+        flex-grow: 1;
+    }
+    .status-text {
+        color: var(--accent-color);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.8rem;
+        margin-bottom: 5px;
+    }
+    .agent-name {
+        font-size: 1.5rem;
+        font-weight: 400;
+        font-family: 'Lora', serif;
+    }
+    .pulse {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #2ecc71;
+        border-radius: 50%;
+        margin-right: 10px;
+        box-shadow: 0 0 0 rgba(46, 204, 113, 0.4);
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+</style>
+
+<div class="tracking-container">
+    <div style="margin-bottom: 30px;">
+        <a href="{{ url_for('track_order', order_id=order.id) }}" style="color: #666; text-decoration: none; font-size: 0.9rem;">
+            <i class="fa fa-arrow-left"></i> Back to Tracking Details
+        </a>
+        <h2 style="margin-top: 15px; font-family: 'Lora', serif; font-size: 2rem;">Order #FW-{{ order.id }} Live Tracking</h2>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="agent-info">
+        <img src="https://i.pravatar.cc/150?u=fashionworld{{ order.id }}" class="agent-photo" alt="Agent">
+        <div class="tracking-status">
+            <div class="status-text"><span class="pulse"></span> Live Update</div>
+            <div class="agent-name">Your delivery partner, Rahul, is on the way.</div>
+            <p id="status-desc" style="color: #888; font-size: 0.9rem; margin-top: 5px;">Agent started from the warehouse.</p>
+        </div>
+        <div style="text-align: right;">
+            <button class="btn btn-dark" style="padding: 10px 20px; font-size: 0.8rem;">Call Partner</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Map (Bangalore Area)
+        const map = L.map('map').setView([12.9716, 77.5946], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Custom Icons
+        const warehouseIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2329/2329944.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+        });
+
+        const agentIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/2739/2739559.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+
+        const customerIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/1277/1277341.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+        });
+
+        // Markers
+        const warehouse = L.marker([12.9716, 77.5946], {icon: warehouseIcon}).addTo(map).bindPopup('Warehouse');
+        const customer = L.marker([13.0200, 77.6411], {icon: customerIcon}).addTo(map).bindPopup('Your Address');
+        const agent = L.marker([12.9716, 77.5946], {icon: agentIcon}).addTo(map).bindPopup('Delivery Agent').openPopup();
+
+        // Path Line
+        const polyline = L.polyline([[12.9716, 77.5946]], {color: 'var(--accent-color)', dashArray: '5, 10'}).addTo(map);
+
+        // Listen for socket events
+        window.addEventListener('delivery_move', (e) => {
+            const data = e.detail;
+            if (data.order_id == "{{ order.id }}") {
+                const newPos = [data.location.lat, data.location.lng];
+                agent.setLatLng(newPos);
+                polyline.addLatLng(newPos);
+                map.panTo(newPos);
+                
+                document.getElementById('status-desc').innerText = data.status === 'Arrived' 
+                    ? "Agent has arrived at your location!" 
+                    : "Agent is moving towards your location.";
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,551 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Customer Support Tickets | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Support Header */
+    .support-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .support-header-title h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .support-header-sub {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 3px;
+    }
+
+    /* 4 Proper Support KPI Cards */
+    .support-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .support-kpi-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 20px 18px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .support-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-card-hover);
+        border-color: #cbd5e1;
+    }
+
+    .support-kpi-left {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .support-kpi-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .support-kpi-num {
+        font-size: 26px;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+
+    .support-kpi-sub {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+
+    .support-kpi-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .icon-box-total { background: #eff6ff; color: #2563eb; }
+    .icon-box-open { background: #fef2f2; color: #dc2626; }
+    .icon-box-progress { background: #fffbeb; color: #d97706; }
+    .icon-box-resolved { background: #ecfdf5; color: #059669; }
+
+    /* Filter & Search Toolbar */
+    .support-filter-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 22px;
+    }
+
+    .support-filter-form {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .filter-tabs-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab-pill {
+        padding: 7px 14px;
+        border-radius: 20px;
+        font-size: 12.5px;
+        font-weight: 600;
+        text-decoration: none;
+        color: #64748b;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .filter-tab-pill:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .filter-tab-pill.active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+    }
+
+    .filter-tab-pill .tab-count-badge {
+        font-size: 10.5px;
+        font-weight: 800;
+        padding: 1px 6px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .filter-tab-pill:not(.active) .tab-count-badge {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .filter-inputs-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: var(--radius-md);
+        padding: 8px 12px;
+        font-size: 12.5px;
+        color: #334155;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .filter-search-box {
+        position: relative;
+        min-width: 260px;
+    }
+
+    .filter-search-box input {
+        width: 100%;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: var(--radius-md);
+        padding: 8px 32px 8px 12px;
+        font-size: 12.5px;
+        color: #0f172a;
+        outline: none;
+    }
+
+    .filter-search-box input:focus {
+        background: #ffffff;
+        border-color: #94a3b8;
+    }
+
+    .filter-search-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+    }
+
+    .btn-reset-filters {
+        font-size: 12px;
+        font-weight: 600;
+        color: #ef4444;
+        text-decoration: none;
+        padding: 8px 12px;
+        border-radius: var(--radius-md);
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s ease;
+    }
+
+    .btn-reset-filters:hover {
+        background: #fee2e2;
+    }
+
+    /* Ticket Table Card */
+    .ticket-id-mono {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-weight: 700;
+        font-size: 12.5px;
+        color: #0f172a;
+    }
+
+    .ticket-customer-col {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ticket-cust-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: #0f172a;
+    }
+
+    .ticket-cust-email {
+        font-size: 11.5px;
+        color: #64748b;
+    }
+
+    .ticket-category-tag {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .ticket-subject-text {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 13px;
+        max-width: 240px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ticket-msg-preview {
+        font-size: 11px;
+        color: #94a3b8;
+        max-width: 240px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 1px;
+    }
+
+    .ticket-order-ref {
+        font-weight: 700;
+        font-size: 12px;
+        color: #0284c7;
+        text-decoration: none;
+    }
+
+    .ticket-order-ref:hover {
+        text-decoration: underline;
+    }
+
+    /* Action button */
+    .btn-ticket-reply {
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+    }
+
+    .btn-ticket-reply:hover {
+        background: #1e293b;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 1024px) {
+        .support-kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .support-kpi-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Support Header -->
+<div class="support-header-row">
+    <div class="support-header-title">
+        <h1><i class="fa-solid fa-headset" style="color: var(--gold-500);"></i> Customer Support & Tickets</h1>
+        <p class="support-header-sub">Review customer inquiries, track ticket lifecycle, and respond in real time</p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn-outline-clean">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- 4 Proper Support KPI Cards -->
+<div class="support-kpi-grid">
+    <!-- Total Tickets -->
+    <div class="support-kpi-card">
+        <div class="support-kpi-left">
+            <span class="support-kpi-label">Total Tickets</span>
+            <span class="support-kpi-num">{{ total_tickets }}</span>
+            <span class="support-kpi-sub">Lifetime support requests</span>
+        </div>
+        <div class="support-kpi-icon-box icon-box-total">
+            <i class="fa-solid fa-ticket"></i>
+        </div>
+    </div>
+
+    <!-- Open Tickets -->
+    <div class="support-kpi-card">
+        <div class="support-kpi-left">
+            <span class="support-kpi-label">Open Tickets</span>
+            <span class="support-kpi-num" style="color: #dc2626;">{{ open_tickets }}</span>
+            <span class="support-kpi-sub">Awaiting initial reply</span>
+        </div>
+        <div class="support-kpi-icon-box icon-box-open">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+    </div>
+
+    <!-- In Progress Tickets -->
+    <div class="support-kpi-card">
+        <div class="support-kpi-left">
+            <span class="support-kpi-label">In Progress</span>
+            <span class="support-kpi-num" style="color: #d97706;">{{ in_progress_tickets }}</span>
+            <span class="support-kpi-sub">Under active investigation</span>
+        </div>
+        <div class="support-kpi-icon-box icon-box-progress">
+            <i class="fa-regular fa-clock"></i>
+        </div>
+    </div>
+
+    <!-- Resolved Tickets -->
+    <div class="support-kpi-card">
+        <div class="support-kpi-left">
+            <span class="support-kpi-label">Resolved</span>
+            <span class="support-kpi-num" style="color: #059669;">{{ resolved_tickets }}</span>
+            <span class="support-kpi-sub">Successfully resolved queries</span>
+        </div>
+        <div class="support-kpi-icon-box icon-box-resolved">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search Toolbar -->
+<div class="support-filter-card">
+    <form method="GET" action="{{ url_for('admin_support_tickets') }}" class="support-filter-form">
+        <!-- Status Filter Tabs -->
+        <div class="filter-tabs-row">
+            <a href="{{ url_for('admin_support_tickets', status='all', category=category_filter, search=search_query) }}" class="filter-tab-pill {% if current_filter == 'all' or not current_filter %}active{% endif %}">
+                All <span class="tab-count-badge">{{ total_tickets }}</span>
+            </a>
+            <a href="{{ url_for('admin_support_tickets', status='open', category=category_filter, search=search_query) }}" class="filter-tab-pill {% if current_filter == 'open' %}active{% endif %}">
+                Open <span class="tab-count-badge">{{ open_tickets }}</span>
+            </a>
+            <a href="{{ url_for('admin_support_tickets', status='in progress', category=category_filter, search=search_query) }}" class="filter-tab-pill {% if current_filter == 'in progress' %}active{% endif %}">
+                In Progress <span class="tab-count-badge">{{ in_progress_tickets }}</span>
+            </a>
+            <a href="{{ url_for('admin_support_tickets', status='resolved', category=category_filter, search=search_query) }}" class="filter-tab-pill {% if current_filter == 'resolved' %}active{% endif %}">
+                Resolved <span class="tab-count-badge">{{ resolved_tickets }}</span>
+            </a>
+        </div>
+
+        <!-- Category & Search Inputs -->
+        <div class="filter-inputs-group">
+            <input type="hidden" name="status" value="{{ current_filter or 'all' }}">
+            <select name="category" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                <option value="Order Issue" {% if category_filter == 'Order Issue' %}selected{% endif %}>Order Issue</option>
+                <option value="Payment & Refund" {% if category_filter == 'Payment & Refund' %}selected{% endif %}>Payment & Refund</option>
+                <option value="Delivery & Shipping" {% if category_filter == 'Delivery & Shipping' %}selected{% endif %}>Delivery & Shipping</option>
+                <option value="Product Sizing" {% if category_filter == 'Product Sizing' %}selected{% endif %}>Product Sizing</option>
+                <option value="Account & Login" {% if category_filter == 'Account & Login' %}selected{% endif %}>Account & Login</option>
+                <option value="General Inquiry" {% if category_filter == 'General Inquiry' %}selected{% endif %}>General Inquiry</option>
+            </select>
+
+            <div class="filter-search-box">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search ticket #, name, email, order..." autocomplete="off">
+                <button type="submit" class="filter-search-btn">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+
+            {% if search_query or (category_filter) or (current_filter and current_filter != 'all') %}
+            <a href="{{ url_for('admin_support_tickets') }}" class="btn-reset-filters">
+                <i class="fa-solid fa-xmark"></i> Clear Filters
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Support Tickets Table Card -->
+<div class="admin-card">
+    <div class="card-header-between">
+        <h3 class="card-title-lg">
+            <i class="fa-solid fa-list-check" style="color: var(--gold-500);"></i> Support Ticket Records
+            <span style="font-size: 13px; font-weight: 500; color: #64748b;">({{ tickets|length }} results)</span>
+        </h3>
+    </div>
+
+    {% if tickets %}
+    <div class="table-responsive-wrapper">
+        <table class="admin-modern-table">
+            <thead>
+                <tr>
+                    <th>Ticket ID</th>
+                    <th>Customer</th>
+                    <th>Category</th>
+                    <th>Subject & Message</th>
+                    <th>Order Ref</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tkt in tickets %}
+                <tr>
+                    <td>
+                        <span class="ticket-id-mono">#{{ tkt.ticket_number }}</span>
+                    </td>
+                    <td>
+                        <div class="ticket-customer-col">
+                            <span class="ticket-cust-name">{{ tkt.customer_name }}</span>
+                            <span class="ticket-cust-email">{{ tkt.customer_email }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="ticket-category-tag">{{ tkt.category }}</span>
+                    </td>
+                    <td>
+                        <div class="ticket-subject-text" title="{{ tkt.subject }}">{{ tkt.subject }}</div>
+                        <div class="ticket-msg-preview" title="{{ tkt.message }}">{{ tkt.message }}</div>
+                    </td>
+                    <td>
+                        {% if tkt.order_id %}
+                        <a href="{{ url_for('admin_order_detail', order_id=tkt.order_id|replace('FW-', '')|replace('#', '')) }}" class="ticket-order-ref">
+                            #{{ tkt.order_id }}
+                        </a>
+                        {% else %}
+                        <span style="color: #cbd5e1;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set p_low = (tkt.priority or 'medium')|lower %}
+                        {% if p_low == 'high' or p_low == 'urgent' %}
+                        <span class="status-pill status-critical"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                        {% elif p_low == 'low' %}
+                        <span class="status-pill status-delivered">Low</span>
+                        {% else %}
+                        <span class="status-pill status-shipped">Medium</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-pill status-{{ tkt.status.lower().replace(' ', '-') }}">
+                            {% if tkt.status.lower() == 'resolved' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                            {% elif tkt.status.lower() == 'in progress' %}
+                            <i class="fa-solid fa-spinner"></i>
+                            {% else %}
+                            <i class="fa-regular fa-clock"></i>
+                            {% endif %}
+                            {{ tkt.status }}
+                        </span>
+                    </td>
+                    <td style="font-size: 12px; color: #64748b; white-space: nowrap;">
+                        {{ tkt.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <a href="{{ url_for('admin_support_detail', ticket_id=tkt.id) }}" class="btn-ticket-reply">
+                            <i class="fa-solid fa-reply"></i> View & Reply
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 60px 20px; color: #64748b;">
+        <i class="fa-solid fa-headset" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 16px;"></i>
+        <h4 style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">No Support Tickets Found</h4>
+        <p style="font-size: 13px;">No inquiries match your selected filter criteria or search query.</p>
+        <a href="{{ url_for('admin_support_tickets') }}" class="btn-dark-primary" style="margin-top: 16px;">
+            Reset All Filters
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

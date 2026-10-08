@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fashion World Pro | Admin Command Center{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --admin-bg: #f8fafc;
+            --admin-card: #ffffff;
+            --admin-border: #f1f5f9;
+            --admin-border-subtle: #e2e8f0;
+            --admin-text: #0f172a;
+            --admin-text-muted: #64748b;
+            --admin-text-subtle: #94a3b8;
+            
+            /* Luxury Gold Palette */
+            --gold-50: #fefce8;
+            --gold-100: #fef9c3;
+            --gold-200: #fef08a;
+            --gold-300: #fde047;
+            --gold-400: #facc15;
+            --gold-500: #f59e0b;
+            --gold-600: #d97706;
+            --gold-700: #b45309;
+            --gold-accent: #d4af37;
+            --gold-dark-pill: #2a2012;
+            --gold-dark-border: rgba(245, 158, 11, 0.3);
+            
+            /* Status Colors */
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --info: #3b82f6;
+            --info-bg: #eff6ff;
+            --purple: #8b5cf6;
+            --purple-bg: #f5f3ff;
+            --cyan: #06b6d4;
+            --cyan-bg: #ecfeff;
+            
+            /* Sidebar Specs */
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 80px;
+            --header-height: 68px;
+            --radius-xl: 18px;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            
+            /* Elevation */
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+            --shadow-card-hover: 0 10px 25px -3px rgba(0, 0, 0, 0.06), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
+            --shadow-dropdown: 0 12px 32px rgba(15, 23, 42, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--admin-bg);
+            color: var(--admin-text);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* ================= SIDEBAR ================= */
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #0c1017 0%, #111722 50%, #0a0e14 100%);
+            color: #f1f5f9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            user-select: none;
+        }
+
+        .sidebar-brand-wrapper {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #2d2212 0%, #453215 100%);
+            border: 1px solid var(--gold-dark-border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            color: var(--gold-400);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+            flex-shrink: 0;
+        }
+
+        .brand-text-col {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .brand-main-name {
+            font-family: 'Lora', serif;
+            font-size: 15.5px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .brand-sub-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .brand-slogan-text {
+            font-size: 8.5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .brand-suite-pill {
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--gold-400);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .sidebar-menu-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-menu-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-menu-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .menu-section-label {
+            font-size: 9.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #64748b;
+            padding: 14px 12px 6px;
+            list-style: none;
+        }
+
+        .menu-section-label:first-child {
+            padding-top: 2px;
+        }
+
+        .sidebar-nav-item {
+            list-style: none;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 13px;
+            border-radius: var(--radius-md);
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .sidebar-nav-link i.nav-icon {
+            font-size: 14px;
+            width: 18px;
+            text-align: center;
+            color: #64748b;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link span.nav-text {
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        .sidebar-nav-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-nav-link:hover i.nav-icon {
+            color: var(--gold-400);
+        }
+
+        /* Active Sidebar Item - Luxury Gold Highlight */
+        .sidebar-nav-item.active .sidebar-nav-link,
+        .sidebar-nav-link.active {
+            background: linear-gradient(90deg, #2b2112 0%, #382a17 100%);
+            color: #fbbf24;
+            font-weight: 600;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-nav-item.active .sidebar-nav-link i.nav-icon,
+        .sidebar-nav-link.active i.nav-icon {
+            color: #fbbf24;
+        }
+
+        .sidebar-nav-item.active .sidebar-nav-link::after {
+            content: "\f054";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 9px;
+            color: #f59e0b;
+            margin-left: auto;
+        }
+
+        /* Notification Badges */
+        .sidebar-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: auto;
+            line-height: 1.2;
+        }
+
+        .badge-red {
+            background: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .badge-gold {
+            background: var(--gold-500);
+            color: #000000;
+        }
+
+        /* Sidebar Footer Admin Profile */
+        .sidebar-footer-card {
+            padding: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-footer-card::before {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .admin-avatar-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+            color: #000000;
+            font-weight: 800;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .admin-footer-text {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .admin-greeting-sub {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .admin-name-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-tagline-motto {
+            font-size: 9.5px;
+            color: #64748b;
+            font-style: italic;
+            margin-top: 1px;
+        }
+
+        /* ================= MAIN CONTENT WRAPPER ================= */
+        .admin-main-wrapper {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-width: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* ================= TOP HEADER ================= */
+        .admin-top-header {
+            height: var(--header-height);
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .header-left-col {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            max-width: 520px;
+        }
+
+        .sidebar-toggle-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            font-size: 18px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .global-search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .global-search-input {
+            width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 9px 75px 9px 38px;
+            font-size: 13px;
+            color: var(--admin-text);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .global-search-input:focus {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+        }
+
+        .global-search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 13px;
+            pointer-events: none;
+        }
+
+        .search-shortcut-kbd {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            pointer-events: none;
+        }
+
+        .header-right-col {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .live-store-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .live-dot-pulse {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-green 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .view-storefront-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 6px 14px;
+            border-radius: var(--radius-md);
+            font-size: 12.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .view-storefront-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .header-notification-btn {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .header-notification-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .notification-count-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ffffff;
+        }
+
+        .admin-header-profile-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px 4px 4px;
+            border-radius: 30px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            text-decoration: none;
+            color: #1e293b;
+            transition: all 0.2s ease;
+        }
+
+        .admin-header-profile-pill:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .header-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #d97706;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-admin-name {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        /* ================= CONTENT CONTAINER ================= */
+        .admin-page-container {
+            padding: 26px 32px 40px;
+            flex: 1;
+        }
+
+        /* Flash Alerts */
+        .admin-alerts-container {
+            margin-bottom: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .admin-alert-banner {
+            padding: 12px 18px;
+            border-radius: var(--radius-md);
+            font-size: 13.5px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .admin-alert-banner.success { background: var(--success-bg); color: #065f46; border: 1px solid #a7f3d0; }
+        .admin-alert-banner.danger, .admin-alert-banner.error { background: var(--danger-bg); color: #991b1b; border: 1px solid #fecaca; }
+        .admin-alert-banner.warning { background: var(--warning-bg); color: #92400e; border: 1px solid #fde68a; }
+        .admin-alert-banner.info { background: var(--info-bg); color: #1e40af; border: 1px solid #bfdbfe; }
+
+        /* General Card Styling */
+        .admin-card {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            transition: all 0.2s ease;
+        }
+
+        .admin-card:hover {
+            box-shadow: var(--shadow-card-hover);
+        }
+
+        .card-header-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .card-title-lg {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--admin-text);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .card-subtitle-sm {
+            font-size: 12.5px;
+            color: var(--admin-text-muted);
+            margin-top: 2px;
+        }
+
+        .view-all-link {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .view-all-link:hover {
+            color: var(--gold-600);
+        }
+
+        /* Buttons */
+        .btn-luxury-gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #000000;
+            font-weight: 700;
+            font-size: 13px;
+            border: none;
+            padding: 9px 18px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        .btn-luxury-gold:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+        }
+
+        .btn-dark-primary {
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            padding: 9px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-dark-primary:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-clean {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-clean:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        /* Status Badges */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: capitalize;
+            letter-spacing: 0.2px;
+        }
+
+        .status-delivered, .status-paid, .status-resolved, .status-active {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-shipped, .status-in-progress, .status-open {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-processing, .status-pending, .status-cod {
+            background: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+
+        .status-cancelled, .status-critical, .status-out-of-stock {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .status-low {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #ffedd5;
+        }
+
+        /* Tables */
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .admin-modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+        }
+
+        .admin-modern-table th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .admin-modern-table th:first-child { border-top-left-radius: var(--radius-sm); border-bottom-left-radius: var(--radius-sm); }
+        .admin-modern-table th:last-child { border-top-right-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm); }
+
+        .admin-modern-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+
+        .admin-modern-table tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        .admin-modern-table tbody tr:hover {
+            background: #fbfcfe;
+        }
+
+        .admin-modern-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Global Search Modal */
+        .search-results-overlay {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 8px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-dropdown);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1100;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #0f172a;
+            transition: background 0.15s ease;
+        }
+
+        .search-result-item:hover {
+            background: #f8fafc;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: #f1f5f9;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* Footer */
+        .admin-footer-bar {
+            padding: 18px 32px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .footer-links-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-links-row a {
+            color: #64748b;
+            text-decoration: none;
+        }
+
+        .footer-links-row a:hover {
+            color: #0f172a;
+        }
+
+        /* General KPI Grid & Card Fallbacks */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--admin-card, #ffffff);
+            border: 1px solid var(--admin-border, #e2e8f0);
+            border-radius: var(--radius-lg, 14px);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-card, 0 1px 3px rgba(0,0,0,0.04));
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 135px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card-hover, 0 8px 20px rgba(0,0,0,0.06));
+            border-color: #cbd5e1;
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .kpi-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #64748b;
+        }
+
+        .kpi-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .kpi-icon.gold { background: #fef3c7; color: #d97706; }
+        .kpi-icon.blue { background: #eff6ff; color: #2563eb; }
+        .kpi-icon.purple { background: #f5f3ff; color: #7c3aed; }
+        .kpi-icon.green { background: #ecfdf5; color: #059669; }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.15;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-footer {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: auto;
+        }
+
+        .trend-badge {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-badge.positive { background: #ecfdf5; color: #047857; }
+        .trend-badge.negative { background: #fef2f2; color: #b91c1c; }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            .admin-sidebar.show {
+                transform: translateX(0);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+            }
+            .admin-main-wrapper {
+                margin-left: 0;
+            }
+            .admin-top-header {
+                padding: 0 18px;
+            }
+            .admin-page-container {
+                padding: 18px;
+            }
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <a href="{{ url_for('admin_dashboard') }}" class="sidebar-brand-wrapper">
+            <div class="brand-logo-icon">
+                <i class="fa-solid fa-gem"></i>
+            </div>
+            <div class="brand-text-col">
+                <span class="brand-main-name">Fashion World Pro</span>
+                <div class="brand-sub-badge-row">
+                    <span class="brand-slogan-text">Style Beyond Trends</span>
+                    <span class="brand-suite-pill">Admin Suite</span>
+                </div>
+            </div>
+        </a>
+
+        <ul class="sidebar-menu-scroll">
+            <li class="menu-section-label">Overview</li>
+            <li class="sidebar-nav-item {% if request.endpoint in ['admin_dashboard', 'admin_dashboard_alias'] %}active{% endif %}">
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-cube nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_analytics' %}active{% endif %}">
+                <a href="{{ url_for('admin_analytics') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-chart-line nav-icon"></i>
+                    <span class="nav-text">Sales Analytics</span>
+                </a>
+            </li>
+
+            <li class="menu-section-label">Inventory & Catalog</li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_products' %}active{% endif %}">
+                <a href="{{ url_for('admin_products') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-shirt nav-icon"></i>
+                    <span class="nav-text">All Products</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_add_product' %}active{% endif %}">
+                <a href="{{ url_for('admin_add_product') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-circle-plus nav-icon"></i>
+                    <span class="nav-text">Add New Product</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_categories' %}active{% endif %}">
+                <a href="{{ url_for('admin_categories') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-layer-group nav-icon"></i>
+                    <span class="nav-text">Categories</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_low_stock' %}active{% endif %}">
+                <a href="{{ url_for('admin_low_stock') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-triangle-exclamation nav-icon"></i>
+                    <span class="nav-text">Stock Alerts</span>
+                    {% if low_stock_badge_count and low_stock_badge_count > 0 %}
+                    <span class="sidebar-badge badge-red">{{ low_stock_badge_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+
+            <li class="menu-section-label">Sales & Purchases</li>
+            <li class="sidebar-nav-item {% if request.endpoint in ['admin_orders', 'admin_order_detail'] %}active{% endif %}">
+                <a href="{{ url_for('admin_orders') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-bag-shopping nav-icon"></i>
+                    <span class="nav-text">Customer Orders</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint in ['admin_customers', 'admin_customer_detail'] %}active{% endif %}">
+                <a href="{{ url_for('admin_customers') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-users nav-icon"></i>
+                    <span class="nav-text">Customer Directory</span>
+                </a>
+            </li>
+
+            <li class="menu-section-label">Support & Concierge</li>
+            <li class="sidebar-nav-item {% if request.endpoint in ['admin_support_tickets', 'admin_support_detail'] %}active{% endif %}">
+                <a href="{{ url_for('admin_support_tickets') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-headset nav-icon"></i>
+                    <span class="nav-text">Customer Support</span>
+                    {% if open_tickets_count and open_tickets_count > 0 %}
+                    <span class="sidebar-badge badge-red">{{ open_tickets_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+
+            <li class="menu-section-label">Marketing</li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_banners_offers' %}active{% endif %}">
+                <a href="{{ url_for('admin_banners_offers') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-bullhorn nav-icon"></i>
+                    <span class="nav-text">Banners & Offers</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_coupons' %}active{% endif %}">
+                <a href="{{ url_for('admin_coupons') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-ticket nav-icon"></i>
+                    <span class="nav-text">Coupons</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint in ['admin_reviews', 'admin_delete_review'] %}active{% endif %}">
+                <a href="{{ url_for('admin_reviews') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-star nav-icon"></i>
+                    <span class="nav-text">Reviews & Ratings</span>
+                </a>
+            </li>
+
+            <li class="menu-section-label">Settings</li>
+            <li class="sidebar-nav-item {% if request.endpoint in ['admin_account_settings', 'admin_update_profile', 'admin_change_email', 'admin_change_password'] %}active{% endif %}">
+                <a href="{{ url_for('admin_account_settings') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-user-gear nav-icon"></i>
+                    <span class="nav-text">Admin Account</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item {% if request.endpoint == 'admin_store_settings' %}active{% endif %}">
+                <a href="{{ url_for('admin_store_settings') }}" class="sidebar-nav-link">
+                    <i class="fa-solid fa-gear nav-icon"></i>
+                    <span class="nav-text">Store Settings</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('admin_logout') }}" class="sidebar-nav-link" style="color: #f87171;">
+                    <i class="fa-solid fa-arrow-right-from-bracket nav-icon" style="color: #f87171;"></i>
+                    <span class="nav-text">Log Out</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Bottom Admin Profile Card -->
+        <div class="sidebar-footer-card">
+            <div class="admin-avatar-circle">
+                {{ current_user.username[0]|upper if current_user.username else 'A' }}
+            </div>
+            <div class="admin-footer-text">
+                <span class="admin-greeting-sub">Good to see you,</span>
+                <span class="admin-name-title">{{ current_user.username }} 👋</span>
+                <span class="admin-tagline-motto">Manage. Grow. Inspire.</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Section Wrapper -->
+    <div class="admin-main-wrapper">
+        <!-- Header -->
+        <header class="admin-top-header">
+            <div class="header-left-col">
+                <button class="sidebar-toggle-btn" id="sidebarToggle" aria-label="Toggle Navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="global-search-container">
+                    <i class="fa-solid fa-magnifying-glass global-search-icon"></i>
+                    <input type="text" class="global-search-input" id="globalAdminSearchInput" placeholder="Search for orders, products, customers, tickets..." autocomplete="off">
+                    <span class="search-shortcut-kbd">Ctrl + K</span>
+                    <div class="search-results-overlay" id="searchResultsOverlay"></div>
+                </div>
+            </div>
+
+            <div class="header-right-col">
+                <span class="live-store-pill">
+                    <span class="live-dot-pulse"></span>
+                    Live Store Online
+                </span>
+                <a href="{{ url_for('home') }}" class="view-storefront-btn" target="_blank">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>View Storefront</span>
+                </a>
+                <div class="header-notification-btn" title="Notifications">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="notification-count-badge">{{ open_tickets_count or 1 }}</span>
+                </div>
+                <a href="{{ url_for('admin_account_settings') }}" class="admin-header-profile-pill">
+                    <div class="header-avatar">{{ current_user.username[0]|upper if current_user.username else 'A' }}</div>
+                    <span class="header-admin-name">{{ current_user.username }}</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: #94a3b8; margin-left: 2px;"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-page-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="admin-alerts-container">
+                        {% for category, message in messages %}
+                            <div class="admin-alert-banner {{ category }}">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    {% if category == 'success' %}
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    {% elif category in ['danger', 'error'] %}
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-circle-info"></i>
+                                    {% endif %}
+                                    <span>{{ message }}</span>
+                                </div>
+                                <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: inherit; opacity: 0.6;">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer-bar">
+            <span>&copy; 2026 Fashion World Pro. All rights reserved.</span>
+            <div class="footer-links-row">
+                <a href="{{ url_for('admin_dashboard') }}">Admin Panel</a>
+                <span>|</span>
+                <a href="{{ url_for('admin_support_tickets') }}">Support</a>
+                <span>|</span>
+                <a href="{{ url_for('home') }}" target="_blank">Documentation</a>
+                <span>|</span>
+                <span>v1.0.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Sidebar Mobile Toggle
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const adminSidebar = document.getElementById('adminSidebar');
+        if (sidebarToggle && adminSidebar) {
+            sidebarToggle.addEventListener('click', () => {
+                adminSidebar.classList.toggle('show');
+            });
+        }
+
+        // Global Search with Ctrl+K shortcut and live API lookup
+        const searchInput = document.getElementById('globalAdminSearchInput');
+        const resultsOverlay = document.getElementById('searchResultsOverlay');
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                if (searchInput) searchInput.focus();
+            }
+        });
+
+        let searchDebounceTimer;
+        if (searchInput && resultsOverlay) {
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimer);
+                const val = searchInput.value.trim();
+                if (val.length < 2) {
+                    resultsOverlay.style.display = 'none';
+                    resultsOverlay.innerHTML = '';
+                    return;
+                }
+                searchDebounceTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/admin/api/search?q=${encodeURIComponent(val)}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.results && data.results.length > 0) {
+                                resultsOverlay.innerHTML = data.results.map(item => `
+                                    <a href="${item.url}" class="search-result-item">
+                                        <div class="search-result-icon"><i class="${item.icon}"></i></div>
+                                        <div>
+                                            <div style="font-weight: 600; font-size: 13px;">${item.title}</div>
+                                            <div style="font-size: 11.5px; color: #64748b;">${item.subtitle}</div>
+                                        </div>
+                                    </a>
+                                `).join('');
+                                resultsOverlay.style.display = 'block';
+                            } else {
+                                resultsOverlay.innerHTML = '<div style="padding: 14px; font-size: 12.5px; color: #64748b; text-align: center;">No matches found.</div>';
+                                resultsOverlay.style.display = 'block';
+                            }
+                        }
+                    } catch(err) {
+                        console.error("Search error:", err);
+                    }
+                }, 250);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !resultsOverlay.contains(e.target)) {
+                    resultsOverlay.style.display = 'none';
+                }
+            });
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

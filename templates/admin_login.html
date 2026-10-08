@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Portal Login | Fashion World Pro{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrapper admin-auth-theme">
+    <div class="auth-card admin-auth-card">
+        <!-- Admin Brand Header -->
+        <div class="auth-header">
+            <div class="auth-emblem admin-emblem">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="auth-brand-name">Fashion World Pro</h1>
+            <h2 class="auth-title">Administrative Portal</h2>
+            <p class="auth-subtitle">Restricted Access • Authorized Personnel Only</p>
+        </div>
+
+        <!-- Flash Messages Inside Card -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="auth-flash-group">
+              {% for category, message in messages %}
+                <div class="auth-alert auth-alert-{{ category }}">
+                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Administrator Login Form (Email & Password ONLY) -->
+        <form action="{{ url_for('admin_login') }}" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="admin-email" class="form-label">Administrator Email or Username</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-user-shield input-icon"></i>
+                    <input type="text" id="admin-email" name="email" class="form-input" placeholder="admin@fashionworld.pro or Admin" required autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="admin-password" class="form-label">Admin Security Password</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="admin-password" name="password" class="form-input" placeholder="Enter administrator password" required autocomplete="current-password">
+                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('admin-password', this)" title="Show/Hide Password">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="remember-label">
+                    <input type="checkbox" name="remember" id="admin-remember">
+                    <span class="checkbox-custom"></span>
+                    <span>Remember this session</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-auth-submit admin-submit-btn">
+                <span>Authenticate as Administrator</span>
+                <i class="fa-solid fa-lock-open"></i>
+            </button>
+        </form>
+
+        <!-- Admin Footer -->
+        <div class="auth-footer admin-footer">
+            <a href="{{ url_for('home') }}" class="back-to-store-link">
+                <i class="fa-solid fa-arrow-left"></i> Return to Storefront
+            </a>
+            <div class="admin-security-badge">
+                <i class="fa-solid fa-fingerprint"></i>
+                <span>Secured 256-bit Encrypted Session</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+    }
+}
+</script>
+{% endblock %}

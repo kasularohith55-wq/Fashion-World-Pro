@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Fashion World Pro{% endblock %}
+
+{% block content %}
+<div class="auth-page-wrapper">
+    <div class="auth-card">
+        <!-- Brand Header -->
+        <div class="auth-header">
+            <div class="auth-emblem">
+                <i class="fa-solid fa-gem"></i>
+            </div>
+            <h1 class="auth-brand-name">Fashion World Pro</h1>
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Login to continue shopping exclusive collections</p>
+        </div>
+
+        <!-- Flash Messages Inside Card -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="auth-flash-group">
+              {% for category, message in messages %}
+                <div class="auth-alert auth-alert-{{ category }}">
+                    <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- Google OAuth 2.0 Server-Side Button -->
+        <a href="{{ url_for('auth_google') }}" class="btn-google" id="google-login-btn">
+            <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.97 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span>Continue with Google</span>
+        </a>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+            <span>OR</span>
+        </div>
+
+        <!-- Auth Method Tabs -->
+        <div class="auth-tabs" style="grid-template-columns: repeat(2, 1fr);">
+            <button type="button" class="auth-tab active" id="tab-email-btn" onclick="switchAuthTab('email')">
+                <i class="fa-solid fa-lock"></i> Password
+            </button>
+            <button type="button" class="auth-tab" id="tab-email-otp-btn" onclick="switchAuthTab('email_otp')">
+                <i class="fa-solid fa-envelope-open-text"></i> Email OTP
+            </button>
+        </div>
+
+        <!-- EMAIL LOGIN FORM (PASSWORD) -->
+        <div id="email-login-panel" class="auth-panel active">
+            <form action="{{ url_for('login') }}" method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label for="password" class="form-label">Password</label>
+                        <a href="javascript:void(0)" onclick="openForgotPasswordModal()" class="forgot-link">Forgot Password?</a>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-label">
+                        <input type="checkbox" name="remember" id="remember">
+                        <span class="checkbox-custom"></span>
+                        <span>Keep me signed in</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-auth-submit">
+                    <span>Login to Account</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- EMAIL OTP LOGIN FORM -->
+        <div id="email-otp-login-panel" class="auth-panel" style="display: none;">
+            <div class="phone-auth-container">
+                <div id="email-otp-alert" class="auth-alert auth-alert-danger" style="display: none; margin-bottom: 16px;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="email-otp-alert-msg"></span>
+                </div>
+
+                <div id="email-otp-step-1">
+                    <div class="form-group">
+                        <label for="otp-email-input" class="form-label">Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="otp-email-input" class="form-input" placeholder="Enter your email for OTP" autocomplete="email">
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn-auth-submit" id="send-email-otp-btn" onclick="sendEmailOtp()">
+                        <span>Send OTP to Email</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <div id="email-otp-step-2" style="display: none;">
+                    <p class="otp-sent-text">Enter the 6-digit verification code sent to <strong id="display-otp-email"></strong></p>
+
+                    <div class="form-group">
+                        <label class="form-label">Verification Code (OTP)</label>
+                        <div class="otp-input-group">
+                            <input type="text" maxlength="6" id="email-otp-code-input" class="form-input otp-code-input" placeholder="• • • • • •" autocomplete="one-time-code" inputmode="numeric">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-auth-submit" id="verify-email-otp-btn" onclick="verifyEmailOtp()">
+                        <span>Verify & Login</span>
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                    <div class="resend-otp-row">
+                        <button type="button" class="resend-btn" id="resend-email-otp-btn" onclick="resendEmailOtp()">Resend OTP</button>
+                        <button type="button" class="change-phone-btn" onclick="changeEmailOtpAddress()">Change Email</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Footer Links -->
+        <div class="auth-footer">
+            <p class="footer-text">
+                Don't have an account? 
+                <a href="{{ url_for('register') }}" class="auth-link-highlight">Register Now</a>
+            </p>
+            <div class="admin-portal-link">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Administrator?</span>
+                <a href="{{ url_for('admin_login') }}">Sign in to Admin Portal</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div id="forgot-password-modal" class="auth-modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeForgotPasswordModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-key"></i> Reset Password</h3>
+            <button type="button" class="modal-close" onclick="closeForgotPasswordModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-desc">Enter your registered email address. We'll verify your account type and help you access your account.</p>
+            <div class="google-notice-box">
+                <i class="fa-brands fa-google"></i>
+                <span>Note: Accounts created via Google Sign-In do not use local passwords. Simply use <strong>Continue with Google</strong>.</span>
+            </div>
+            <form action="{{ url_for('forgot_password') }}" method="POST">
+                <div class="form-group">
+                    <label for="reset-email" class="form-label">Registered Email</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="reset-email" name="email" class="form-input" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-auth-submit" style="margin-top: 15px;">
+                    <span>Send Reset Instructions</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase Web SDK (v10 Modular) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { 
+    getAuth, 
+    RecaptchaVerifier, 
+    signInWithPhoneNumber 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ----------------------------------------------------
+// FIREBASE AUTHENTICATION CONFIGURATION
+// ----------------------------------------------------
+const firebaseConfig = {
+    apiKey: "{{ firebase_config.apiKey if firebase_config else '' }}",
+    authDomain: "{{ firebase_config.authDomain if firebase_config else 'fashion-world-pro.firebaseapp.com' }}",
+    projectId: "{{ firebase_config.projectId if firebase_config else 'fashion-world-pro' }}",
+    storageBucket: "{{ firebase_config.storageBucket if firebase_config else 'fashion-world-pro.firebasestorage.app' }}",
+    messagingSenderId: "{{ firebase_config.messagingSenderId if firebase_config else '46044413498' }}",
+    appId: "{{ firebase_config.appId if firebase_config else '' }}",
+    measurementId: "{{ firebase_config.measurementId if firebase_config else '' }}"
+};
+
+let app = null;
+let auth = null;
+let appVerifier = null;
+let confirmationResult = null;
+let firebaseInitialized = false;
+let firebaseInitError = null;
+
+try {
+    if (!firebaseConfig.apiKey) {
+        console.warn("[Firebase] Notice: FIREBASE_API_KEY is not configured in .env.");
+    }
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    auth.languageCode = 'en';
+    firebaseInitialized = true;
+    console.log("[Firebase] Modular SDK v10.12.0 initialized for project:", firebaseConfig.projectId);
+} catch (e) {
+    console.error("[Firebase] Initialization error:", e);
+    firebaseInitError = e;
+    firebaseInitialized = false;
+}
+
+function showPhoneAlert(message) {
+    const alertBox = document.getElementById('phone-auth-alert');
+    const msgSpan = document.getElementById('phone-alert-msg');
+    if (alertBox && msgSpan) {
+        msgSpan.innerText = message;
+        alertBox.style.display = 'flex';
+    }
+}
+
+function hidePhoneAlert() {
+    const alertBox = document.getElementById('phone-auth-alert');
+    if (alertBox) {
+        alertBox.style.display = 'none';
+    }
+}
+
+async function initRecaptcha() {
+    if (!firebaseInitialized || !auth) {
+        console.error("Cannot initialize reCAPTCHA: Firebase Auth is not ready.", firebaseInitError);
+        return null;
+    }
+
+    if (!appVerifier) {
+        try {
+            appVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                'size': 'normal',
+                'callback': function(response) {
+                    hidePhoneAlert();
+                },
+                'expired-callback': function() {
+                    showPhoneAlert('reCAPTCHA expired. Please solve the challenge again.');
+                }
+            });
+            await appVerifier.render();
+            console.log("[Firebase] RecaptchaVerifier rendered successfully.");
+        } catch (e) {
+            console.error("Error setting up RecaptchaVerifier:", e);
+            showPhoneAlert("Failed to initialize reCAPTCHA: " + (e.message || e));
+            return null;
+        }
+    }
+    return appVerifier;
+}
+
+let emailOtpCooldownInterval = null;
+
+function showEmailOtpAlert(message) {
+    const alertBox = document.getElementById('email-otp-alert');
+    const msgSpan = document.getElementById('email-otp-alert-msg');
+    if (alertBox && msgSpan) {
+        msgSpan.innerText = message;
+        alertBox.style.display = 'flex';
+    }
+}
+
+function hideEmailOtpAlert() {
+    const alertBox = document.getElementById('email-otp-alert');
+    if (alertBox) {
+        alertBox.style.display = 'none';
+    }
+}
+
+function startEmailOtpCooldown(seconds) {
+    const resendBtn = document.getElementById('resend-email-otp-btn');
+    if (!resendBtn) return;
+    
+    if (emailOtpCooldownInterval) {
+        clearInterval(emailOtpCooldownInterval);
+    }
+    
+    let remaining = seconds;
+    resendBtn.disabled = true;
+    resendBtn.innerText = `Resend OTP (${remaining}s)`;
+    
+    emailOtpCooldownInterval = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+            clearInterval(emailOtpCooldownInterval);
+            emailOtpCooldownInterval = null;
+            resendBtn.disabled = false;
+            resendBtn.innerText = 'Resend OTP';
+        } else {
+            resendBtn.innerText = `Resend OTP (${remaining}s)`;
+        }
+    }, 1000);
+}
+
+async function sendEmailOtp() {
+    hideEmailOtpAlert();
+    const emailInput = document.getElementById('otp-email-input');
+    const email = emailInput ? emailInput.value.trim() : '';
+    
+    if (!email || !email.includes('@') || !email.includes('.')) {
+        showEmailOtpAlert('Please enter a valid email address.');
+        return;
+    }
+    
+    const sendBtn = document.getElementById('send-email-otp-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending Code...</span>';
+    
+    try {
+        const response = await fetch("{{ url_for('auth_email_otp_send') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('display-otp-email').innerText = email;
+            document.getElementById('email-otp-step-1').style.display = 'none';
+            document.getElementById('email-otp-step-2').style.display = 'block';
+            document.getElementById('email-otp-code-input').value = '';
+            document.getElementById('email-otp-code-input').focus();
+            
+            startEmailOtpCooldown(data.cooldown || 60);
+        } else {
+            showEmailOtpAlert(data.message || 'Failed to send OTP. Please try again.');
+        }
+    } catch (err) {
+        console.error('Email OTP send error:', err);
+        showEmailOtpAlert('Network error while requesting OTP. Please try again.');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<span>Send OTP to Email</span> <i class="fa-solid fa-paper-plane"></i>';
+    }
+}
+
+function changeEmailOtpAddress() {
+    hideEmailOtpAlert();
+    if (emailOtpCooldownInterval) {
+        clearInterval(emailOtpCooldownInterval);
+        emailOtpCooldownInterval = null;
+    }
+    document.getElementById('email-otp-step-2').style.display = 'none';
+    document.getElementById('email-otp-step-1').style.display = 'block';
+    const emailInput = document.getElementById('otp-email-input');
+    if (emailInput) emailInput.focus();
+}
+
+async function resendEmailOtp() {
+    hideEmailOtpAlert();
+    const email = document.getElementById('otp-email-input').value.trim();
+    if (!email) {
+        changeEmailOtpAddress();
+        return;
+    }
+    
+    const resendBtn = document.getElementById('resend-email-otp-btn');
+    resendBtn.disabled = true;
+    resendBtn.innerText = 'Sending...';
+    
+    try {
+        const response = await fetch("{{ url_for('auth_email_otp_send') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            startEmailOtpCooldown(data.cooldown || 60);
+        } else {
+            showEmailOtpAlert(data.message || 'Failed to resend OTP.');
+            resendBtn.disabled = false;
+            resendBtn.innerText = 'Resend OTP';
+        }
+    } catch (err) {
+        console.error('Email OTP resend error:', err);
+        showEmailOtpAlert('Network error while resending OTP.');
+        resendBtn.disabled = false;
+        resendBtn.innerText = 'Resend OTP';
+    }
+}
+
+async function verifyEmailOtp() {
+    hideEmailOtpAlert();
+    const emailInput = document.getElementById('otp-email-input');
+    const email = emailInput ? emailInput.value.trim() : '';
+    const otp = document.getElementById('email-otp-code-input').value.trim().replace(/\D/g, '');
+    
+    if (!otp || otp.length !== 6) {
+        showEmailOtpAlert('Please enter the complete 6-digit verification code.');
+        return;
+    }
+    
+    const verifyBtn = document.getElementById('verify-email-otp-btn');
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying...</span>';
+    
+    try {
+        const response = await fetch("{{ url_for('auth_email_otp_verify') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, otp: otp })
+        });
+        const data = await response.json();
+        
+        if (data.success && data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            showEmailOtpAlert(data.message || 'Verification failed. Please try again.');
+        }
+    } catch (err) {
+        console.error('Email OTP verify error:', err);
+        showEmailOtpAlert('Network error while verifying OTP.');
+    } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<span>Verify & Login</span> <i class="fa-solid fa-check"></i>';
+    }
+}
+
+function switchAuthTab(type) {
+    const emailTab = document.getElementById('tab-email-btn');
+    const emailOtpTab = document.getElementById('tab-email-otp-btn');
+    const emailPanel = document.getElementById('email-login-panel');
+    const emailOtpPanel = document.getElementById('email-otp-login-panel');
+    
+    if (emailTab) emailTab.classList.remove('active');
+    if (emailOtpTab) emailOtpTab.classList.remove('active');
+    
+    if (emailPanel) emailPanel.style.display = 'none';
+    if (emailOtpPanel) emailOtpPanel.style.display = 'none';
+    
+    if (type === 'email_otp') {
+        if (emailOtpTab) emailOtpTab.classList.add('active');
+        if (emailOtpPanel) emailOtpPanel.style.display = 'block';
+        hideEmailOtpAlert();
+    } else {
+        if (emailTab) emailTab.classList.add('active');
+        if (emailPanel) emailPanel.style.display = 'block';
+    }
+}
+
+function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+    }
+}
+
+function openForgotPasswordModal() {
+    document.getElementById('forgot-password-modal').style.display = 'flex';
+}
+
+function closeForgotPasswordModal() {
+    document.getElementById('forgot-password-modal').style.display = 'none';
+}
+
+// ----------------------------------------------------
+// REAL FIREBASE PHONE OTP HANDLERS
+// ----------------------------------------------------
+async function sendPhoneOtp() {
+    hidePhoneAlert();
+    const rawInput = document.getElementById('phone-number').value.trim();
+    const countryCodeSelect = document.getElementById('phone-country-code');
+    const countryCode = countryCodeSelect ? countryCodeSelect.value : '+91';
+    
+    let fullPhoneNumber = '';
+    
+    if (rawInput.startsWith('+')) {
+        fullPhoneNumber = rawInput.replace(/[^\d+]/g, '');
+    } else {
+        const cleanDigits = rawInput.replace(/\D/g, '');
+        if (!cleanDigits) {
+            showPhoneAlert("Please enter a valid mobile number.");
+            return;
+        }
+        if (countryCode === '+91' && cleanDigits.length !== 10) {
+            showPhoneAlert("Please enter a valid 10-digit Indian mobile number.");
+            return;
+        }
+        if (countryCode === '+1' && cleanDigits.length !== 10) {
+            showPhoneAlert("Please enter a valid 10-digit mobile number.");
+            return;
+        }
+        fullPhoneNumber = countryCode + cleanDigits;
+    }
+    
+    if (!fullPhoneNumber || fullPhoneNumber.length < 8) {
+        showPhoneAlert("Please enter a valid mobile number.");
+        return;
+    }
+    
+    if (!firebaseInitialized || !auth) {
+        let msg = "Firebase Authentication is not available.";
+        if (firebaseInitError) {
+            msg = "Firebase Initialization Error: " + (firebaseInitError.message || firebaseInitError);
+        } else if (!firebaseConfig.apiKey) {
+            msg = "Firebase API Key is missing. Please set FIREBASE_API_KEY in your .env configuration.";
+        }
+        showPhoneAlert(msg);
+        return;
+    }
+    
+    const sendBtn = document.getElementById('send-otp-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending Code...</span>';
+    
+    try {
+        const verifier = await initRecaptcha();
+        if (!verifier) {
+            throw new Error("reCAPTCHA initialization failed. Please reload the page.");
+        }
+        
+        confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, verifier);
+        
+        document.getElementById('display-phone-number').innerText = fullPhoneNumber;
+        document.getElementById('phone-step-1').style.display = 'none';
+        document.getElementById('phone-step-2').style.display = 'block';
+        
+        document.getElementById('otp-input').value = '';
+        document.getElementById('otp-input').focus();
+    } catch (error) {
+        console.error("Firebase sendPhoneOtp error:", error);
+        let msg = "Failed to send OTP code. Please check your number.";
+        if (error.code === 'auth/invalid-phone-number') {
+            msg = "The mobile number entered is invalid.";
+        } else if (error.code === 'auth/too-many-requests') {
+            msg = "Too many attempts. Please wait a few minutes before trying again.";
+        } else if (error.code === 'auth/quota-exceeded' || error.code === 'auth/billing-not-enabled') {
+            msg = "SMS service is temporarily unavailable. Please try again later or use Google Sign-In / Email Login.";
+        } else if (error.code === 'auth/operation-not-allowed') {
+            msg = "Phone authentication is currently unavailable for this region. Please use Google Sign-In or Email Login.";
+        } else if (error.code === 'auth/captcha-check-failed') {
+            msg = "reCAPTCHA verification failed. Please try again.";
+        } else if (error.code === 'auth/invalid-app-credential') {
+            msg = "Firebase authentication error. Please try again or use Google Sign-In.";
+        } else if (error.message) {
+            msg = error.message;
+        }
+        showPhoneAlert(msg);
+        
+        // Reset reCAPTCHA on error
+        if (appVerifier) {
+            try {
+                if (typeof appVerifier.clear === 'function') {
+                    appVerifier.clear();
+                }
+            } catch(e) {}
+            appVerifier = null;
+        }
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<span>Send OTP Code</span> <i class="fa-solid fa-paper-plane"></i>';
+    }
+}
+
+function changePhoneNumber() {
+    hidePhoneAlert();
+    document.getElementById('phone-step-2').style.display = 'none';
+    document.getElementById('phone-step-1').style.display = 'block';
+    document.getElementById('phone-number').focus();
+}
+
+async function resendPhoneOtp() {
+    hidePhoneAlert();
+    if (appVerifier) {
+        try {
+            if (typeof appVerifier.clear === 'function') {
+                appVerifier.clear();
+            }
+        } catch(e) {}
+        appVerifier = null;
+    }
+    document.getElementById('phone-step-2').style.display = 'none';
+    document.getElementById('phone-step-1').style.display = 'block';
+    await sendPhoneOtp();
+}
+
+async function verifyPhoneOtp() {
+    hidePhoneAlert();
+    const otp = document.getElementById('otp-input').value.trim().replace(/\D/g, '');
+    
+    if (!otp || otp.length !== 6) {
+        showPhoneAlert("Please enter the complete 6-digit verification code.");
+        return;
+    }
+    
+    if (!confirmationResult) {
+        showPhoneAlert("Verification session expired. Please request a new OTP.");
+        changePhoneNumber();
+        return;
+    }
+    
+    const verifyBtn = document.getElementById('verify-otp-btn');
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying...</span>';
+    
+    try {
+        const userCredential = await confirmationResult.confirm(otp);
+        const firebaseUser = userCredential.user;
+        const idToken = await firebaseUser.getIdToken();
+        
+        // Send Firebase ID token to Flask backend for server-side verification
+        const response = await fetch("{{ url_for('auth_phone_login') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id_token: idToken
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success && data.redirect) {
+            window.location.href = data.redirect;
+        } else {
+            showPhoneAlert(data.message || "Server verification failed. Please try again.");
+        }
+    } catch (error) {
+        console.error("OTP verification error:", error);
+        let msg = "Invalid verification code. Please check your SMS.";
+        if (error.code === 'auth/invalid-verification-code') {
+            msg = "Incorrect OTP code. Please enter the 6-digit code received via SMS.";
+        } else if (error.code === 'auth/code-expired') {
+            msg = "This verification code has expired. Please request a new OTP.";
+        } else if (error.message) {
+            msg = error.message;
+        }
+        showPhoneAlert(msg);
+    } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<span>Verify & Login</span> <i class="fa-solid fa-check"></i>';
+    }
+}
+
+// Bind functions to window object
+window.initRecaptcha = initRecaptcha;
+window.sendPhoneOtp = sendPhoneOtp;
+window.verifyPhoneOtp = verifyPhoneOtp;
+window.resendPhoneOtp = resendPhoneOtp;
+window.changePhoneNumber = changePhoneNumber;
+window.switchAuthTab = switchAuthTab;
+window.togglePasswordVisibility = togglePasswordVisibility;
+window.openForgotPasswordModal = openForgotPasswordModal;
+window.closeForgotPasswordModal = closeForgotPasswordModal;
+window.showPhoneAlert = showPhoneAlert;
+window.hidePhoneAlert = hidePhoneAlert;
+window.sendEmailOtp = sendEmailOtp;
+window.verifyEmailOtp = verifyEmailOtp;
+window.resendEmailOtp = resendEmailOtp;
+window.changeEmailOtpAddress = changeEmailOtpAddress;
+window.showEmailOtpAlert = showEmailOtpAlert;
+window.hideEmailOtpAlert = hideEmailOtpAlert;
+</script>
+{% endblock %}

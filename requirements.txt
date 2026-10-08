@@ -1,0 +1,16 @@
+flask
+flask-sqlalchemy
+flask-login
+werkzeug
+authlib
+python-dotenv
+requests
+razorpay
+stripe
+waitress
+flask-mail
+reportlab
+flask-socketio
+gevent
+gevent-websocket
+replicate

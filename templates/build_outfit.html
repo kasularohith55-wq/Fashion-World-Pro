@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Build My Outfit | Fashion World Pro{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/build_outfit.css', v='1.0') }}">
+{% endblock %}
+
+{% block content %}
+<div class="outfit-builder-page">
+    <!-- Hero Header Banner -->
+    <div class="outfit-hero-banner">
+        <div class="outfit-container">
+            <div class="outfit-hero-content">
+                <span class="outfit-eyebrow"><i class="fa-solid fa-wand-magic-sparkles"></i> STYLING STUDIO</span>
+                <h1 class="outfit-main-heading">BUILD MY OUTFIT</h1>
+                <p class="outfit-sub-heading">Select an anchor piece and curate a coordinated head-to-toe luxury look from our genuine inventory.</p>
+                
+                <!-- Category Selector Tabs -->
+                <div class="outfit-category-tabs" role="tablist">
+                    {% for cat in categories %}
+                    <a href="{{ url_for('build_outfit', category=cat) }}" 
+                       class="category-tab-btn {% if active_category == cat %}active{% endif %}" 
+                       data-category="{{ cat }}">
+                        <i class="{% if cat == 'Men' %}fa-solid fa-person{% elif cat == 'Women' %}fa-solid fa-person-dress{% else %}fa-solid fa-children{% endif %}"></i>
+                        <span>{{ cat | upper }}'S WEAR</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="outfit-container outfit-main-layout">
+        
+        <!-- ===================================================================
+             OUTFIT SHOWCASE CANVAS (STEP 2: COORDINATED LOOK)
+             =================================================================== -->
+        <section class="outfit-showcase-section" id="outfitShowcaseSection">
+            <div class="section-header-row">
+                <div class="header-left">
+                    <span class="canvas-tag"><i class="fa-solid fa-sparkles"></i> ACTIVE LOOK</span>
+                    <h2 class="canvas-title">Your Coordinated Outfit</h2>
+                </div>
+                <div class="header-right">
+                    <button type="button" class="btn-change-anchor" id="btnScrollToPicker">
+                        <i class="fa-solid fa-arrows-rotate"></i> Change Anchor Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4-Slot Outfit Grid -->
+            <div class="outfit-grid-canvas" id="outfitGridCanvas">
+                
+                <!-- Slot 0: Main Anchor Product -->
+                <div class="outfit-slot-card slot-anchor" 
+                     id="slotCardMain" 
+                     data-slot="main" 
+                     data-product-id="{{ main_product.id if main_product else '' }}"
+                     data-price="{{ main_product.discount_price if main_product and main_product.discount_price else (main_product.price if main_product else 0) }}">
+                    <div class="slot-badge-label anchor-badge"><i class="fa-solid fa-anchor"></i> ANCHOR PIECE</div>
+                    <div class="slot-media-wrap">
+                        <img src="{{ main_product.image_url if main_product else '/static/images/placeholder.jpg' }}" 
+                             alt="{{ main_product.name if main_product else 'Main Product' }}" 
+                             id="slotImgMain" 
+                             class="slot-product-img">
+                        <span class="slot-stock-status in-stock" id="slotStockMain">
+                            {% if main_product and main_product.stock is not none and main_product.stock > 0 %}
+                            In Stock ({{ main_product.stock }})
+                            {% else %}
+                            Available
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="slot-info-wrap">
+                        <span class="slot-role-name">Anchor / Main Piece</span>
+                        <h3 class="slot-product-title" id="slotTitleMain">{{ main_product.name if main_product else 'Select a Product' }}</h3>
+                        <div class="slot-price-row" id="slotPriceMain">
+                            {% if main_product %}
+                                {% if main_product.discount_price %}
+                                <span class="slot-price-final">₹{{ "{:,.2f}".format(main_product.discount_price) }}</span>
+                                <span class="slot-price-original">₹{{ "{:,.2f}".format(main_product.price) }}</span>
+                                {% else %}
+                                <span class="slot-price-final">₹{{ "{:,.2f}".format(main_product.price) }}</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn-slot-action btn-change-slot" data-slot="main" data-role="all" title="Choose another anchor piece">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i> Change
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Slots 1, 2, 3: Dynamic Matching Pieces -->
+                {% for match in matching_slots %}
+                {% set p = match.product %}
+                <div class="outfit-slot-card slot-matching" 
+                     id="slotCard{{ loop.index }}" 
+                     data-slot="{{ loop.index }}" 
+                     data-role="{{ match.role }}"
+                     data-product-id="{{ p.id if p else '' }}"
+                     data-price="{{ p.discount_price if p and p.discount_price else (p.price if p else 0) }}">
+                    <div class="slot-badge-label match-badge"><i class="{{ match.icon }}"></i> {{ match.slot_name | upper }}</div>
+                    <div class="slot-media-wrap">
+                        {% if p %}
+                        <img src="{{ p.image_url }}" alt="{{ p.name }}" id="slotImg{{ loop.index }}" class="slot-product-img">
+                        <span class="slot-stock-status in-stock" id="slotStock{{ loop.index }}">
+                            {% if p.stock is not none and p.stock > 0 %}In Stock ({{ p.stock }}){% else %}Available{% endif %}
+                        </span>
+                        {% else %}
+                        <div class="slot-empty-state">
+                            <i class="fa-solid fa-box-open"></i>
+                            <span>No matching item available</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="slot-info-wrap">
+                        <span class="slot-role-name">{{ match.slot_name }}</span>
+                        <h3 class="slot-product-title" id="slotTitle{{ loop.index }}">{{ p.name if p else 'No matching item available' }}</h3>
+                        <div class="slot-price-row" id="slotPrice{{ loop.index }}">
+                            {% if p %}
+                                {% if p.discount_price %}
+                                <span class="slot-price-final">₹{{ "{:,.2f}".format(p.discount_price) }}</span>
+                                <span class="slot-price-original">₹{{ "{:,.2f}".format(p.price) }}</span>
+                                {% else %}
+                                <span class="slot-price-final">₹{{ "{:,.2f}".format(p.price) }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="slot-price-none">—</span>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn-slot-action btn-change-slot" data-slot="{{ loop.index }}" data-role="{{ match.role }}" title="Change this item">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i> Change
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+
+            <!-- Total Price & Action Checkout Bar -->
+            <div class="outfit-summary-checkout-card">
+                <div class="summary-left-block">
+                    <div class="summary-title-row">
+                        <span class="summary-eyebrow">COMPLETE LOOK SUMMARY</span>
+                        <span class="summary-count-badge" id="outfitItemCount">{{ item_count }} Item{% if item_count != 1 %}s{% endif %} Selected</span>
+                    </div>
+                    <p class="summary-note">All items are sourced directly from our curated in-stock collection.</p>
+                </div>
+
+                <div class="summary-right-block">
+                    <div class="summary-pricing-stack">
+                        <span class="pricing-label">Total Outfit Price</span>
+                        <div class="pricing-amount-row">
+                            <span class="pricing-amount" id="outfitTotalPrice">₹{{ "{:,.2f}".format(total_outfit_price) }}</span>
+                            <span class="pricing-original" id="outfitOriginalPrice" style="display: none;"></span>
+                        </div>
+                    </div>
+
+                    <div class="summary-actions-row">
+                        <button type="button" class="btn-outfit-cart" id="btnAddFullLook">
+                            <i class="fa-solid fa-bag-shopping"></i>
+                            <span>ADD FULL LOOK TO CART</span>
+                        </button>
+                        <button type="button" class="btn-outfit-buy" id="btnBuyFullLook">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>BUY THIS LOOK</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================
+             PRODUCT ANCHOR SELECTOR (STEP 1: BROWSE REAL PRODUCTS)
+             =================================================================== -->
+        <section class="anchor-picker-section" id="anchorPickerSection">
+            <div class="section-header-block">
+                <span class="section-pretitle"><i class="fa-solid fa-list-check"></i> STEP 1: CHOOSE ANCHOR</span>
+                <h2 class="section-title">Select Any {{ active_category }}'s Product</h2>
+                <p class="section-desc">Pick any starting piece to instantly generate coordinating items and build your complete look.</p>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="picker-toolbar">
+                <div class="picker-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="pickerSearchInput" placeholder="Search {{ active_category }}'s apparel by name, style, or color...">
+                </div>
+                <div class="picker-role-pills" id="pickerRolePills">
+                    <button type="button" class="role-pill-btn active" data-role="all">All Styles</button>
+                    <button type="button" class="role-pill-btn" data-role="top">Tops &amp; Shirts</button>
+                    <button type="button" class="role-pill-btn" data-role="bottom">Bottoms &amp; Jeans</button>
+                    <button type="button" class="role-pill-btn" data-role="footwear">Footwear</button>
+                    <button type="button" class="role-pill-btn" data-role="accessory">Accessories</button>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="picker-products-grid" id="pickerProductsGrid">
+                {% for prod in initial_products %}
+                <div class="picker-product-card {% if main_product and main_product.id == prod.id %}selected-anchor{% endif %}" 
+                     data-id="{{ prod.id }}" 
+                     data-name="{{ prod.name }}" 
+                     data-price="{{ prod.discount_price if prod.discount_price else prod.price }}"
+                     data-original-price="{{ prod.price }}"
+                     data-image="{{ prod.image_url }}"
+                     data-stock="{{ prod.stock }}">
+                    <div class="card-media">
+                        <img src="{{ prod.image_url }}" alt="{{ prod.name }}" loading="lazy">
+                        {% if prod.discount_price %}
+                        <span class="card-badge sale">SALE</span>
+                        {% endif %}
+                        {% if main_product and main_product.id == prod.id %}
+                        <span class="card-badge active-tag">CURRENT ANCHOR</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-details">
+                        <h4 class="card-title">{{ prod.name }}</h4>
+                        <div class="card-pricing">
+                            {% if prod.discount_price %}
+                            <span class="price-current">₹{{ "{:,.2f}".format(prod.discount_price) }}</span>
+                            <span class="price-strikethrough">₹{{ "{:,.2f}".format(prod.price) }}</span>
+                            {% else %}
+                            <span class="price-current">₹{{ "{:,.2f}".format(prod.price) }}</span>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn-select-anchor" data-id="{{ prod.id }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> 
+                            <span>{% if main_product and main_product.id == prod.id %}Selected{% else %}Style With This{% endif %}</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<!-- =======================================================================
+     ITEM REPLACEMENT DRAWER / MODAL
+     ======================================================================= -->
+<div class="outfit-modal-backdrop" id="outfitModalBackdrop" style="display: none;">
+    <div class="outfit-modal-sheet" id="outfitModalSheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header-bar">
+            <div class="modal-title-box">
+                <span class="modal-eyebrow" id="modalEyebrow">CHOOSE ALTERNATIVE</span>
+                <h3 class="modal-title" id="modalTitle">Select Item</h3>
+            </div>
+            <button type="button" class="btn-close-modal" id="btnCloseModal" aria-label="Close modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-filter-bar">
+            <div class="modal-search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="modalSearchInput" placeholder="Filter available items...">
+            </div>
+        </div>
+
+        <div class="modal-products-list" id="modalProductsList">
+            <!-- Dynamically populated via JavaScript -->
+            <div class="modal-loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>Loading available items...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Toast Notification -->
+<div class="outfit-toast-container" id="outfitToastContainer"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    window.ACTIVE_CATEGORY = "{{ active_category }}";
+    window.MAIN_PRODUCT_ID = {{ main_product.id if main_product else 'null' }};
+</script>
+<script src="{{ url_for('static', filename='js/build_outfit.js', v='2.0') }}"></script>
+{% endblock %}
+{% block extra_js %}
+<script>
+    window.ACTIVE_CATEGORY = "{{ active_category }}";
+    window.MAIN_PRODUCT_ID = {{ main_product.id if main_product else 'null' }};
+</script>
+<script src="{{ url_for('static', filename='js/build_outfit.js', v='2.0') }}"></script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist | Fashion World Pro{% endblock %}
+
+{% block content %}
+<section class="products-section" style="padding-top: 150px;">
+    <div class="section-header">
+        <h2>My Wishlist</h2>
+        <p style="color: #666; margin-top: 10px; font-weight: 300;">Your favorite curated pieces, saved for later.</p>
+    </div>
+    
+    {% if not items %}
+    <div style="text-align: center; padding: 100px 0;">
+        <i class="fa fa-heart" style="font-size: 3rem; color: #eee; margin-bottom: 30px;"></i>
+        <p style="font-size: 1.2rem; color: #777;">Your wishlist is empty.</p>
+        <a href="{{ url_for('products') }}" class="btn btn-dark" style="margin-top:20px;">Explore Collection</a>
+    </div>
+    {% else %}
+    <div class="product-grid">
+        {% for item in items %}
+        {% set product = item.product %}
+        <div class="product-card" id="wishlist-card-{{ product.id }}">
+            <div class="product-image" style="position: relative;">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" style="display: block; width: 100%; height: 100%;">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                </a>
+                {% if product.discount_price %}
+                <span class="sale-badge">SALE</span>
+                {% endif %}
+                <div class="add-to-cart-overlay">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">View Details</a>
+                </div>
+            </div>
+            <div class="product-info">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" style="text-decoration: none; color: inherit;">
+                    <h3>{{ product.name }}</h3>
+                </a>
+                <p class="price">
+                    {% if product.discount_price %}
+                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                    {% else %}
+                    ₹{{ "{:,.2f}".format(product.price) }}
+                    {% endif %}
+                </p>
+                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.75rem; padding: 8px 14px;">View Item</a>
+                    <a href="{{ url_for('remove_from_wishlist', product_id=product.id) }}" class="wishlist-remove-link" style="font-size: 0.75rem; color: #888; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#888'">
+                        <i class="fa fa-trash-can"></i> Remove
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

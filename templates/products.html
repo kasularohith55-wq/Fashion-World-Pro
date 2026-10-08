@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}Shop Collection | Fashion World Pro{% endblock %}
+
+{% block content %}
+<style>
+/* ==========================================================================
+   FASHION WORLD PRO - LUXURY PRODUCT SORT DROPDOWN STYLING
+   ========================================================================== */
+.luxury-sort-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.luxury-sort-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #8a6416;
+    text-transform: uppercase;
+}
+
+.custom-sort-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-sort-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-width: 195px;
+    height: 46px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1.5px solid #dcd4c7;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #14171c;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(28, 24, 19, 0.04);
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    outline: none;
+    user-select: none;
+}
+
+.custom-sort-trigger:hover {
+    border-color: #9c7a2b;
+    background: #fdfaf7;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(156, 122, 43, 0.12);
+}
+
+.custom-sort-trigger:focus-visible {
+    border-color: #9c7a2b;
+    box-shadow: 0 0 0 3px rgba(156, 122, 43, 0.18);
+}
+
+.custom-sort-trigger.active-menu {
+    border-color: #9c7a2b;
+    box-shadow: 0 0 0 3px rgba(156, 122, 43, 0.18);
+}
+
+.sort-chevron-icon {
+    font-size: 0.75rem;
+    color: #9c7a2b;
+    transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.custom-sort-trigger[aria-expanded="true"] .sort-chevron-icon,
+.custom-sort-trigger.active-menu .sort-chevron-icon {
+    transform: rotate(180deg);
+}
+
+.custom-sort-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 230px;
+    background: #ffffff;
+    border: 1.5px solid #ebd9c2;
+    border-radius: 14px;
+    box-shadow: 0 14px 36px rgba(28, 24, 19, 0.12);
+    padding: 6px;
+    list-style: none;
+    margin: 0;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.22s;
+    pointer-events: none;
+}
+
+.custom-sort-menu.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.custom-sort-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    outline: none;
+    font-weight: 500;
+}
+
+.custom-sort-option:hover,
+.custom-sort-option:focus-visible {
+    background: #fdf8f0;
+    color: #9c7a2b;
+}
+
+.custom-sort-option.selected {
+    background: #faf4e8;
+    color: #14171c;
+    font-weight: 700;
+}
+
+.option-check-icon {
+    color: #9c7a2b;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.custom-sort-option.selected .option-check-icon {
+    opacity: 1;
+}
+
+@media (max-width: 680px) {
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+    .luxury-sort-container {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .custom-sort-wrapper {
+        flex: 1;
+        max-width: 240px;
+    }
+    .custom-sort-trigger {
+        width: 100%;
+        min-width: unset;
+    }
+    .custom-sort-menu {
+        width: 100%;
+        left: 0;
+        right: 0;
+    }
+}
+</style>
+
+<section class="products-section" style="padding: 40px 8% 80px;">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; margin-bottom: 24px;">
+        <div>
+            <h2>{{ title if title else "Shop The Collection" }}</h2>
+            <p style="color: #666; margin-top: 10px; font-weight: 300;">Explore our full range of curated minimalist apparel.</p>
+        </div>
+        
+        <!-- Luxury Sort By Custom Dropdown -->
+        <div class="luxury-sort-container" id="luxurySortContainer">
+            <span class="luxury-sort-label">SORT BY</span>
+            <div class="custom-sort-wrapper">
+                <button type="button" class="custom-sort-trigger" id="customSortTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Sort products dropdown">
+                    <span class="custom-sort-selected-text" id="customSortSelectedText">
+                        {% if current_sort in ['price_asc', 'low_to_high', 'price_low_high'] %}
+                        Price: Low to High
+                        {% elif current_sort in ['price_desc', 'high_to_low', 'price_high_low'] %}
+                        Price: High to Low
+                        {% else %}
+                        Default
+                        {% endif %}
+                    </span>
+                    <i class="fa-solid fa-chevron-down sort-chevron-icon" id="sortChevronIcon"></i>
+                </button>
+
+                <ul class="custom-sort-menu" id="customSortMenu" role="listbox" aria-label="Sort by options">
+                    <li class="custom-sort-option {% if current_sort not in ['price_asc', 'low_to_high', 'price_low_high', 'price_desc', 'high_to_low', 'price_high_low'] %}selected{% endif %}" role="option" data-value="default" tabindex="0">
+                        <span class="option-label">Default</span>
+                        <i class="fa-solid fa-check option-check-icon"></i>
+                    </li>
+                    <li class="custom-sort-option {% if current_sort in ['price_asc', 'low_to_high', 'price_low_high'] %}selected{% endif %}" role="option" data-value="price_asc" tabindex="0">
+                        <span class="option-label">Price: Low to High</span>
+                        <i class="fa-solid fa-check option-check-icon"></i>
+                    </li>
+                    <li class="custom-sort-option {% if current_sort in ['price_desc', 'high_to_low', 'price_high_low'] %}selected{% endif %}" role="option" data-value="price_desc" tabindex="0">
+                        <span class="option-label">Price: High to Low</span>
+                        <i class="fa-solid fa-check option-check-icon"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    {% if current_category == 'Men' %}
+    <div class="men-sub-filter-bar" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 35px 0; padding: 14px 18px; background: #faf9f6; border: 1px solid #e2d9cc; border-radius: 12px;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #7a5c29; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; margin-right: 6px;"><i class="fa-solid fa-filter" style="margin-right: 5px;"></i> Filter:</span>
+        <a href="{{ url_for('products', category='Men', sort=request.args.get('sort', '')) }}" class="btn btn-sm" style="font-size: 0.72rem; padding: 5px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; border: 1px solid #c8a355; background: {% if not current_sub %}#1c1813{% else %}#ffffff{% endif %}; color: {% if not current_sub %}#ffffff{% else %}#2d2d2d{% endif %};">All Men</a>
+        {% for filter_name, filter_key in [('Formal Wear', 'formal'), ('Smart Casual', 'smart_casual'), ('Bottom Wear', 'bottom'), ('Party Wear', 'party'), ('Ethnic Wear', 'ethnic'), ('Wedding & Groom', 'wedding'), ('Night & Lounge', 'lounge'), ('Outerwear', 'outerwear'), ('Footwear', 'footwear'), ('Accessories', 'accessories')] %}
+        <a href="{{ url_for('products', category='Men', sub=filter_key, sort=request.args.get('sort', '')) }}" class="btn btn-sm" style="font-size: 0.72rem; padding: 5px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; border: 1px solid #c8a355; background: {% if current_sub == filter_key %}#1c1813{% else %}#ffffff{% endif %}; color: {% if current_sub == filter_key %}#ffffff{% else %}#2d2d2d{% endif %};">{{ filter_name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if current_category == 'Kids' %}
+    <div class="kids-sub-filter-bar" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 35px 0; padding: 14px 18px; background: #faf8f5; border: 1px solid #ebd9c2; border-radius: 12px;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #8c6d32; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; margin-right: 6px;"><i class="fa-solid fa-filter" style="margin-right: 5px;"></i> Filter:</span>
+        <a href="{{ url_for('products', category='Kids', sort=request.args.get('sort', '')) }}" class="btn btn-sm" style="font-size: 0.72rem; padding: 5px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; border: 1px solid #d4af37; background: {% if not current_sub %}#1c1813{% else %}#ffffff{% endif %}; color: {% if not current_sub %}#ffffff{% else %}#2d2d2d{% endif %};">All Kids</a>
+        {% for filter_name, filter_key in [('Boys', 'boys'), ('Girls', 'girls'), ('Baby', 'baby'), ('Casual', 'casual'), ('Smart / Formal', 'formal'), ('Ethnic Wear', 'ethnic'), ('Party Wear', 'party'), ('Dresses', 'dress'), ('Footwear', 'footwear'), ('Accessories', 'accessories')] %}
+        <a href="{{ url_for('products', category='Kids', sub=filter_key, sort=request.args.get('sort', '')) }}" class="btn btn-sm" style="font-size: 0.72rem; padding: 5px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; border: 1px solid #d4af37; background: {% if current_sub == filter_key %}#1c1813{% else %}#ffffff{% endif %}; color: {% if current_sub == filter_key %}#ffffff{% else %}#2d2d2d{% endif %};">{{ filter_name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if not products %}
+    <div style="text-align: center; padding: 100px 0;">
+        <i class="fa fa-frown-open" style="font-size: 3rem; color: #ddd; margin-bottom: 20px;"></i>
+        <h3 style="font-weight: 300;">No pieces found for your search.</h3>
+        <p style="color: #888; margin-top: 10px;">Try searching for something else or explore all designs.</p>
+        <a href="{{ url_for('products') }}" class="btn btn-dark" style="margin-top: 30px; font-size: 0.8rem;">View All Products</a>
+    </div>
+    {% endif %}
+    
+    <div class="product-grid" id="mainProductGrid">
+        {% for product in products %}
+        <div class="product-card" data-price="{{ product.discount_price if product.discount_price else product.price }}" data-original-index="{{ loop.index0 }}" data-product-id="{{ product.id }}">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" style="text-decoration: none; color: inherit;">
+                <div class="product-image">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                    {% if product.discount_price %}
+                    <span class="sale-badge">SALE</span>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <p style="text-transform: uppercase; font-size: 0.7rem; color: #888; letter-spacing: 1.5px; margin-bottom: 5px;">{{ product.category }}</p>
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">
+                        {% if product.discount_price %}
+                        <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                        <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                        {% else %}
+                        ₹{{ "{:,.2f}".format(product.price) }}
+                        {% endif %}
+                    </p>
+                </div>
+            </a>
+            <div style="margin-top: 10px; padding: 0 0 20px 0;">
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem; padding: 10px 20px; width: 100%; text-align: center;">Add to Bag</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination %}
+    <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 20px; margin: 50px 0;">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('products', page=pagination.prev_num, query=request.args.get('query', ''), collection=request.args.get('collection', ''), category=request.args.get('category', ''), filter=request.args.get('filter', ''), sub=request.args.get('sub', ''), sort=request.args.get('sort', '')) }}" class="btn btn-dark" style="font-size: 0.8rem; padding: 10px 25px;">&larr; Previous</a>
+        {% endif %}
+        
+        <span style="font-size: 0.9rem; color: #666; font-weight: 300;">Page <strong>{{ pagination.page }}</strong> of {{ pagination.pages }}</span>
+        
+        {% if pagination.has_next %}
+        <a href="{{ url_for('products', page=pagination.next_num, query=request.args.get('query', ''), collection=request.args.get('collection', ''), category=request.args.get('category', ''), filter=request.args.get('filter', ''), sub=request.args.get('sub', ''), sort=request.args.get('sort', '')) }}" class="btn btn-dark" style="font-size: 0.8rem; padding: 10px 25px;">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+
+<!-- ======================================================================
+     CUSTOM SORT DROPDOWN JAVASCRIPT LOGIC
+     ====================================================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sortTrigger = document.getElementById('customSortTrigger');
+    const sortMenu = document.getElementById('customSortMenu');
+    const selectedText = document.getElementById('customSortSelectedText');
+    const options = document.querySelectorAll('.custom-sort-option');
+    const productGrid = document.getElementById('mainProductGrid');
+
+    if (!sortTrigger || !sortMenu) return;
+
+    let isOpen = false;
+
+    function openMenu() {
+        isOpen = true;
+        sortMenu.classList.add('is-open');
+        sortTrigger.classList.add('active-menu');
+        sortTrigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+        isOpen = false;
+        sortMenu.classList.remove('is-open');
+        sortTrigger.classList.remove('active-menu');
+        sortTrigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleMenu() {
+        if (isOpen) closeMenu();
+        else openMenu();
+    }
+
+    sortTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleMenu();
+    });
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+        if (!sortTrigger.contains(e.target) && !sortMenu.contains(e.target)) {
+            closeMenu();
+        }
+    });
+
+    // Client-side grid reordering + URL sync
+    function applySort(sortVal, label) {
+        if (selectedText) selectedText.textContent = label;
+
+        options.forEach(opt => {
+            if (opt.getAttribute('data-value') === sortVal) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+
+        if (productGrid) {
+            const cards = Array.from(productGrid.querySelectorAll('.product-card'));
+            if (cards.length > 0) {
+                if (sortVal === 'price_asc') {
+                    cards.sort((a, b) => {
+                        const priceA = parseFloat(a.getAttribute('data-price')) || 0;
+                        const priceB = parseFloat(b.getAttribute('data-price')) || 0;
+                        return priceA - priceB;
+                    });
+                } else if (sortVal === 'price_desc') {
+                    cards.sort((a, b) => {
+                        const priceA = parseFloat(a.getAttribute('data-price')) || 0;
+                        const priceB = parseFloat(b.getAttribute('data-price')) || 0;
+                        return priceB - priceA;
+                    });
+                } else {
+                    // Default
+                    cards.sort((a, b) => {
+                        const idxA = parseInt(a.getAttribute('data-original-index'), 10) || 0;
+                        const idxB = parseInt(b.getAttribute('data-original-index'), 10) || 0;
+                        return idxA - idxB;
+                    });
+                }
+
+                // Smoothly append sorted elements
+                cards.forEach(card => productGrid.appendChild(card));
+            }
+        }
+
+        // Update URL query string smoothly
+        try {
+            const url = new URL(window.location.href);
+            if (sortVal === 'default') {
+                url.searchParams.delete('sort');
+            } else {
+                url.searchParams.set('sort', sortVal);
+            }
+            window.history.replaceState({}, '', url.toString());
+        } catch (err) {
+            console.warn('URL update error:', err);
+        }
+
+        closeMenu();
+    }
+
+    options.forEach(opt => {
+        opt.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const sortVal = this.getAttribute('data-value');
+            const label = this.querySelector('.option-label').textContent.trim();
+            applySort(sortVal, label);
+        });
+
+        // Keyboard interaction on option
+        opt.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const sortVal = this.getAttribute('data-value');
+                const label = this.querySelector('.option-label').textContent.trim();
+                applySort(sortVal, label);
+                sortTrigger.focus();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = this.nextElementSibling;
+                if (next) next.focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prev = this.previousElementSibling;
+                if (prev) prev.focus();
+                else sortTrigger.focus();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeMenu();
+                sortTrigger.focus();
+            }
+        });
+    });
+
+    // Keyboard navigation on trigger button
+    sortTrigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            openMenu();
+            const firstOpt = sortMenu.querySelector('.custom-sort-option');
+            if (firstOpt) firstOpt.focus();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeMenu();
+        }
+    });
+});
+</script>
+{% endblock %}

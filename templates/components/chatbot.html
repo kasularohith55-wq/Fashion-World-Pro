@@ -1,0 +1,87 @@
+<!-- ==========================================================================
+     FASHION WORLD PRO — LUXURY FASHION ASSISTANT / CHATBOT COMPONENT
+     ========================================================================== -->
+
+<!-- Floating Launcher Button (Bottom Right) -->
+<button type="button" id="fwChatbotLauncher" class="fw-chatbot-launcher" aria-label="Open Fashion Assistant" title="Chat with Fashion Assistant">
+    <div class="launcher-icon-wrap">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+    </div>
+    <span>Fashion Assistant</span>
+    <span class="launcher-pulse-dot" title="Online"></span>
+</button>
+
+<!-- Chatbot Popup Window -->
+<div id="fwChatbotWindow" class="fw-chatbot-window" role="dialog" aria-modal="true" aria-label="Fashion World Pro Shopping Assistant">
+    <!-- Header -->
+    <div class="fw-chat-header">
+        <div class="fw-chat-header-info">
+            <div class="fw-chat-avatar">
+                <i class="fa-solid fa-gem"></i>
+            </div>
+            <div class="fw-chat-title-group">
+                <h4>Fashion Assistant</h4>
+                <div class="fw-chat-status-sub">
+                    <span class="status-dot"></span>
+                    <span>Style & Shopping Guide • Online</span>
+                </div>
+            </div>
+        </div>
+        <div class="fw-chat-header-actions">
+            <button type="button" id="fwChatClearBtn" class="fw-chat-header-btn" title="Reset Chat" aria-label="Reset Chat">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <button type="button" id="fwChatCloseBtn" class="fw-chat-header-btn close-btn" title="Close Chat" aria-label="Close Chat">
+                &times;
+            </button>
+        </div>
+    </div>
+
+    <!-- Body / Conversation Stream -->
+    <div id="fwChatBody" class="fw-chat-body">
+        <!-- Initial Welcome Card -->
+        <div class="fw-chat-msg-row bot-row fw-chat-initial-card">
+            <div class="fw-chat-msg-avatar">
+                <i class="fa-solid fa-gem"></i>
+            </div>
+            <div class="fw-chat-bubble">
+                <p style="margin: 0 0 6px 0; font-weight: 700; color: #111827;">Hi! 👋 Welcome to Fashion World Pro.</p>
+                <p style="margin: 0 0 10px 0; color: #475569; font-size: 0.83rem; line-height: 1.4;">How can I help you today? Ask me for outfits, track orders, check sizes, or explore collections:</p>
+                
+                <div class="fw-chat-chips-container">
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Men's shirts">👕 Men's Wear</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Women's wear">👗 Women's Wear</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Kids wear">👶 Kids Wear</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Flash sale">🔥 Flash Sale</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Find my size">📏 Find My Size</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="What is in my cart?">🛍️ My Cart</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="What is in my wishlist?">❤️ My Wishlist</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Track my order">📦 My Orders</button>
+                    <button type="button" class="fw-chat-chip fw-initial-chip" data-query="Contact support">🎧 Contact Support</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Typing Indicator Row -->
+        <div id="fwChatTypingRow" class="fw-chat-typing-row">
+            <div class="fw-chat-msg-avatar">
+                <i class="fa-solid fa-gem"></i>
+            </div>
+            <div class="fw-chat-typing-bubble">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer / Input Form -->
+    <div class="fw-chat-footer">
+        <form id="fwChatForm" class="fw-chat-input-form">
+            <input type="text" id="fwChatInput" class="fw-chat-input-field" placeholder="Ask for shirts, sizes, cart, orders..." autocomplete="off">
+            <button type="submit" class="fw-chat-send-btn" aria-label="Send Message" title="Send">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>

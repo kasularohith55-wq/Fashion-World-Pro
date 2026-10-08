@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Support & Concierge | Fashion World Pro{% endblock %}
+
+{% block content %}
+<style>
+    .support-page-container {
+        padding: 140px 8% 80px 8%;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: 80vh;
+    }
+
+    .support-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .support-title {
+        font-family: 'Lora', serif;
+        font-size: 2.5rem;
+        color: #0f172a;
+        margin-bottom: 12px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+    }
+
+    .support-subtitle {
+        color: #64748b;
+        font-size: 1.05rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .support-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    @media (max-width: 992px) {
+        .support-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .support-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 35px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-heading-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 25px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .card-heading-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        color: #c5a880;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .card-heading-text h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 4px 0;
+    }
+
+    .card-heading-text p {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .form-group-custom {
+        margin-bottom: 20px;
+    }
+
+    .form-group-custom label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 8px;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #0f172a;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #0f172a;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+    }
+
+    .form-row-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    @media (max-width: 576px) {
+        .form-row-two {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .btn-submit-support {
+        width: 100%;
+        padding: 14px 20px;
+        background: #0f172a;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+        margin-top: 10px;
+    }
+
+    .btn-submit-support:hover {
+        background: #1e293b;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2);
+    }
+
+    .ticket-card-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .ticket-card-item:hover {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .ticket-item-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .ticket-number-badge {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #0f172a;
+        background: #e2e8f0;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+
+    .ticket-status-pill {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .ticket-status-open {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .ticket-status-in-progress {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .ticket-status-resolved {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .ticket-status-closed {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .ticket-item-subject {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #0f172a;
+        margin: 0 0 6px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ticket-item-meta {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 0.8rem;
+        color: #64748b;
+        flex-wrap: wrap;
+    }
+
+    .ticket-reply-notice {
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: #f0fdf4;
+        border-left: 3px solid #22c55e;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: #166534;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .empty-tickets-box {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+    }
+
+    .empty-tickets-box i {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+</style>
+
+<div class="support-page-container">
+    <div class="support-header">
+        <h1 class="support-title">Customer Concierge & Support</h1>
+        <p class="support-subtitle">Need assistance with your order, payment, or product inquiries? Submit a ticket and our dedicated concierge team will respond promptly.</p>
+    </div>
+
+    <div class="support-grid">
+        <!-- Ticket Submission Form -->
+        <div class="support-card">
+            <div class="card-heading-box">
+                <div class="card-heading-icon">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <div class="card-heading-text">
+                    <h2>Submit a Support Request</h2>
+                    <p>Provide details about your query and our team will get in touch</p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('create_support_ticket') }}" method="POST">
+                <div class="form-row-two">
+                    <div class="form-group-custom">
+                        <label><i class="fa-regular fa-user"></i> Your Name</label>
+                        <input type="text" name="name" class="form-control-custom" 
+                               value="{{ (current_user.first_name ~ ' ' ~ current_user.last_name).strip() if current_user.first_name else current_user.username }}" 
+                               required>
+                    </div>
+                    <div class="form-group-custom">
+                        <label><i class="fa-regular fa-envelope"></i> Email Address</label>
+                        <input type="email" name="email" class="form-control-custom" 
+                               value="{{ current_user.email }}" 
+                               required>
+                    </div>
+                </div>
+
+                <div class="form-row-two">
+                    <div class="form-group-custom">
+                        <label><i class="fa-solid fa-list"></i> Issue Category</label>
+                        <select name="category" class="form-control-custom" required>
+                            <option value="Order & Delivery Inquiry">Order & Delivery Inquiry</option>
+                            <option value="Payment & Refund">Payment & Refund</option>
+                            <option value="Product Quality / Sizing">Product Quality / Sizing</option>
+                            <option value="Order Cancellation">Order Cancellation</option>
+                            <option value="Exchange Request">Exchange Request</option>
+                            <option value="Account & Security">Account & Security</option>
+                            <option value="General Inquiry">General Inquiry</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label><i class="fa-solid fa-box"></i> Related Order ID (Optional)</label>
+                        {% if user_orders %}
+                        <select name="order_id" class="form-control-custom">
+                            <option value="">-- No Specific Order --</option>
+                            {% for ord in user_orders %}
+                            <option value="FW-{{ ord.id }}" {% if prefilled_order_id in ['FW-' ~ ord.id, ord.id|string] %}selected{% endif %}>
+                                #FW-{{ ord.id }} (₹{{ "{:,.2f}".format(ord.total_price) }} - {{ ord.status }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" name="order_id" class="form-control-custom" 
+                               placeholder="e.g. FW-123 (Optional)" 
+                               value="{{ prefilled_order_id }}">
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label><i class="fa-solid fa-tag"></i> Subject / Summary</label>
+                    <input type="text" name="subject" class="form-control-custom" 
+                           placeholder="Brief summary of your query (e.g. Delivery status inquiry)" 
+                           required>
+                </div>
+
+                <div class="form-group-custom">
+                    <label><i class="fa-regular fa-message"></i> Detailed Message</label>
+                    <textarea name="message" class="form-control-custom" rows="5" 
+                              placeholder="Please provide complete details so we can assist you quickly..." 
+                              required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-support">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Support Request
+                </button>
+            </form>
+        </div>
+
+        <!-- Previous Support Tickets -->
+        <div class="support-card">
+            <div class="card-heading-box">
+                <div class="card-heading-icon" style="background: linear-gradient(135deg, #1e293b 0%, #475569 100%);">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="card-heading-text">
+                    <h2>My Support Tickets</h2>
+                    <p>Track progress and read responses from our concierge</p>
+                </div>
+            </div>
+
+            {% if my_tickets %}
+                <div class="tickets-list">
+                    {% for tkt in my_tickets %}
+                    <a href="{{ url_for('view_support_ticket', ticket_number=tkt.ticket_number) }}" class="ticket-card-item">
+                        <div class="ticket-item-top">
+                            <span class="ticket-number-badge">#{{ tkt.ticket_number }}</span>
+                            <span class="ticket-status-pill ticket-status-{{ tkt.status.lower().replace(' ', '-') }}">
+                                {% if tkt.status.lower() == 'resolved' %}
+                                <i class="fa-solid fa-circle-check"></i>
+                                {% elif tkt.status.lower() == 'in progress' %}
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                {% else %}
+                                <i class="fa-regular fa-clock"></i>
+                                {% endif %}
+                                {{ tkt.status }}
+                            </span>
+                        </div>
+                        <h4 class="ticket-item-subject">{{ tkt.subject }}</h4>
+                        <div class="ticket-item-meta">
+                            <span><i class="fa-solid fa-folder-open"></i> {{ tkt.category }}</span>
+                            {% if tkt.order_id %}
+                            <span><i class="fa-solid fa-bag-shopping"></i> {{ tkt.order_id }}</span>
+                            {% endif %}
+                            <span><i class="fa-regular fa-calendar"></i> {{ tkt.created_at.strftime('%d %b %Y') }}</span>
+                        </div>
+
+                        {% if tkt.admin_reply %}
+                        <div class="ticket-reply-notice">
+                            <i class="fa-solid fa-reply"></i> <strong>Admin Response Available</strong>
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-tickets-box">
+                    <i class="fa-solid fa-ticket-simple"></i>
+                    <p style="font-weight: 600; color: #64748b; margin-bottom: 5px;">No Previous Tickets Found</p>
+                    <p style="font-size: 0.85rem;">When you submit a support query, you can track its progress and replies here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

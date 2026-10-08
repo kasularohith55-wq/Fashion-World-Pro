@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block title %}Fashion World Pro | Luxury Apparel{% endblock %}
+
+{% block content %}
+<!-- ==========================================================================
+     1. CINEMATIC FASHION WORLD HERO BANNER
+     ========================================================================== -->
+<section class="main-hero-cinematic">
+    <!-- Subtle cinematic dark tint overlay for contrast and text clarity -->
+    <div class="hero-overlay-gradient"></div>
+
+    <!-- Carousel Nav Arrows -->
+    <button class="hero-slider-nav prev" id="heroPrevBtn" aria-label="Previous Slide">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <button class="hero-slider-nav next" id="heroNextBtn" aria-label="Next Slide">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+    <!-- Master Hero Centered Content -->
+    <div class="hero-cinematic-inner">
+        <div class="hero-center-content">
+            <span class="hero-small-welcome">PREMIUM FASHION FOR EVERY STORY</span>
+            <h1 class="hero-title-main">FASHION WORLD</h1>
+            <p class="hero-subtitle-serif">— Explore the Latest Trends for Men, Women &amp; Kids —</p>
+            <div class="hero-btn-group">
+                <a href="{{ url_for('products', category='Men') }}" class="btn-hero-luxury" title="Shop Men Collection">
+                    <span>SHOP MEN</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="{{ url_for('products', category='Women') }}" class="btn-hero-luxury" title="Explore Women Collection">
+                    <span>EXPLORE WOMEN</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carousel Indicator Dots (3 Dots) -->
+    <div class="hero-slider-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+    </div>
+</section>
+
+<!-- 2. Master Curated Collections Section (Trending Now / Our Collections) -->
+<section id="collections" class="collections-master-section">
+    <div class="collections-container">
+        <div class="collections-header-block">
+            <span class="collections-pretitle"><i class="fa-solid fa-sparkles"></i> TRENDING NOW</span>
+            <h2 class="collections-main-title">Our Collections</h2>
+            <p class="collections-desc">12 bespoke fashion categories crafted for distinction, effortless elegance, and modern living.</p>
+        </div>
+
+        <div class="collections-showcase-grid">
+            {% for col in collections_list %}
+            <a href="{{ url_for('products', collection=col.key) }}" class="collection-luxury-card" title="View {{ col.title }}">
+                <div class="collection-card-media">
+                    <img src="{{ col.image }}" alt="{{ col.title }}" loading="lazy">
+                    <span class="collection-tag-badge">{{ col.tag }}</span>
+                    <span class="collection-count-badge">{{ "{:,}".format(col.count) }} Styles</span>
+                </div>
+                <div class="collection-card-body">
+                    <h3 class="collection-card-title">{{ col.title }}</h3>
+                    <p class="collection-card-desc">{{ col.subtitle }}</p>
+                    <div class="collection-card-footer">
+                        <span>Explore Collection</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================================================
+     3. FLASH SALE COUNTDOWN (PREMIUM LIMITED TIME PROMOTION)
+     ========================================================================== -->
+<section id="flash-sale" class="flash-sale-countdown-section">
+    <div class="flash-sale-container">
+        <!-- Left: Brand Promo Info -->
+        <div class="flash-sale-info-block">
+            <div class="flash-sale-badge">
+                <span class="flash-sale-fire-icon">🔥</span>
+                <span class="flash-sale-badge-text">FLASH SALE</span>
+            </div>
+            <h2 class="flash-sale-title">UP TO 40% OFF</h2>
+            <p class="flash-sale-subtitle">Limited Time Offer</p>
+        </div>
+
+        <!-- Center: Fixed Expiry Countdown Clock -->
+        <div class="flash-sale-timer-block">
+            <span class="flash-sale-ends-label">ENDS IN</span>
+            <div class="flash-sale-clock" id="flashSaleTimer">
+                <div class="flash-time-box">
+                    <span class="time-digit" id="flashSaleDays">00</span>
+                    <span class="time-unit">Days</span>
+                </div>
+                <span class="time-separator">:</span>
+                <div class="flash-time-box">
+                    <span class="time-digit" id="flashSaleHours">00</span>
+                    <span class="time-unit">Hours</span>
+                </div>
+                <span class="time-separator">:</span>
+                <div class="flash-time-box">
+                    <span class="time-digit" id="flashSaleMinutes">00</span>
+                    <span class="time-unit">Minutes</span>
+                </div>
+                <span class="time-separator">:</span>
+                <div class="flash-time-box">
+                    <span class="time-digit" id="flashSaleSeconds">00</span>
+                    <span class="time-unit">Seconds</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Action CTA -->
+        <div class="flash-sale-cta-block">
+            <a href="#specials" class="btn-flash-sale-cta" title="Shop Flash Deals">
+                <span>Shop Deals</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Special Offers Section -->
+<section id="specials" class="products-section" style="background: #fffcf9; border-bottom: 2px solid #fdf2e9;">
+    <div class="section-header" style="text-align: center;">
+        <span style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; color: #e74c3c; font-weight: 800;">Exclusive</span>
+        <h2 style="margin-top: 10px; color: #121212;">Limited Time Offers</h2>
+        <p style="color: #666; font-weight: 300; margin-top: 10px;">Premium pieces at exceptional value. Limited stock available.</p>
+    </div>
+    <div class="product-grid">
+        {% for product in specials %}
+        <div class="product-card">
+            <div class="product-image">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                <span class="sale-badge">SALE</span>
+                <div class="add-to-cart-overlay">
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                </div>
+            </div>
+            <div class="product-info">
+                <h3>{{ product.name }}</h3>
+                <p class="price">
+                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left: 10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align: center; margin-top: 50px;">
+        <a href="{{ url_for('specials') }}" class="btn btn-dark" style="padding: 12px 30px; font-size: 0.8rem;">View All Offers</a>
+    </div>
+</section>
+
+<!-- Women's Collection -->
+<section id="womens" class="products-section">
+    <div class="section-header">
+        <span style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; color: var(--accent-color);">Curated</span>
+        <h2 style="margin-top: 10px;">Women's Collection</h2>
+    </div>
+    <div class="product-grid">
+        {% for product in womens %}
+        <div class="product-card">
+            <div class="product-image">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                {% if product.discount_price %}
+                <span class="sale-badge">SALE</span>
+                {% endif %}
+                <div class="add-to-cart-overlay">
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                </div>
+            </div>
+            <div class="product-info">
+                <h3>{{ product.name }}</h3>
+                <p class="price">
+                    {% if product.discount_price %}
+                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                    {% else %}
+                    ₹{{ "{:,.2f}".format(product.price) }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Men's Collection -->
+<section id="mens" class="products-section" style="background: #fafafa;">
+    <div class="section-header">
+        <span style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; color: var(--accent-color);">Essential</span>
+        <h2 style="margin-top: 10px;">Men's Essentials</h2>
+    </div>
+    <div class="product-grid">
+        {% for product in mens %}
+        <div class="product-card">
+            <div class="product-image">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                {% if product.discount_price %}
+                <span class="sale-badge">SALE</span>
+                {% endif %}
+                <div class="add-to-cart-overlay">
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                </div>
+            </div>
+            <div class="product-info">
+                <h3>{{ product.name }}</h3>
+                <p class="price">
+                    {% if product.discount_price %}
+                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                    {% else %}
+                    ₹{{ "{:,.2f}".format(product.price) }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Budget Collections Section (Under 500) -->
+<section id="budget-collections" class="products-section" style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); padding: 100px 0;">
+    <div class="product_grid_container" style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
+        <div class="section-header" style="text-align: center; margin-bottom: 60px;">
+            <span style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; color: #d35400; font-weight: 700;">Unbeatable Value</span>
+            <h2 style="margin-top: 10px; color: #2c3e50;">Collections Under ₹500</h2>
+            <p style="color: #7f8c8d; font-weight: 300;">Discover our vast selection of high-quality essentials starting from ₹99.</p>
+        </div>
+
+        <!-- Men's Under 500 Sub-section -->
+        <div style="margin-bottom: 80px;">
+            <h3 style="font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 1.1rem; border-left: 4px solid #d35400; padding-left: 15px; margin-bottom: 30px;">Men's Budget Finds</h3>
+            <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
+                {% for product in mens_under_500 %}
+                <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <div class="product-image" style="position: relative; height: 300px; overflow: hidden;">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span class="sale-badge" style="background: #27ae60; position: absolute; top: 15px; left: 15px; padding: 5px 12px; font-size: 0.7rem; color: white; border-radius: 4px; font-weight: bold;">JUST ₹{{ "{:,.0f}".format(product.discount_price if product.discount_price else product.price) }}</span>
+                        <div class="add-to-cart-overlay">
+                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                        </div>
+                    </div>
+                    <div class="product-info" style="padding: 20px; text-align: center;">
+                        <h3 style="font-weight: 600; font-size: 1rem; margin-bottom: 10px; color: #333;">{{ product.name }}</h3>
+                        <p class="price" style="margin: 0;">
+                            {% if product.discount_price %}
+                            <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            <span class="discount-price" style="color: #27ae60; font-weight: 700; margin-left: 10px; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
+                            {% else %}
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Women's Under 500 Sub-section -->
+        <div>
+            <h3 style="font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 1.1rem; border-left: 4px solid #d35400; padding-left: 15px; margin-bottom: 30px;">Women's Budget Finds</h3>
+            <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
+                {% for product in womens_under_500 %}
+                <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <div class="product-image" style="position: relative; height: 300px; overflow: hidden;">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span class="sale-badge" style="background: #27ae60; position: absolute; top: 15px; left: 15px; padding: 5px 12px; font-size: 0.7rem; color: white; border-radius: 4px; font-weight: bold;">JUST ₹{{ "{:,.0f}".format(product.discount_price if product.discount_price else product.price) }}</span>
+                        <div class="add-to-cart-overlay">
+                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                        </div>
+                    </div>
+                    <div class="product-info" style="padding: 20px; text-align: center;">
+                        <h3 style="font-weight: 600; font-size: 1rem; margin-bottom: 10px; color: #333;">{{ product.name }}</h3>
+                        <p class="price" style="margin: 0;">
+                            {% if product.discount_price %}
+                            <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            <span class="discount-price" style="color: #27ae60; font-weight: 700; margin-left: 10px; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
+                            {% else %}
+                            <span style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 60px;">
+            <a href="{{ url_for('products') }}" class="btn btn-dark" style="padding: 15px 40px; font-size: 1rem;">View All Budget Finds</a>
+        </div>
+    </div>
+</section>
+
+<!-- Women's Core Collection (Bottom) -->
+<section id="womens-core" class="products-section" style="background: #fff; padding: 100px 0;">
+    <div class="product_grid_container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <div class="section-header" style="text-align: center; margin-bottom: 50px;">
+            <span style="text-transform: uppercase; font-size: 0.8rem; letter-spacing: 3px; color: var(--accent-color);">Premium Selection</span>
+            <h2 style="margin-top: 10px;">Women's Essentials</h2>
+        </div>
+        <div class="product-grid">
+            {% for product in womens %}
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                    {% if product.discount_price %}
+                    <span class="sale-badge">SALE</span>
+                    {% endif %}
+                    <div class="add-to-cart-overlay">
+                        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">
+                        {% if product.discount_price %}
+                        <span class="original-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                        <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
+                        {% else %}
+                        ₹{{ "{:,.0f}".format(product.price) }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dots = document.querySelectorAll('.hero-slider-dots .dot');
+        const prevBtn = document.getElementById('heroPrevBtn');
+        const nextBtn = document.getElementById('heroNextBtn');
+        let currentIdx = 0;
+
+        function updateDots(idx) {
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === idx);
+            });
+        }
+
+        if (dots.length > 0) {
+            dots.forEach((dot, idx) => {
+                dot.addEventListener('click', () => {
+                    currentIdx = idx;
+                    updateDots(currentIdx);
+                });
+            });
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    currentIdx = (currentIdx - 1 + dots.length) % dots.length;
+                    updateDots(currentIdx);
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    currentIdx = (currentIdx + 1) % dots.length;
+                    updateDots(currentIdx);
+                });
+            }
+        }
+
+        // ======================================================================
+        // Flash Sale Fixed-Timestamp Countdown
+        // ======================================================================
+        (function initFlashSaleCountdown() {
+            // Configurable Fixed Expiry Timestamp (ISO 8601 with project timezone +05:30)
+            const FLASH_SALE_END = "2026-10-06T23:59:59+05:30";
+            const targetTimestamp = new Date(FLASH_SALE_END).getTime();
+
+            const dEl = document.getElementById('flashSaleDays');
+            const hEl = document.getElementById('flashSaleHours');
+            const mEl = document.getElementById('flashSaleMinutes');
+            const sEl = document.getElementById('flashSaleSeconds');
+            const timerContainer = document.getElementById('flashSaleTimer');
+
+            if (!dEl || !hEl || !mEl || !sEl || !timerContainer) return;
+
+            function pad(n) {
+                return String(Math.max(0, n)).padStart(2, '0');
+            }
+
+            let countdownInterval = null;
+
+            function update() {
+                const now = Date.now();
+                const remainingMs = targetTimestamp - now;
+
+                if (remainingMs <= 0) {
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                    }
+                    timerContainer.innerHTML = '<div class="flash-sale-ended-badge" style="padding: 10px 24px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #ff6b5b; border-radius: 6px; font-weight: 800; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;">SALE ENDED</div>';
+                    return;
+                }
+
+                const totalSeconds = Math.floor(remainingMs / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                dEl.textContent = pad(days);
+                hEl.textContent = pad(hours);
+                mEl.textContent = pad(minutes);
+                sEl.textContent = pad(seconds);
+            }
+
+            update();
+            countdownInterval = setInterval(update, 1000);
+        })();
+    });
+</script>
+{% endblock %}

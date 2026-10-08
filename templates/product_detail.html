@@ -1,0 +1,1920 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} | Fashion World Pro{% endblock %}
+
+{% block content %}
+<style>
+/* ==========================================================================
+   FASHION WORLD PRO - LUXURY PRODUCT DETAIL PAGE STYLING
+   ========================================================================== */
+.luxury-product-detail-section {
+    padding: 130px 8% 60px;
+    background: #faf8f5;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1a1a1a;
+}
+
+.luxury-product-container {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+/* --- Left Column: Gallery --- */
+.luxury-gallery-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid #ece5da;
+    box-shadow: 0 16px 45px rgba(28, 24, 19, 0.05);
+    position: sticky;
+    top: 100px;
+}
+
+.product-gallery-viewport {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #fbf9f6;
+    border: 1px solid #f0eae1;
+    touch-action: pan-y;
+    outline: none;
+    cursor: grab;
+}
+
+.product-gallery-viewport:focus-visible {
+    box-shadow: 0 0 0 2px #bfa15f;
+}
+
+.product-gallery-viewport.is-dragging {
+    cursor: grabbing;
+}
+
+.product-gallery-track {
+    display: flex;
+    width: 100%;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
+}
+
+.product-gallery-track.no-transition {
+    transition: none !important;
+}
+
+.product-gallery-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.gallery-image-frame {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fbf9f6;
+    min-height: 520px;
+    overflow: hidden;
+}
+
+.gallery-slide-img {
+    width: 100%;
+    height: auto;
+    max-height: 620px;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.gallery-image-frame:hover .gallery-slide-img {
+    transform: scale(1.035);
+}
+
+/* Gallery Navigation Arrows */
+.gallery-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    border: 1px solid #e8dfcf;
+    color: #1c1813;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 3;
+}
+
+.gallery-nav-btn:hover {
+    background: #1c1813;
+    color: #f7e6b5;
+    border-color: #bfa15f;
+    transform: translateY(-50%) scale(1.08);
+}
+
+.gallery-nav-btn.prev-btn { left: 16px; }
+.gallery-nav-btn.next-btn { right: 16px; }
+
+.gallery-nav-btn:disabled,
+.gallery-nav-btn.is-disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Gallery Thumbnails & Dots Bar */
+.gallery-controls-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.gallery-thumbnails-strip {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.gallery-thumb-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    background: #ffffff;
+    border: 2px solid #e8dfcf;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.gallery-thumb-item .thumb-mini-img {
+    width: 48px;
+    height: 58px;
+    object-fit: cover;
+    border-radius: 5px;
+    display: block;
+    background: #fbf9f6;
+}
+
+.gallery-thumb-item:hover {
+    border-color: #bfa15f;
+    transform: translateY(-2px);
+}
+
+.gallery-thumb-item.active {
+    border-color: #9c7a2b;
+    box-shadow: 0 4px 14px rgba(156, 122, 43, 0.25);
+    transform: translateY(-2px);
+}
+
+.gallery-dots-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gallery-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: #d8cebe;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.gallery-dot:hover {
+    background: #9c7a2b;
+}
+
+.gallery-dot.active {
+    width: 26px;
+    background: #1c1813;
+    border-radius: 4px;
+}
+
+/* --- Right Column: Product Information --- */
+.luxury-info-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.luxury-category-eyebrow {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #9c7a2b;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.luxury-product-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2.35rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #14171c;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.5px;
+}
+
+/* Price Row & Review Badge */
+.luxury-price-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.luxury-current-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #14171c;
+}
+
+.luxury-original-price {
+    font-size: 1.3rem;
+    color: #8c8c8c;
+    text-decoration: line-through;
+    font-weight: 400;
+}
+
+.luxury-save-pill {
+    background: #fdf5ea;
+    border: 1px solid #ebd9c2;
+    color: #9c7a2b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.luxury-rating-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #ffffff;
+    border: 1px solid #ede5d8;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #444;
+    margin-bottom: 24px;
+    width: fit-content;
+}
+
+.luxury-rating-stars {
+    color: #bfa15f;
+    font-size: 0.85rem;
+}
+
+/* Description Card */
+.luxury-desc-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #ece5da;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    margin-bottom: 24px;
+}
+
+.luxury-desc-text {
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: #4a4a4a;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* Highlights Grid */
+.luxury-highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.luxury-highlight-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #ede5d8;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.luxury-highlight-item i {
+    color: #9c7a2b;
+    font-size: 0.9rem;
+}
+
+/* Size Selection Card */
+.luxury-size-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px 24px;
+    border: 1px solid #ece5da;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    margin-bottom: 26px;
+}
+
+.size-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.size-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.size-heading-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #1c1813;
+    margin: 0;
+}
+
+.find-size-btn {
+    background: none;
+    border: none;
+    color: #9c7a2b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+}
+
+.tryon-luxury-btn {
+    background: #fbf7ee;
+    border: 1px solid #bfa15f;
+    color: #8a6416;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 4px 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(191, 161, 95, 0.15);
+}
+
+.tryon-luxury-btn:hover {
+    background: #9c7a2b;
+    color: #ffffff;
+    border-color: #9c7a2b;
+    transform: translateY(-1px);
+}
+
+.selected-size-text {
+    font-size: 0.82rem;
+    color: #888;
+    font-weight: 400;
+}
+
+.size-buttons-flex {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.size-btn {
+    min-width: 52px;
+    height: 52px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1.5px solid #dcd4c7;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #2b2b2b;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.size-btn:hover {
+    border-color: #9c7a2b;
+    background: #fdfaf6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(156, 122, 43, 0.12);
+}
+
+.size-btn.active {
+    background: #14171c !important;
+    color: #ffffff !important;
+    border-color: #14171c !important;
+    box-shadow: 0 0 0 2px #bfa15f, 0 6px 16px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+}
+
+.size-alert-msg {
+    display: none;
+    color: #c0392b;
+    font-size: 0.85rem;
+    margin-top: 12px;
+    font-weight: 600;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Purchase Actions Row */
+.luxury-actions-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.action-btn-cart {
+    flex: 2;
+    min-width: 200px;
+    height: 54px;
+    padding: 0 24px;
+    background: linear-gradient(135deg, #a88434 0%, #8b6b21 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(156, 122, 43, 0.28);
+    transition: all 0.25s ease;
+}
+
+.action-btn-cart:hover {
+    background: linear-gradient(135deg, #9c7a2b 0%, #7d601b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(156, 122, 43, 0.38);
+}
+
+.action-btn-buy {
+    flex: 1.4;
+    min-width: 150px;
+    height: 54px;
+    padding: 0 20px;
+    background: #14171c;
+    color: #ffffff;
+    border: 1px solid #14171c;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    transition: all 0.25s ease;
+}
+
+.action-btn-buy:hover {
+    background: #2b303c;
+    border-color: #2b303c;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+.action-btn-wishlist {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1.5px solid #dcd4c7;
+    color: #2b2b2b;
+    font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.action-btn-wishlist:hover {
+    border-color: #e74c3c;
+    color: #e74c3c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.15);
+}
+
+.action-btn-wishlist.in-wishlist,
+.action-btn-wishlist.active {
+    background: #fff5f5;
+    border-color: #e74c3c;
+    color: #e74c3c;
+}
+
+/* Trust Card */
+.luxury-trust-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #ede5d8;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.trust-item i {
+    color: #9c7a2b;
+    font-size: 0.95rem;
+}
+
+/* --- Responsive Breakpoints --- */
+@media (max-width: 1080px) {
+    .luxury-product-container {
+        gap: 40px;
+    }
+    .luxury-product-title {
+        font-size: 2rem;
+    }
+    .gallery-image-frame {
+        min-height: 440px;
+    }
+}
+
+@media (max-width: 860px) {
+    .luxury-product-detail-section {
+        padding: 110px 5% 40px;
+    }
+    .luxury-product-container {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+    .luxury-gallery-card {
+        position: static;
+        padding: 16px;
+    }
+    .gallery-image-frame {
+        min-height: 360px;
+    }
+    .luxury-product-title {
+        font-size: 1.75rem;
+    }
+    .luxury-highlights-grid {
+        grid-template-columns: 1fr;
+    }
+    .luxury-actions-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .action-btn-wishlist {
+        width: 100%;
+        height: 50px;
+    }
+}
+</style>
+
+<section class="luxury-product-detail-section">
+    <div class="luxury-product-container">
+        
+        <!-- ======================================================================
+             LEFT COLUMN: PRODUCT GALLERY
+             ====================================================================== -->
+        <div class="luxury-gallery-card" id="productGallery">
+            <div class="product-gallery-viewport" id="galleryViewport" tabindex="0" aria-label="{{ product.name }} image gallery. Use arrow keys or swipe horizontally to change images.">
+                <div class="product-gallery-track" id="galleryTrack">
+                    {% for img_url in product.gallery_images %}
+                    <div class="product-gallery-slide" data-index="{{ loop.index0 }}">
+                        <div class="gallery-image-frame">
+                            <img src="{{ img_url }}" alt="{{ product.name }} - Image {{ loop.index }}" class="gallery-slide-img" loading="{% if loop.first %}eager{% else %}lazy{% endif %}" draggable="false">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if product.gallery_images|length > 1 %}
+                <!-- Carousel Navigation Arrows -->
+                <button type="button" class="gallery-nav-btn prev-btn" id="galleryPrevBtn" aria-label="Previous image" title="Previous Image">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button type="button" class="gallery-nav-btn next-btn" id="galleryNextBtn" aria-label="Next image" title="Next Image">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                {% endif %}
+            </div>
+
+            {% if product.gallery_images|length > 1 %}
+            <!-- Carousel Thumbnails & Dots Bar -->
+            <div class="gallery-controls-bar">
+                <div class="gallery-thumbnails-strip" id="galleryThumbnailsStrip">
+                    {% for img_url in product.gallery_images %}
+                    <button type="button" class="gallery-thumb-item {% if loop.first %}active{% endif %}" data-target-index="{{ loop.index0 }}" aria-label="View image {{ loop.index }}">
+                        <img src="{{ img_url }}" alt="Thumbnail {{ loop.index }}" class="thumb-mini-img" draggable="false">
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <div class="gallery-dots-indicator" id="galleryDots">
+                    {% for img_url in product.gallery_images %}
+                    <button type="button" class="gallery-dot {% if loop.first %}active{% endif %}" data-target-index="{{ loop.index0 }}" aria-label="Go to image {{ loop.index }}"></button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ======================================================================
+             RIGHT COLUMN: PRODUCT INFORMATION PANEL
+             ====================================================================== -->
+        <div class="luxury-info-panel">
+            <!-- 1. Category Eyebrow -->
+            <div class="luxury-category-eyebrow">{{ product.category }}</div>
+            
+            <!-- 2. Product Title -->
+            <h1 class="luxury-product-title">{{ product.name }}</h1>
+            
+            <!-- 3. Price & Discount -->
+            <div class="luxury-price-row">
+                <span class="luxury-current-price">
+                    ₹{{ "{:,.2f}".format(product.discount_price if product.discount_price else product.price) }}
+                </span>
+                {% if product.discount_price %}
+                <span class="luxury-original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                <span class="luxury-save-pill">SAVE ₹{{ "{:,.2f}".format(product.price - product.discount_price) }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Review Rating Summary (if available) -->
+            {% if product.reviews %}
+                {% set avg_rating = (product.reviews|sum(attribute='rating') / product.reviews|length)|round(1) %}
+                <div class="luxury-rating-summary">
+                    <div class="luxury-rating-stars">
+                        {% for i in range(avg_rating|int) %}<i class="fa fa-star"></i>{% endfor %}
+                        {% if avg_rating % 1 >= 0.5 %}<i class="fa fa-star-half-alt"></i>{% endif %}
+                        {% for i in range(5 - avg_rating|round(0, 'ceil')|int) %}<i class="far fa-star"></i>{% endfor %}
+                    </div>
+                    <span><strong>{{ avg_rating }}</strong> ({{ product.reviews|length }} Verified Review{{ 's' if product.reviews|length != 1 else '' }})</span>
+                </div>
+            {% endif %}
+
+            <!-- 4. Description -->
+            <div class="luxury-desc-card">
+                <p class="luxury-desc-text">{{ product.description }}</p>
+            </div>
+
+            <!-- 5. Product Highlights -->
+            <div class="luxury-highlights-grid">
+                <div class="luxury-highlight-item">
+                    <i class="fa-solid fa-award"></i>
+                    <span>100% Authentic Quality</span>
+                </div>
+                <div class="luxury-highlight-item">
+                    <i class="fa-solid fa-gem"></i>
+                    <span>Tailored Luxury Craft</span>
+                </div>
+                <div class="luxury-highlight-item">
+                    <i class="fa-solid fa-leaf"></i>
+                    <span>Sustainable Sourcing</span>
+                </div>
+                <div class="luxury-highlight-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Guaranteed Durability</span>
+                </div>
+            </div>
+
+            <!-- 6. Size Selection -->
+            <div class="luxury-size-card">
+                <div class="size-header-bar">
+                    <div class="size-title-group">
+                        <p class="size-heading-label">Size Selection</p>
+                        <button type="button" id="openSizeFinderBtn" class="find-size-btn" title="Find your recommended fit">
+                            <i class="fa-solid fa-ruler-combined"></i> Find My Size
+                        </button>
+                        <a href="{{ url_for('virtual_tryon', product_id=product.id) }}" id="tryItOnBtn" class="tryon-luxury-btn" title="Preview this outfit on your photo">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ TRY IT ON
+                        </a>
+                    </div>
+                    <span id="selectedSizeLabel" class="selected-size-text">Select a size</span>
+                </div>
+
+                <input type="hidden" id="selectedSizeInput" name="size" value="">
+
+                <div class="size-buttons-flex">
+                    {% if product.size and ',' in product.size %}
+                        {% for s in product.size.split(',') %}
+                            {% set s_clean = s.strip() %}
+                            <button type="button" class="size-btn" data-size="{{ s_clean }}">{{ s_clean }}</button>
+                        {% endfor %}
+                    {% else %}
+                        {% for s in ['S', 'M', 'L', 'XL'] %}
+                            <button type="button" class="size-btn" data-size="{{ s }}">{{ s }}</button>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div id="sizeAlertMessage" class="size-alert-msg">
+                    <i class="fa fa-exclamation-circle"></i> Please select a size.
+                </div>
+            </div>
+
+            <!-- 7. Purchase Actions -->
+            <div class="luxury-actions-row">
+                <button type="button" id="addToBagBtn" class="action-btn-cart">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span>Add to Cart</span>
+                </button>
+                <button type="button" id="buyNowBtn" class="action-btn-buy">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Buy Now</span>
+                </button>
+                <button type="button" id="wishlistToggleBtn" 
+                    class="action-btn-wishlist wishlist-toggle-btn {% if in_wishlist %}in-wishlist active{% endif %}" 
+                    data-product-id="{{ product.id }}" 
+                    data-in-wishlist="{{ 'true' if in_wishlist else 'false' }}"
+                    data-toggle-url="{{ url_for('toggle_wishlist', product_id=product.id) }}"
+                    title="{% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}"
+                    aria-label="{% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                    <i class="{% if in_wishlist %}fa-solid fa-heart{% else %}fa-regular fa-heart{% endif %}" id="wishlistIcon" style="color: {% if in_wishlist %}#e74c3c{% else %}inherit{% endif %};"></i>
+                </button>
+            </div>
+
+            <!-- 8. Shipping & Trust Card -->
+            <div class="luxury-trust-card">
+                <div class="trust-item">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <span>Free standard shipping</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                    <span>30-day hassle-free returns</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>100% secure checkout</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================================================================
+     SMART SIZE RECOMMENDATION MODAL
+     ====================================================================== -->
+<div id="sizeRecommendationModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 99999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+    <div class="size-modal-card" style="background: #ffffff; border-radius: 18px; width: 100%; max-width: 440px; box-sizing: border-box; box-shadow: 0 24px 60px rgba(0,0,0,0.25); border: 1px solid #ebd9c2; overflow: hidden; position: relative;">
+        <!-- Modal Header -->
+        <div style="padding: 24px 28px 18px; border-bottom: 1px solid #f0eae1; display: flex; justify-content: space-between; align-items: flex-start; background: #faf8f5;">
+            <div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1c1813; margin: 0; font-family: 'Playfair Display', serif;">Find Your Size</h3>
+                <p style="font-size: 0.8rem; color: #888; margin: 4px 0 0; font-weight: 400;">Get your recommended fit based on your measurements</p>
+            </div>
+            <button type="button" id="closeSizeModalBtn" style="background: none; border: none; font-size: 1.6rem; line-height: 1; color: #999; cursor: pointer; padding: 0 0 0 10px;" aria-label="Close Modal">&times;</button>
+        </div>
+
+        <!-- Modal Body: Form View -->
+        <div id="sizeModalFormView" style="padding: 24px 28px;">
+            <div style="margin-bottom: 18px;">
+                <label for="smartHeightInput" style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #333; margin-bottom: 8px;">Height (cm)</label>
+                <div style="position: relative;">
+                    <input type="number" id="smartHeightInput" min="100" max="240" placeholder="e.g. 175" style="width: 100%; padding: 12px 40px 12px 14px; border: 1.5px solid #dcd4c7; border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; box-sizing: border-box;">
+                    <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #999; font-weight: 600;">cm</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="smartWeightInput" style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #333; margin-bottom: 8px;">Weight (kg)</label>
+                <div style="position: relative;">
+                    <input type="number" id="smartWeightInput" min="30" max="200" placeholder="e.g. 70" style="width: 100%; padding: 12px 40px 12px 14px; border: 1.5px solid #dcd4c7; border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; box-sizing: border-box;">
+                    <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #999; font-weight: 600;">kg</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 24px;">
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #333; margin-bottom: 10px;">Fit Preference</label>
+                <div class="fit-options-group" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <button type="button" class="fit-pref-btn" data-fit="slim" style="padding: 10px 4px; border: 1.5px solid #dcd4c7; background: #fff; border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: #444; cursor: pointer; text-align: center; transition: all 0.2s ease;">Slim</button>
+                    <button type="button" class="fit-pref-btn active" data-fit="regular" style="padding: 10px 4px; border: 1.5px solid #1c1813; background: #1c1813; color: #fff; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.2s ease;">Regular</button>
+                    <button type="button" class="fit-pref-btn" data-fit="relaxed" style="padding: 10px 4px; border: 1.5px solid #dcd4c7; background: #fff; border-radius: 8px; font-size: 0.82rem; font-weight: 600; color: #444; cursor: pointer; text-align: center; transition: all 0.2s ease;">Relaxed</button>
+                </div>
+            </div>
+
+            <div id="sizeModalAlert" style="display: none; padding: 10px 14px; background: #fdf2f2; border: 1px solid #f8d7da; border-radius: 8px; color: #c0392b; font-size: 0.82rem; font-weight: 600; margin-bottom: 18px; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="sizeModalAlertText">Please enter realistic height and weight values.</span>
+            </div>
+
+            <button type="button" id="calculateSizeBtn" style="width: 100%; padding: 15px; background: #1c1813; color: #ffffff; border: 1px solid #1c1813; border-radius: 10px; font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;">Recommend My Size</button>
+        </div>
+
+        <!-- Modal Body: Result View -->
+        <div id="sizeModalResultView" style="display: none; padding: 32px 28px; text-align: center;">
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #9c7a2b;">Your Recommended Size</span>
+            <div style="margin: 16px auto; width: 84px; height: 84px; background: #faf7f2; border: 2.5px solid #bfa15f; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(191, 161, 95, 0.25);">
+                <span id="recommendedSizeBadge" style="font-size: 2.3rem; font-weight: 800; color: #1c1813; line-height: 1;">M</span>
+                <span style="color: #27ae60; font-size: 1.2rem; margin-left: 2px; font-weight: bold;">✓</span>
+            </div>
+            <p style="font-size: 0.85rem; color: #666; margin: 0 0 24px;">Based on your biometric inputs & fit preference.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" id="useRecommendedSizeBtn" style="width: 100%; padding: 14px; background: #9c7a2b; color: #ffffff; border: 1px solid #9c7a2b; border-radius: 10px; font-size: 0.85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s ease;">Use M</button>
+                <button type="button" id="recalculateSizeBtn" style="background: none; border: none; font-size: 0.8rem; color: #888; text-decoration: underline; cursor: pointer; padding: 6px;">Recalculate Measurements</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================================
+     REVIEWS SECTION (CUSTOMER INSIGHTS)
+     ====================================================================== -->
+<style>
+.customer-insights-section {
+    padding: 80px 8%;
+    background: #fbf9f5;
+    border-top: 1px solid #f0eae1;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.insights-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.insights-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+.insights-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #9c7a2b;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.insights-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 14px 0;
+    letter-spacing: -0.5px;
+}
+.insights-subtitle {
+    font-size: 0.95rem;
+    color: #6c757d;
+    max-width: 580px;
+    margin: 0 auto;
+    line-height: 1.6;
+    font-weight: 300;
+}
+.insights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    align-items: stretch;
+}
+.insights-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 36px 32px;
+    border: 1px solid #ece5da;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+}
+.card-header-flex {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 26px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f3ede4;
+}
+.card-icon-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #f7f1e6;
+    color: #9c7a2b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.card-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 4px 0;
+}
+.card-subtitle {
+    font-size: 0.85rem;
+    color: #7a7a7a;
+    margin: 0;
+    font-weight: 300;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #4a4a4a;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.star-hint {
+    color: #bfa15f;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+.review-select {
+    width: 100%;
+    border: 1.5px solid #e5dcce;
+    padding: 13px 40px 13px 16px;
+    border-radius: 12px;
+    background: #ffffff;
+    font-size: 0.9rem;
+    color: #2b2b2b;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.review-select:focus {
+    border-color: #9c7a2b;
+    box-shadow: 0 0 0 3px rgba(156, 122, 43, 0.12);
+}
+.select-arrow {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #9c7a2b;
+    font-size: 0.8rem;
+}
+.review-textarea {
+    width: 100%;
+    border: 1.5px solid #e5dcce;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #ffffff;
+    min-height: 120px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #2b2b2b;
+    outline: none;
+    transition: all 0.2s ease;
+    resize: vertical;
+}
+.review-textarea:focus {
+    border-color: #9c7a2b;
+    box-shadow: 0 0 0 3px rgba(156, 122, 43, 0.12);
+}
+.review-textarea::placeholder {
+    color: #a0a0a0;
+    font-weight: 300;
+}
+.review-submit-btn {
+    width: 100%;
+    padding: 15px 24px;
+    background: linear-gradient(135deg, #9c7a2b 0%, #7d601b 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 18px rgba(156, 122, 43, 0.25);
+    transition: all 0.25s ease;
+    margin-top: 6px;
+}
+.review-submit-btn:hover {
+    background: linear-gradient(135deg, #8b6b21 0%, #6d5214 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(156, 122, 43, 0.35);
+}
+.auth-prompt-card {
+    text-align: center;
+    padding: 30px 20px;
+    background: #faf7f2;
+    border-radius: 14px;
+    border: 1px solid #efe6d8;
+}
+.auth-prompt-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f0e6d6;
+    color: #9c7a2b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+    font-size: 1.1rem;
+}
+.auth-prompt-text {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.auth-login-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #9c7a2b;
+    color: #ffffff;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.auth-login-link:hover {
+    background: #7d601b;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+.reviews-card {
+    min-height: 100%;
+}
+.reviews-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f3ede4;
+}
+.reviews-count-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+.reviews-avg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fbf7ee;
+    border: 1px solid #e8dfcf;
+    color: #8a6416;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+.reviews-scroll-list {
+    max-height: 440px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+.review-item {
+    padding-bottom: 22px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid #f2ebe1;
+}
+.review-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.review-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.reviewer-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.reviewer-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #f3ede2;
+    color: #9c7a2b;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+.reviewer-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 2px 0;
+}
+.verified-badge {
+    font-size: 0.72rem;
+    color: #198754;
+    font-weight: 600;
+}
+.review-stars {
+    color: #bfa15f;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+.review-comment-body {
+    color: #555;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    margin: 0;
+    font-weight: 300;
+}
+.empty-reviews-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    border: 1.5px dashed #dfd5c4;
+    border-radius: 16px;
+    background: #fcfaf6;
+    min-height: 300px;
+}
+.empty-icon-circle {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #f5ede0;
+    color: #9c7a2b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 14px rgba(156, 122, 43, 0.1);
+}
+.empty-heading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+}
+.empty-subtext {
+    color: #777;
+    font-size: 0.92rem;
+    max-width: 320px;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+    font-weight: 300;
+}
+.empty-decorative-bar {
+    width: 40px;
+    height: 2px;
+    background: #dcd0bf;
+    border-radius: 2px;
+}
+@media (max-width: 900px) {
+    .customer-insights-section {
+        padding: 60px 5%;
+    }
+    .insights-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+    .insights-title {
+        font-size: 1.8rem;
+    }
+    .insights-card {
+        padding: 28px 20px;
+    }
+}
+</style>
+
+<section class="customer-insights-section">
+    <div class="insights-container">
+        <!-- 1. SECTION HEADER -->
+        <div class="insights-header">
+            <span class="insights-eyebrow">CUSTOMER INSIGHTS</span>
+            <h2 class="insights-title">Share Your Experience</h2>
+            <p class="insights-subtitle">Your feedback helps other customers make better choices and helps us improve our products and services.</p>
+        </div>
+        
+        <!-- 2. TWO-COLUMN LAYOUT -->
+        <div class="insights-grid">
+            <!-- Left Column: Review Form Card -->
+            <div class="insights-card form-card">
+                <div class="card-header-flex">
+                    <div class="card-icon-badge">
+                        <i class="fa fa-pen-nib"></i>
+                    </div>
+                    <div>
+                        <h3 class="card-title">Write a Review</h3>
+                        <p class="card-subtitle">Tell us what you think about this product.</p>
+                    </div>
+                </div>
+
+                {% if current_user.is_authenticated %}
+                <form action="{{ url_for('add_review', product_id=product.id) }}" method="POST" class="review-form">
+                    <div class="form-group">
+                        <label class="form-label" for="reviewRatingSelect">
+                            <span>RATING (1-5)</span>
+                            <span class="star-hint"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i></span>
+                        </label>
+                        <div class="select-wrapper">
+                            <select id="reviewRatingSelect" name="rating" required class="review-select">
+                                <option value="5">⭐⭐⭐⭐⭐ 5 Stars — Exceptional</option>
+                                <option value="4">⭐⭐⭐⭐ 4 Stars — Very Good</option>
+                                <option value="3">⭐⭐⭐ 3 Stars — Good</option>
+                                <option value="2">⭐⭐ 2 Stars — Fair</option>
+                                <option value="1">⭐ 1 Star — Poor</option>
+                            </select>
+                            <i class="fa fa-chevron-down select-arrow"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label class="form-label" for="reviewCommentText" style="margin-bottom: 0;">COMMENT</label>
+                            <span id="commentCharCount" style="font-size: 0.75rem; color: #999;">0 / 500</span>
+                        </div>
+                        <textarea id="reviewCommentText" name="comment" required maxlength="500" class="review-textarea" placeholder="Share your experience, quality, fit, comfort, and any other details..." oninput="document.getElementById('commentCharCount').textContent = this.value.length + ' / 500';"></textarea>
+                    </div>
+
+                    <button type="submit" class="review-submit-btn">
+                        <span>SUBMIT POST</span>
+                        <i class="fa fa-paper-plane"></i>
+                    </button>
+                </form>
+                {% else %}
+                <div class="auth-prompt-card">
+                    <div class="auth-prompt-icon">
+                        <i class="fa fa-lock"></i>
+                    </div>
+                    <p class="auth-prompt-text">Please log in to your account to share your verified review and rating for this product.</p>
+                    <a href="{{ url_for('login') }}" class="auth-login-link">
+                        <span>LOG IN TO WRITE A REVIEW</span>
+                        <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Reviews List or Empty State Card -->
+            <div class="insights-card reviews-card">
+                {% if product.reviews %}
+                <div class="reviews-header-bar">
+                    <h4 class="reviews-count-title">Verified Reviews ({{ product.reviews|length }})</h4>
+                    {% set avg_r = (product.reviews|sum(attribute='rating') / product.reviews|length)|round(1) %}
+                    <div class="reviews-avg-badge">
+                        <i class="fa fa-star" style="color: #bfa15f;"></i>
+                        <span>{{ avg_r }} / 5.0</span>
+                    </div>
+                </div>
+                <div class="reviews-scroll-list">
+                    {% for review in product.reviews %}
+                    <div class="review-item">
+                        <div class="review-item-top">
+                            <div class="reviewer-meta">
+                                <div class="reviewer-avatar">
+                                    {{ review.user.username[:1].upper() if review.user and review.user.username else 'U' }}
+                                </div>
+                                <div>
+                                    <h5 class="reviewer-name">{{ review.user.username if review.user else 'Verified Customer' }}</h5>
+                                    <span class="verified-badge"><i class="fa fa-check-circle"></i> Verified Buyer</span>
+                                </div>
+                            </div>
+                            <div class="review-stars">
+                                {% for i in range(review.rating) %}<i class="fa fa-star"></i>{% endfor %}
+                                {% for i in range(5 - review.rating) %}<i class="far fa-star"></i>{% endfor %}
+                            </div>
+                        </div>
+                        <p class="review-comment-body">{{ review.comment }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- Empty State Card -->
+                <div class="empty-reviews-state">
+                    <div class="empty-icon-circle">
+                        <i class="far fa-comment-dots"></i>
+                    </div>
+                    <h4 class="empty-heading">No reviews yet!</h4>
+                    <p class="empty-subtext">Be the first to share your experience with this product.</p>
+                    <span class="empty-decorative-bar"></span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================================================================
+     ABOUT THE CRAFT SECTION
+     ====================================================================== -->
+<section style="padding: 80px 8%; background: #ffffff; border-top: 1px solid #ece5da;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <span style="font-size: 0.75rem; font-weight: 700; letter-spacing: 3px; color: #9c7a2b; text-transform: uppercase;">ATELIER QUALITY</span>
+            <h2 style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: #1a1a1a; margin: 8px 0 0 0;">About the Craft</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;">
+            <div style="text-align: center; padding: 30px 24px; background: #fbf9f6; border-radius: 16px; border: 1px solid #f0eae1;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #f3ede2; color: #9c7a2b; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto; font-size: 1.3rem;">
+                    <i class="fa fa-gem"></i>
+                </div>
+                <h4 style="font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 10px; color: #1a1a1a;">Premium Fabric</h4>
+                <p style="font-size: 0.88rem; color: #666; font-weight: 300; line-height: 1.6; margin: 0;">Sourced from the finest sustainable mills across Northern Italy.</p>
+            </div>
+            <div style="text-align: center; padding: 30px 24px; background: #fbf9f6; border-radius: 16px; border: 1px solid #f0eae1;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #f3ede2; color: #9c7a2b; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto; font-size: 1.3rem;">
+                    <i class="fa fa-leaf"></i>
+                </div>
+                <h4 style="font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 10px; color: #1a1a1a;">Ethereal Design</h4>
+                <p style="font-size: 0.88rem; color: #666; font-weight: 300; line-height: 1.6; margin: 0;">Designed to be ethereal and timeless, transcending fast-fashion trends.</p>
+            </div>
+            <div style="text-align: center; padding: 30px 24px; background: #fbf9f6; border-radius: 16px; border: 1px solid #f0eae1;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #f3ede2; color: #9c7a2b; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto; font-size: 1.3rem;">
+                    <i class="fa fa-history"></i>
+                </div>
+                <h4 style="font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 10px; color: #1a1a1a;">Lifetime Care</h4>
+                <p style="font-size: 0.88rem; color: #666; font-weight: 300; line-height: 1.6; margin: 0;">Our commitment to durability. Repair and restoration available for every garment.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================================================================
+     INTERACTIVE SCRIPT (GALLERY, SIZES, ACTIONS & SIZE FINDER)
+     ====================================================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Product Gallery Carousel ---
+    const viewport = document.getElementById('galleryViewport');
+    const track = document.getElementById('galleryTrack');
+    const slides = document.querySelectorAll('.product-gallery-slide');
+    const prevBtn = document.getElementById('galleryPrevBtn');
+    const nextBtn = document.getElementById('galleryNextBtn');
+    const thumbs = document.querySelectorAll('.gallery-thumb-item');
+    const dots = document.querySelectorAll('.gallery-dot');
+
+    if (viewport && track && slides.length > 1) {
+        let currentIndex = 0;
+        const totalSlides = slides.length;
+        let isMouseDown = false;
+        let mouseStartX = 0;
+        let dragDistance = 0;
+
+        function goToSlide(index, smooth = true) {
+            if (index < 0) index = 0;
+            if (index >= totalSlides) index = totalSlides - 1;
+
+            currentIndex = index;
+
+            if (!smooth) {
+                track.classList.add('no-transition');
+            } else {
+                track.classList.remove('no-transition');
+            }
+
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+            if (prevBtn) {
+                prevBtn.classList.toggle('is-disabled', currentIndex === 0);
+                prevBtn.disabled = (currentIndex === 0);
+            }
+            if (nextBtn) {
+                nextBtn.classList.toggle('is-disabled', currentIndex === totalSlides - 1);
+                nextBtn.disabled = (currentIndex === totalSlides - 1);
+            }
+
+            thumbs.forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === currentIndex);
+            });
+
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentIndex);
+            });
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                goToSlide(currentIndex - 1);
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                goToSlide(currentIndex + 1);
+            });
+        }
+
+        thumbs.forEach(thumb => {
+            thumb.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = parseInt(this.getAttribute('data-target-index'), 10);
+                if (!isNaN(target)) goToSlide(target);
+            });
+        });
+
+        dots.forEach(dot => {
+            dot.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = parseInt(this.getAttribute('data-target-index'), 10);
+                if (!isNaN(target)) goToSlide(target);
+            });
+        });
+
+        viewport.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goToSlide(currentIndex - 1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                goToSlide(currentIndex + 1);
+            }
+        });
+
+        // Touch Swipe
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isHorizontalSwipe = false;
+
+        viewport.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isHorizontalSwipe = false;
+        }, { passive: true });
+
+        viewport.addEventListener('touchmove', (e) => {
+            const dx = e.touches[0].clientX - touchStartX;
+            const dy = e.touches[0].clientY - touchStartY;
+            if (!isHorizontalSwipe && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+                isHorizontalSwipe = true;
+            }
+        }, { passive: true });
+
+        viewport.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            if (isHorizontalSwipe && Math.abs(dx) > 40) {
+                if (dx < 0 && currentIndex < totalSlides - 1) {
+                    goToSlide(currentIndex + 1);
+                } else if (dx > 0 && currentIndex > 0) {
+                    goToSlide(currentIndex - 1);
+                }
+            }
+        });
+
+        // Desktop Mouse Drag
+        viewport.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            isMouseDown = true;
+            mouseStartX = e.clientX;
+            dragDistance = 0;
+            viewport.classList.add('is-dragging');
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            dragDistance = e.clientX - mouseStartX;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            viewport.classList.remove('is-dragging');
+            if (Math.abs(dragDistance) > 50) {
+                if (dragDistance < 0 && currentIndex < totalSlides - 1) {
+                    goToSlide(currentIndex + 1);
+                } else if (dragDistance > 0 && currentIndex > 0) {
+                    goToSlide(currentIndex - 1);
+                }
+            }
+        });
+
+        goToSlide(0, false);
+    }
+
+    // --- Size Selection Handling ---
+    const sizeBtns = document.querySelectorAll('.size-btn');
+    const selectedSizeInput = document.getElementById('selectedSizeInput');
+    const sizeAlertMessage = document.getElementById('sizeAlertMessage');
+    const selectedSizeLabel = document.getElementById('selectedSizeLabel');
+    const addToBagBtn = document.getElementById('addToBagBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    const wishlistToggleBtn = document.getElementById('wishlistToggleBtn');
+    const wishlistIcon = document.getElementById('wishlistIcon');
+    const productId = "{{ product.id }}";
+
+    function selectSize(btn) {
+        sizeBtns.forEach(b => {
+            b.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        const chosenSize = btn.getAttribute('data-size');
+        selectedSizeInput.value = chosenSize;
+        if (selectedSizeLabel) {
+            selectedSizeLabel.innerHTML = `Size: <strong style="color: #9c7a2b;">${chosenSize}</strong>`;
+        }
+        if (sizeAlertMessage) {
+            sizeAlertMessage.style.display = 'none';
+        }
+    }
+
+    sizeBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            selectSize(this);
+        });
+    });
+
+    function checkSizeSelected() {
+        const size = selectedSizeInput.value.trim();
+        if (!size) {
+            if (sizeAlertMessage) {
+                sizeAlertMessage.style.display = 'flex';
+            }
+            if (typeof showToast === 'function') {
+                showToast("Please select a size.");
+            }
+            return null;
+        }
+        return size;
+    }
+
+    if (addToBagBtn) {
+        addToBagBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const size = checkSizeSelected();
+            if (!size) return;
+
+            const url = `/add_to_cart/${productId}?size=${encodeURIComponent(size)}`;
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    if (typeof showToast === 'function') {
+                        showToast(data.message || `{{ product.name }} (Size: ${size}) added to cart!`);
+                    }
+                    const cartBadges = document.querySelectorAll('#cartCountBadge, .cart-badge, .cart-count-pill');
+                    if (data.count !== undefined) {
+                        cartBadges.forEach(badge => badge.textContent = data.count);
+                    }
+                } else {
+                    window.location.href = url;
+                }
+            } catch (err) {
+                window.location.href = url;
+            }
+        });
+    }
+
+    if (buyNowBtn) {
+        buyNowBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const size = checkSizeSelected();
+            if (!size) return;
+
+            window.location.href = `/buy_now/${productId}?size=${encodeURIComponent(size)}`;
+        });
+    }
+
+    function updateWishlistUI(isInWishlist) {
+        if (!wishlistToggleBtn) return;
+        wishlistToggleBtn.setAttribute('data-in-wishlist', isInWishlist ? 'true' : 'false');
+        if (isInWishlist) {
+            wishlistToggleBtn.classList.add('in-wishlist', 'active');
+            if (wishlistIcon) {
+                wishlistIcon.className = 'fa-solid fa-heart';
+                wishlistIcon.style.color = '#e74c3c';
+            }
+            wishlistToggleBtn.setAttribute('title', 'Remove from Wishlist');
+            wishlistToggleBtn.setAttribute('aria-label', 'Remove from Wishlist');
+        } else {
+            wishlistToggleBtn.classList.remove('in-wishlist', 'active');
+            if (wishlistIcon) {
+                wishlistIcon.className = 'fa-regular fa-heart';
+                wishlistIcon.style.color = 'inherit';
+            }
+            wishlistToggleBtn.setAttribute('title', 'Add to Wishlist');
+            wishlistToggleBtn.setAttribute('aria-label', 'Add to Wishlist');
+        }
+    }
+
+    if (wishlistToggleBtn) {
+        wishlistToggleBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const toggleUrl = `/toggle_wishlist/${productId}`;
+            
+            try {
+                const response = await fetch(toggleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    const data = await response.json().catch(() => ({}));
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+                    }
+                    return;
+                }
+
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    if (data.success) {
+                        updateWishlistUI(data.in_wishlist);
+                        
+                        const wishlistBadges = document.querySelectorAll('#wishlistCountBadge, .wishlist-count-pill, .fw-side-count-pill');
+                        if (data.count !== undefined) {
+                            wishlistBadges.forEach(badge => {
+                                badge.textContent = data.count;
+                                badge.style.display = data.count > 0 ? '' : 'none';
+                            });
+                        }
+                        
+                        if (typeof showToast === 'function') {
+                            showToast(data.message || (data.in_wishlist ? 'Added to wishlist!' : 'Removed from wishlist!'));
+                        }
+                    }
+                } else {
+                    window.location.href = toggleUrl;
+                }
+            } catch (err) {
+                console.error('Wishlist toggle error:', err);
+                window.location.href = toggleUrl;
+            }
+        });
+    }
+
+    // --- Smart Size Recommendation Modal ---
+    const openSizeFinderBtn = document.getElementById('openSizeFinderBtn');
+    const sizeModal = document.getElementById('sizeRecommendationModal');
+    const closeSizeModalBtn = document.getElementById('closeSizeModalBtn');
+    const sizeModalFormView = document.getElementById('sizeModalFormView');
+    const sizeModalResultView = document.getElementById('sizeModalResultView');
+    const calculateSizeBtn = document.getElementById('calculateSizeBtn');
+    const useRecommendedSizeBtn = document.getElementById('useRecommendedSizeBtn');
+    const recalculateSizeBtn = document.getElementById('recalculateSizeBtn');
+    const smartHeightInput = document.getElementById('smartHeightInput');
+    const smartWeightInput = document.getElementById('smartWeightInput');
+    const fitPrefBtns = document.querySelectorAll('.fit-pref-btn');
+    const sizeModalAlert = document.getElementById('sizeModalAlert');
+    const sizeModalAlertText = document.getElementById('sizeModalAlertText');
+    const recommendedSizeBadge = document.getElementById('recommendedSizeBadge');
+
+    let currentFitPref = 'regular';
+    let lastRecommendedSize = 'M';
+
+    fitPrefBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            fitPrefBtns.forEach(b => {
+                b.classList.remove('active');
+                b.style.borderColor = '#dcd4c7';
+                b.style.background = '#fff';
+                b.style.color = '#444';
+            });
+            this.classList.add('active');
+            this.style.borderColor = '#1c1813';
+            this.style.background = '#1c1813';
+            this.style.color = '#fff';
+            currentFitPref = this.getAttribute('data-fit') || 'regular';
+        });
+    });
+
+    function openSizeModal() {
+        if (!sizeModal) return;
+        sizeModal.style.display = 'flex';
+        sizeModalFormView.style.display = 'block';
+        sizeModalResultView.style.display = 'none';
+        if (sizeModalAlert) sizeModalAlert.style.display = 'none';
+        if (smartHeightInput) smartHeightInput.focus();
+    }
+
+    function closeSizeModal() {
+        if (!sizeModal) return;
+        sizeModal.style.display = 'none';
+    }
+
+    if (openSizeFinderBtn) {
+        openSizeFinderBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openSizeModal();
+        });
+    }
+
+    if (closeSizeModalBtn) {
+        closeSizeModalBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeSizeModal();
+        });
+    }
+
+    if (sizeModal) {
+        sizeModal.addEventListener('click', function(e) {
+            if (e.target === sizeModal) {
+                closeSizeModal();
+            }
+        });
+    }
+
+    function calculateRecommendedSize(heightCm, weightKg, fitPref) {
+        if (isNaN(heightCm) || isNaN(weightKg) || heightCm < 100 || heightCm > 240 || weightKg < 30 || weightKg > 200) {
+            return null;
+        }
+
+        const heightM = heightCm / 100;
+        const bmi = weightKg / (heightM * heightM);
+        const standardSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+        let baseIndex = 1;
+
+        if (bmi < 19.5) {
+            baseIndex = (heightCm > 180) ? 1 : 0;
+        } else if (bmi < 23.5) {
+            if (heightCm < 165) baseIndex = 0;
+            else if (heightCm <= 178) baseIndex = 1;
+            else baseIndex = 2;
+        } else if (bmi < 27.0) {
+            if (heightCm < 170) baseIndex = 1;
+            else if (heightCm <= 182) baseIndex = 2;
+            else baseIndex = 3;
+        } else if (bmi < 31.0) {
+            if (heightCm < 175) baseIndex = 2;
+            else if (heightCm <= 185) baseIndex = 3;
+            else baseIndex = 4;
+        } else {
+            baseIndex = 4;
+        }
+
+        if (fitPref === 'slim' && baseIndex > 0) {
+            baseIndex -= 1;
+        } else if (fitPref === 'relaxed' && baseIndex < standardSizes.length - 1) {
+            baseIndex += 1;
+        }
+
+        return standardSizes[baseIndex];
+    }
+
+    if (calculateSizeBtn) {
+        calculateSizeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const hVal = parseFloat(smartHeightInput.value.trim());
+            const wVal = parseFloat(smartWeightInput.value.trim());
+
+            if (!smartHeightInput.value.trim() || !smartWeightInput.value.trim() || isNaN(hVal) || isNaN(wVal) || hVal < 100 || hVal > 240 || wVal < 30 || wVal > 200) {
+                if (sizeModalAlert) {
+                    sizeModalAlert.style.display = 'flex';
+                    sizeModalAlertText.textContent = "Please enter realistic height and weight values.";
+                }
+                return;
+            }
+
+            if (sizeModalAlert) sizeModalAlert.style.display = 'none';
+
+            const recommended = calculateRecommendedSize(hVal, wVal, currentFitPref);
+            if (!recommended) {
+                if (sizeModalAlert) {
+                    sizeModalAlert.style.display = 'flex';
+                    sizeModalAlertText.textContent = "Please enter realistic height and weight values.";
+                }
+                return;
+            }
+
+            lastRecommendedSize = recommended;
+            if (recommendedSizeBadge) {
+                recommendedSizeBadge.textContent = recommended;
+            }
+            if (useRecommendedSizeBtn) {
+                useRecommendedSizeBtn.textContent = `Use ${recommended}`;
+            }
+
+            sizeModalFormView.style.display = 'none';
+            sizeModalResultView.style.display = 'block';
+        });
+    }
+
+    if (recalculateSizeBtn) {
+        recalculateSizeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            sizeModalResultView.style.display = 'none';
+            sizeModalFormView.style.display = 'block';
+        });
+    }
+
+    if (useRecommendedSizeBtn) {
+        useRecommendedSizeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeSizeModal();
+
+            let matchingBtn = null;
+            sizeBtns.forEach(btn => {
+                if (btn.getAttribute('data-size') === lastRecommendedSize) {
+                    matchingBtn = btn;
+                }
+            });
+
+            if (!matchingBtn && sizeBtns.length > 0) {
+                matchingBtn = sizeBtns[0];
+            }
+
+            if (matchingBtn) {
+                selectSize(matchingBtn);
+                if (typeof showToast === 'function') {
+                    showToast(`Selected recommended Size: ${matchingBtn.getAttribute('data-size')}`);
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

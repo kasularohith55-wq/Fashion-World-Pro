@@ -1,0 +1,236 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Banners & Offers | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-header-wrapper {
+        margin-bottom: 24px;
+    }
+
+    .page-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #64748b;
+        text-decoration: none;
+    }
+
+    .breadcrumb-item.active {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .breadcrumb-separator {
+        font-size: 9px;
+        color: #94a3b8;
+    }
+
+    .page-main-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .page-sub-title {
+        font-size: 13.5px;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    .campaign-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .campaign-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .campaign-badge {
+        font-size: 10.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        width: fit-content;
+        margin-bottom: 12px;
+    }
+
+    .badge-gold { background: #fef3c7; color: #92400e; }
+    .badge-blue { background: #eff6ff; color: #1d4ed8; }
+    .badge-green { background: #ecfdf5; color: #059669; }
+
+    .campaign-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 4px;
+    }
+
+    .campaign-desc {
+        font-size: 12.5px;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    .campaign-footer {
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    @media (max-width: 1024px) {
+        .campaign-cards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header & Breadcrumb -->
+<div class="page-header-wrapper">
+    <div class="page-breadcrumb">
+        <span class="breadcrumb-item"><i class="fa-solid fa-bullhorn"></i> Marketing</span>
+        <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+        <span class="breadcrumb-item active">Banners & Offers</span>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div>
+            <h1 class="page-main-title">Banners & Promotional Offers</h1>
+            <p class="page-sub-title">Manage active promotional campaigns, hero spotlights, and discounted deals.</p>
+        </div>
+        <a href="{{ url_for('admin_products') }}" class="btn-dark-primary" style="padding: 10px 18px; font-size: 13px;">
+            <i class="fa-solid fa-shirt"></i> Manage Product Promotions
+        </a>
+    </div>
+</div>
+
+<!-- Active Store Campaigns -->
+<div class="campaign-cards-grid">
+    <div class="campaign-card">
+        <div>
+            <span class="campaign-badge badge-gold"><i class="fa-solid fa-star"></i> Storefront Hero Banner</span>
+            <h3 class="campaign-title">New Collection: Autumn Edit</h3>
+            <p class="campaign-desc">Primary hero banner showcased on the customer homepage with catalog redirection.</p>
+        </div>
+        <div class="campaign-footer">
+            <span class="status-badge active"><i class="fa-solid fa-circle-check"></i> Live & Active</span>
+            <a href="{{ url_for('home') }}" target="_blank" class="btn-outline-clean" style="font-size: 11.5px; padding: 6px 12px;">
+                Preview <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="campaign-card">
+        <div>
+            <span class="campaign-badge badge-blue"><i class="fa-solid fa-percent"></i> Special Offers</span>
+            <h3 class="campaign-title">Exclusive Discount Deals</h3>
+            <p class="campaign-desc">Special reduced-price merchandise highlighted across the Specials catalog section.</p>
+        </div>
+        <div class="campaign-footer">
+            <span class="status-badge active"><i class="fa-solid fa-circle-check"></i> {{ special_offers|length }} Items Active</span>
+            <a href="{{ url_for('specials') }}" target="_blank" class="btn-outline-clean" style="font-size: 11.5px; padding: 6px 12px;">
+                View Page <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="campaign-card">
+        <div>
+            <span class="campaign-badge badge-green"><i class="fa-solid fa-wand-magic-sparkles"></i> Seasonal Arrivals</span>
+            <h3 class="campaign-title">Fresh Season Releases</h3>
+            <p class="campaign-desc">Latest apparel flagged as New Arrivals on category and shop grids.</p>
+        </div>
+        <div class="campaign-footer">
+            <span class="status-badge active"><i class="fa-solid fa-circle-check"></i> {{ new_arrivals|length }} Items Active</span>
+            <a href="{{ url_for('admin_products') }}" class="btn-outline-clean" style="font-size: 11.5px; padding: 6px 12px;">
+                Edit Products <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Special Offers Table -->
+<div class="admin-card">
+    <div class="card-header-between" style="margin-bottom: 18px;">
+        <div>
+            <h3 class="card-title-lg" style="font-size: 16px;"><i class="fa-solid fa-tags" style="color: var(--gold-500); margin-right: 6px;"></i> Active Discounted Merchandise</h3>
+            <span class="card-subtitle-sm">Products currently running special promotional pricing</span>
+        </div>
+    </div>
+
+    <div class="table-responsive-wrapper">
+        <table class="admin-modern-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Original Price</th>
+                    <th>Offer Price</th>
+                    <th>Discount</th>
+                    <th>Stock</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prod in special_offers %}
+                <tr>
+                    <td><strong style="color: #0f172a;">{{ prod.name }}</strong></td>
+                    <td><span style="color: #64748b; font-size: 12px;">{{ prod.category }}</span></td>
+                    <td><span style="text-decoration: line-through; color: #94a3b8;">₹{{ "{:,.2f}".format(prod.price) }}</span></td>
+                    <td><strong style="color: #059669;">₹{{ "{:,.2f}".format(prod.discount_price) }}</strong></td>
+                    <td>
+                        {% set disc_pct = ((prod.price - prod.discount_price) / prod.price * 100)|round|int %}
+                        <span class="status-badge active">{{ disc_pct }}% OFF</span>
+                    </td>
+                    <td>
+                        <span class="status-badge {% if prod.stock <= 5 %}status-critical{% else %}status-shipped{% endif %}">
+                            {{ prod.stock }} left
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{ url_for('admin_edit_product', product_id=prod.id) }}" class="btn-outline-clean" style="padding: 5px 10px; font-size: 11.5px;">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #94a3b8; padding: 30px;">No promotional discounted items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

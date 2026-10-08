@@ -1,0 +1,1332 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout | Fashion World Pro{% endblock %}
+
+{% block extra_head %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --text-dark: #333;
+        --text-gray: #666;
+        --border-color: #e0e0e0;
+        --success-green: #22c55e;
+        --accent-blue: #007185;
+    }
+
+    .checkout-page {
+        padding: 150px 10% 80px;
+        background: #fdfdfd;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 60px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .checkout-sec {
+        background: white;
+        padding-bottom: 40px;
+        margin-bottom: 40px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sec-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .sec-header h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .edit-link {
+        color: var(--text-dark);
+        text-decoration: underline;
+        font-size: 0.9rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    /* Billing Summary */
+    .summary-card {
+        font-size: 1rem;
+        color: var(--text-gray);
+        line-height: 1.6;
+    }
+
+    /* Expandable Items & Accordions */
+    .checkout-accordion {
+        border-top: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+
+    .checkout-accordion summary.expand-item {
+        padding: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text-dark);
+        list-style: none;
+        user-select: none;
+        outline: none;
+    }
+
+    .checkout-accordion summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .checkout-accordion summary::marker {
+        display: none;
+    }
+
+    .checkout-accordion summary:hover {
+        color: #0f172a;
+    }
+
+    .checkout-accordion .accordion-icon {
+        font-size: 0.95rem;
+        color: #64748b;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .checkout-accordion[open] summary .accordion-icon:before {
+        content: "\f068"; /* FontAwesome fa-minus */
+    }
+
+    .checkout-accordion[open] summary .accordion-icon {
+        color: var(--text-dark);
+    }
+
+    .checkout-accordion-content {
+        padding: 4px 0 24px 0;
+        animation: fadeIn 0.25s ease;
+    }
+
+    .accordion-input-group {
+        display: flex;
+        gap: 10px;
+        max-width: 480px;
+    }
+
+    .accordion-input {
+        flex: 1;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.92rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #1e293b;
+        background: #fdfdfd;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .accordion-input:focus {
+        border-color: #0f172a;
+        background: #ffffff;
+    }
+
+    .accordion-btn {
+        padding: 12px 22px;
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+        transition: background 0.2s ease, transform 0.1s ease;
+        white-space: nowrap;
+    }
+
+    .accordion-btn:hover {
+        background: #1e293b;
+    }
+
+    .accordion-btn:active {
+        transform: scale(0.98);
+    }
+
+    /* Payment Methods Grid & Luxury Redesign */
+    .payment-options-sec {
+        background: #ffffff;
+        border: 1px solid #ede8e1;
+        border-radius: 16px;
+        padding: 32px 30px;
+        margin-top: 35px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    }
+
+    .pay-header-eyebrow {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #b38b4d;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .pay-header-title {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 6px 0;
+        letter-spacing: -0.3px;
+    }
+
+    .pay-header-subtitle {
+        font-size: 0.88rem;
+        color: #64748b;
+        margin: 0 0 24px 0;
+        line-height: 1.4;
+    }
+
+    .pay-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 680px) {
+        .pay-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .pay-btn-box {
+        position: relative;
+        border: 1.5px solid #e2e8f0;
+        background: #ffffff;
+        padding: 20px 18px;
+        border-radius: 14px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        user-select: none;
+    }
+
+    .pay-btn-box:hover {
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .pay-btn-box.active {
+        border-color: #0f172a;
+        background: #fafaf8;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .pay-btn-box input[type="radio"] {
+        display: none;
+    }
+
+    .pay-custom-radio {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        background: #ffffff;
+        flex-shrink: 0;
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .pay-custom-radio::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #0f172a;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pay-btn-box.active .pay-custom-radio {
+        border-color: #0f172a;
+    }
+
+    .pay-btn-box.active .pay-custom-radio::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .pay-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+
+    .pay-btn-box.active .pay-icon-box {
+        background: #0f172a;
+        color: #ffffff;
+    }
+
+    .pay-card-info {
+        flex-grow: 1;
+    }
+
+    .pay-card-title {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .pay-card-desc {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    .pay-badge {
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        text-transform: uppercase;
+    }
+
+    .pay-badge-secure {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .pay-badge-cod {
+        background: #f8fafc;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Selected Payment Message Panels */
+    .pay-info-panel {
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-top: 18px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .pay-info-panel-razorpay {
+        border: 1px solid #e2d9cc;
+        background: #fdfbf7;
+    }
+
+    .pay-info-panel-cod {
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+    }
+
+    .pay-info-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .pay-info-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pay-brand-icons {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1.35rem;
+        color: #475569;
+    }
+
+    .pay-info-text {
+        font-size: 0.83rem;
+        color: #475569;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* Trust & Security Strip */
+    .pay-trust-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    @media (max-width: 680px) {
+        .pay-trust-strip {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+    }
+
+    .pay-trust-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .pay-trust-icon {
+        font-size: 1.1rem;
+        color: #0f172a;
+        margin-top: 2px;
+    }
+
+    .pay-trust-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+
+    .pay-trust-desc {
+        font-size: 0.73rem;
+        color: #64748b;
+        line-height: 1.3;
+    }
+
+    /* Card Input Block */
+    .card-inputs {
+        border: 1px solid var(--border-color);
+        padding: 25px;
+        border-radius: 4px;
+        background: #fafafa;
+    }
+
+    .input-grp {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .input-grp input {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .card-logos {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        gap: 8px;
+    }
+
+    .card-logos i {
+        font-size: 1.5rem;
+        color: #888;
+    }
+
+    /* Order Summary Sidebar */
+    .sidebar {
+        position: sticky;
+        top: 120px;
+        height: fit-content;
+    }
+
+    .order-sum-card {
+        background: white;
+        padding-bottom: 20px;
+    }
+
+    .item-line {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        font-size: 0.95rem;
+    }
+
+    .line-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        color: var(--text-gray);
+        font-size: 1rem;
+    }
+
+    .grand-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-dark);
+    }
+
+    /* Rewards Box */
+    .rewards-box {
+        background: #111;
+        color: white;
+        padding: 30px;
+        border-radius: 4px;
+        margin-top: 40px;
+    }
+
+    .rewards-box h4 { margin-bottom: 15px; }
+    .rewards-box p { font-size: 0.85rem; line-height: 1.6; opacity: 0.8; }
+
+    .btn-place {
+        width: 100%;
+        background: #000;
+        color: white;
+        border: none;
+        padding: 20px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-top: 30px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="checkout-page">
+    <div class="checkout-container">
+        <!-- Main Form Left -->
+        <div class="checkout-main">
+            <form id="checkout-form" action="{{ url_for('place_order') }}" method="POST">
+                
+                <!-- Billing Address Section (Based on Image) -->
+                <div class="checkout-sec" id="step-1">
+                    <div class="sec-header">
+                        <h3>Shipping & Billing Address</h3>
+                        <span class="edit-link" onclick="goToStep(1)">Edit</span>
+                    </div>
+                    <div class="summary-card" id="address-summary">
+                        {% if current_user.address %}
+                        <strong>{{ current_user.username }}</strong><br>
+                        {{ current_user.address }}<br>
+                        {{ current_user.city }}, {{ current_user.zip_code }}
+                        {% else %}
+                        Please enter your shipping address below.
+                        {% endif %}
+                    </div>
+
+                    <div id="address-fields" style="margin-top: 30px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <label for="fname" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">First Name</label>
+                                <input type="text" id="fname" name="first_name" required placeholder="First Name" value="{{ current_user.first_name or current_user.username or '' }}" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                            </div>
+                            <div>
+                                <label for="lname" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Last Name</label>
+                                <input type="text" id="lname" name="last_name" required placeholder="Last Name" value="{{ current_user.last_name or '' }}" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label for="address_input" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Full Street Address</label>
+                            <input type="text" id="address_input" name="address" required placeholder="House/Flat No., Street, Landmark" value="{{ current_user.address or '' }}" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                        </div>
+
+                        <!-- PIN Code & State -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 12px;">
+                            <div>
+                                <label for="zip_input" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    PIN Code (6 Digits)
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="text" id="zip_input" name="zip_code" maxlength="6" inputmode="numeric" required placeholder="Enter 6-digit PIN (e.g. 522612)" value="{{ current_user.zip_code or '' }}" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; letter-spacing: 1px;">
+                                    <div id="pin-spinner" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: none; color: #007185;">
+                                        <i class="fa fa-spinner fa-spin"></i>
+                                    </div>
+                                </div>
+                                <!-- Live PIN Status Notification Box -->
+                                <div id="pin-status-box" style="margin-top: 6px; min-height: 22px;">
+                                    <span id="pin-loading" style="display: none; color: #007185; font-size: 0.82rem; font-weight: 600;">
+                                        <i class="fa fa-spinner fa-spin"></i> Fetching postal information...
+                                    </span>
+                                    <span id="pin-error" style="display: none; color: #dc2626; font-size: 0.82rem; font-weight: 600;">
+                                        <i class="fa fa-circle-exclamation"></i> Invalid PIN code or postal information unavailable
+                                    </span>
+                                    <span id="pin-success" style="display: none; color: #16a34a; font-size: 0.82rem; font-weight: 600;">
+                                        <i class="fa fa-circle-check"></i> Location details fetched successfully
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="state_input" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">State</label>
+                                <input type="text" id="state_input" name="state" required placeholder="State (Auto-populated)" value="{{ current_user.state or '' }}" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background: #f8fafc;">
+                            </div>
+                        </div>
+
+                        <!-- District & Village/City (Dropdown) -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <label for="district_input" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">District</label>
+                                <input type="text" id="district_input" name="district" required placeholder="District (Auto-populated)" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background: #f8fafc;">
+                            </div>
+
+                            <div>
+                                <label for="city_input" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Village / City / Post Office</label>
+                                <select id="city_input" name="city" required style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background: white; cursor: pointer; color: #1e293b;">
+                                    <option value="">-- Enter PIN Code to Select Village/City --</option>
+                                    {% if current_user.city %}
+                                    <option value="{{ current_user.city }}" selected>{{ current_user.city }}</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label for="user_phone" style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Mobile Number</label>
+                            <input type="tel" id="user_phone" name="phone" required placeholder="10-digit Mobile Number" value="{{ current_user.phone or '' }}" style="width: 100%; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expandable Options (Promo Code & Gift Cards/Rewards) -->
+                <details class="checkout-accordion" id="accordion-promo-code">
+                    <summary class="expand-item">
+                        <span>Promo Code</span>
+                        <i class="fa-solid fa-plus accordion-icon"></i>
+                    </summary>
+                    <div class="checkout-accordion-content">
+                        <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 8px;">Enter your promotional coupon or discount voucher code.</p>
+                        <div class="accordion-input-group">
+                            <input type="text" class="accordion-input" placeholder="Enter Promo Code" id="promo_code_input" autocomplete="off">
+                            <button type="button" class="accordion-btn" onclick="applyPromoCode()">Apply</button>
+                        </div>
+                        <div id="promo-msg" style="font-size: 0.8rem; margin-top: 6px; display: none;"></div>
+                    </div>
+                </details>
+
+                <details class="checkout-accordion" id="accordion-gift-cards">
+                    <summary class="expand-item">
+                        <span>Apply Gift Cards and Rewards</span>
+                        <i class="fa-solid fa-plus accordion-icon"></i>
+                    </summary>
+                    <div class="checkout-accordion-content">
+                        <p style="font-size: 0.83rem; color: #64748b; margin-bottom: 8px;">Redeem your Fashion World Pro gift voucher or membership rewards balance.</p>
+                        <div class="accordion-input-group">
+                            <input type="text" class="accordion-input" placeholder="Enter Gift Card / Reward Code" id="gift_card_input" autocomplete="off">
+                            <button type="button" class="accordion-btn" onclick="applyGiftCard()">Apply</button>
+                        </div>
+                        <div id="gift-card-msg" style="font-size: 0.8rem; margin-top: 6px; display: none;"></div>
+                    </div>
+                </details>
+
+                <!-- Payment Options -->
+                <div class="checkout-sec payment-options-sec">
+                    <div class="pay-header-eyebrow">
+                        <i class="fa-solid fa-shield-halved"></i> SECURE CHECKOUT
+                    </div>
+                    <h3 class="pay-header-title">Choose Your Payment Method</h3>
+                    <p class="pay-header-subtitle">Select a convenient and secure way to complete your order.</p>
+                    
+                    <div class="pay-grid">
+                        <!-- Razorpay Card -->
+                        <label class="pay-btn-box active" onclick="selectPay(this)">
+                            <input type="radio" name="payment_method" value="razorpay" checked>
+                            <span class="pay-custom-radio"></span>
+                            <div class="pay-icon-box">
+                                <i class="fa-solid fa-credit-card"></i>
+                            </div>
+                            <div class="pay-card-info">
+                                <div class="pay-card-title">
+                                    <span>Razorpay Secure</span>
+                                    <span class="pay-badge pay-badge-secure">SECURE</span>
+                                </div>
+                                <div class="pay-card-desc">
+                                    UPI, Cards, NetBanking, Wallets
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- COD Card -->
+                        <label class="pay-btn-box" onclick="selectPay(this)">
+                            <input type="radio" name="payment_method" value="cod">
+                            <span class="pay-custom-radio"></span>
+                            <div class="pay-icon-box">
+                                <i class="fa-solid fa-truck-fast"></i>
+                            </div>
+                            <div class="pay-card-info">
+                                <div class="pay-card-title">
+                                    <span>Cash on Delivery</span>
+                                    <span class="pay-badge pay-badge-cod">COD</span>
+                                </div>
+                                <div class="pay-card-desc">
+                                    Pay with cash upon doorstep delivery
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Razorpay Info Box -->
+                    <div id="razorpay-info-card" class="pay-info-panel pay-info-panel-razorpay">
+                        <div class="pay-info-header">
+                            <div class="pay-info-title">
+                                <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
+                                <span>Razorpay Secure selected</span>
+                            </div>
+                            <div class="pay-brand-icons">
+                                <i class="fab fa-google-pay" title="Google Pay"></i>
+                                <i class="fab fa-cc-visa" title="Visa"></i>
+                                <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                                <i class="fa-solid fa-building-columns" title="Net Banking"></i>
+                                <i class="fa-solid fa-wallet" title="Wallets"></i>
+                            </div>
+                        </div>
+                        <p class="pay-info-text">
+                            You’ll be redirected to secure Razorpay Checkout to complete your payment via UPI, Cards, NetBanking, or Wallets.
+                        </p>
+                    </div>
+
+                    <!-- COD Info Box -->
+                    <div id="cod-info-card" class="pay-info-panel pay-info-panel-cod" style="display: none;">
+                        <div class="pay-info-header">
+                            <div class="pay-info-title" style="color: #065f46;">
+                                <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
+                                <span>Cash on Delivery selected</span>
+                            </div>
+                            <span style="font-size: 0.78rem; font-weight: 700; color: #065f46; background: #dcfce7; padding: 3px 8px; border-radius: 6px;">
+                                PAY AT DOORSTEP
+                            </span>
+                        </div>
+                        <p class="pay-info-text" style="color: #065f46;">
+                            You will pay <strong>₹{{ "{:,.2f}".format(total) }}</strong> to the delivery courier when your order arrives.
+                        </p>
+                    </div>
+
+                    <!-- Payment Security & Trust Strip -->
+                    <div class="pay-trust-strip">
+                        <div class="pay-trust-item">
+                            <i class="fa-solid fa-shield-halved pay-trust-icon"></i>
+                            <div>
+                                <div class="pay-trust-label">Secure Payment</div>
+                                <div class="pay-trust-desc">Your payment information is protected.</div>
+                            </div>
+                        </div>
+                        <div class="pay-trust-item">
+                            <i class="fa-solid fa-rotate-left pay-trust-icon"></i>
+                            <div>
+                                <div class="pay-trust-label">Easy Returns</div>
+                                <div class="pay-trust-desc">As per our existing return policy.</div>
+                            </div>
+                        </div>
+                        <div class="pay-trust-item">
+                            <i class="fa-solid fa-truck-ramp-box pay-trust-icon"></i>
+                            <div>
+                                <div class="pay-trust-label">Reliable Delivery</div>
+                                <div class="pay-trust-desc">Track your order after confirmation.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-place" id="submit-btn-real">
+                    <i class="fa-solid fa-lock"></i> Pay ₹{{ "{:,.2f}".format(total) }} & Place Order
+                </button>
+            </form>
+        </div>
+
+        <!-- Sidebar Right -->
+        <div class="sidebar">
+            <div class="order-sum-card">
+                <h3 style="font-size: 1.4rem; margin-bottom: 30px;">Order Summary</h3>
+                
+                <div style="background: #f1f1f1; padding: 15px; margin-bottom: 30px; border-radius: 40px; text-align: center; font-size: 0.9rem;">
+                    <i class="fa fa-clock"></i> Your items are being reserved for <span id="reservation-countdown-time" style="font-weight: 700; font-variant-numeric: tabular-nums;">15:00</span>
+                </div>
+
+                <div class="items-list">
+                    {% for item in items %}
+                    <div class="item-line">
+                        <img src="{{ item.product.image_url }}" style="width: 80px; height: 100px; object-fit: cover;">
+                        <div style="flex-grow: 1;">
+                            <p style="font-weight: 600;">{{ item.product.name }}</p>
+                            <p style="color: grey; font-size: 0.85rem;">QTY: {{ item.quantity }}</p>
+                            <p style="font-weight: 700; margin-top: 5px;">₹{{ "{:,.2f}".format(item.product.discount_price if item.product.discount_price else item.product.price) }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-details" style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 30px;">
+                    <div class="line-row"><span>Subtotal</span><span>₹{{ "{:,.2f}".format(total) }}</span></div>
+                    <div class="line-row"><span>Shipping & Processing</span><span>Free</span></div>
+                    <div class="line-row"><span>Tax</span><span>₹0.00</span></div>
+                    
+                    <div class="grand-total">
+                        <span>Total</span>
+                        <span>₹{{ "{:,.2f}".format(total) }}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" style="height: 25px; opacity: 0.5;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ====================================================
+    // CHECKOUT RESERVATION COUNTDOWN TIMER (15 MINUTES)
+    // ====================================================
+    const RESERVATION_DURATION_MS = 15 * 60 * 1000;
+    const STORAGE_KEY = 'checkout_reservation_end_time';
+    let reservationIntervalId = null;
+
+    function getOrSetReservationEndTime() {
+        try {
+            let stored = sessionStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = parseInt(stored, 10);
+                if (!isNaN(parsed) && parsed > 0) {
+                    return parsed;
+                }
+            }
+            const newEndTime = Date.now() + RESERVATION_DURATION_MS;
+            sessionStorage.setItem(STORAGE_KEY, newEndTime.toString());
+            return newEndTime;
+        } catch (e) {
+            console.warn('SessionStorage not accessible, using window state:', e);
+            if (!window._reservationEndTime) {
+                window._reservationEndTime = Date.now() + RESERVATION_DURATION_MS;
+            }
+            return window._reservationEndTime;
+        }
+    }
+
+    function formatReservationTime(totalSeconds) {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        const mm = mins < 10 ? '0' + mins : mins;
+        const ss = secs < 10 ? '0' + secs : secs;
+        return `${mm}:${ss}`;
+    }
+
+    function updateReservationTimer() {
+        const timerEl = document.getElementById('reservation-countdown-time');
+        if (!timerEl) return;
+
+        const endTime = getOrSetReservationEndTime();
+        const remainingMs = endTime - Date.now();
+        const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+        timerEl.textContent = formatReservationTime(remainingSec);
+
+        if (remainingMs <= 0) {
+            timerEl.textContent = '00:00';
+            if (reservationIntervalId) {
+                clearInterval(reservationIntervalId);
+                reservationIntervalId = null;
+            }
+        }
+    }
+
+    function startReservationTimer() {
+        if (reservationIntervalId) {
+            clearInterval(reservationIntervalId);
+            reservationIntervalId = null;
+        }
+
+        updateReservationTimer();
+        reservationIntervalId = setInterval(updateReservationTimer, 1000);
+    }
+
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateReservationTimer();
+        }
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startReservationTimer);
+    } else {
+        startReservationTimer();
+    }
+
+    function selectPay(el) {
+        document.querySelectorAll('.pay-btn-box').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        const method = el.querySelector('input').value;
+        el.querySelector('input').checked = true;
+        
+        const razorpayCard = document.getElementById('razorpay-info-card');
+        const codCard = document.getElementById('cod-info-card');
+        const submitBtn = document.getElementById('submit-btn-real');
+        
+        if (method === 'razorpay') {
+            if (razorpayCard) razorpayCard.style.display = 'block';
+            if (codCard) codCard.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Pay ₹{{ "{:,.2f}".format(total) }} & Place Order';
+            }
+        } else {
+            if (razorpayCard) razorpayCard.style.display = 'none';
+            if (codCard) codCard.style.display = 'block';
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fa-solid fa-truck-ramp-box"></i> Place Order (Cash on Delivery)';
+            }
+        }
+    }
+
+    // ----------------------------------------------------
+    // CHECKOUT PROMO CODE & GIFT CARD ACCORDION HANDLERS
+    // ----------------------------------------------------
+    function applyPromoCode() {
+        const input = document.getElementById('promo_code_input');
+        const msg = document.getElementById('promo-msg');
+        if (!input || !msg) return;
+        const code = input.value.trim().toUpperCase();
+        if (!code) {
+            msg.style.display = 'block';
+            msg.style.color = '#dc2626';
+            msg.innerHTML = '<i class="fa fa-circle-exclamation"></i> Please enter a promo code.';
+            return;
+        }
+        msg.style.display = 'block';
+        msg.style.color = '#059669';
+        msg.innerHTML = '<i class="fa fa-circle-check"></i> Promo code "' + code + '" recorded. Discounts will be verified upon order placement.';
+    }
+
+    function applyGiftCard() {
+        const input = document.getElementById('gift_card_input');
+        const msg = document.getElementById('gift-card-msg');
+        if (!input || !msg) return;
+        const code = input.value.trim().toUpperCase();
+        if (!code) {
+            msg.style.display = 'block';
+            msg.style.color = '#dc2626';
+            msg.innerHTML = '<i class="fa fa-circle-exclamation"></i> Please enter a gift card or reward code.';
+            return;
+        }
+        msg.style.display = 'block';
+        msg.style.color = '#059669';
+        msg.innerHTML = '<i class="fa fa-circle-check"></i> Gift card / Reward voucher "' + code + '" recorded for settlement.';
+    }
+
+
+    // ----------------------------------------------------
+    // INDIAN PIN CODE AUTO-FILL & VILLAGE DROPDOWN LOGIC
+    // ----------------------------------------------------
+    const pinCache = {};
+    let pinFetchAbortController = null;
+
+    function resetPostalFields(showDefaultOption = true) {
+        const stateInput = document.getElementById('state_input');
+        const districtInput = document.getElementById('district_input');
+        const citySelect = document.getElementById('city_input');
+        const loadingSpan = document.getElementById('pin-loading');
+        const errorSpan = document.getElementById('pin-error');
+        const successSpan = document.getElementById('pin-success');
+        const spinner = document.getElementById('pin-spinner');
+
+        if (stateInput) stateInput.value = '';
+        if (districtInput) districtInput.value = '';
+        if (citySelect) {
+            citySelect.innerHTML = showDefaultOption 
+                ? '<option value="">-- Enter PIN Code to Select Village/City --</option>'
+                : '<option value="">Loading village / city options...</option>';
+        }
+        if (loadingSpan) loadingSpan.style.display = 'none';
+        if (errorSpan) errorSpan.style.display = 'none';
+        if (successSpan) successSpan.style.display = 'none';
+        if (spinner) spinner.style.display = 'none';
+    }
+
+    function showPinLoading(isLoading) {
+        const loadingSpan = document.getElementById('pin-loading');
+        const errorSpan = document.getElementById('pin-error');
+        const successSpan = document.getElementById('pin-success');
+        const spinner = document.getElementById('pin-spinner');
+        
+        if (isLoading) {
+            if (loadingSpan) loadingSpan.style.display = 'inline-block';
+            if (errorSpan) errorSpan.style.display = 'none';
+            if (successSpan) successSpan.style.display = 'none';
+            if (spinner) spinner.style.display = 'block';
+        } else {
+            if (loadingSpan) loadingSpan.style.display = 'none';
+            if (spinner) spinner.style.display = 'none';
+        }
+    }
+
+    function showPinError(msg) {
+        showPinLoading(false);
+        const errorSpan = document.getElementById('pin-error');
+        const successSpan = document.getElementById('pin-success');
+        if (errorSpan) {
+            if (msg) errorSpan.innerHTML = '<i class="fa fa-circle-exclamation"></i> ' + msg;
+            errorSpan.style.display = 'inline-block';
+        }
+        if (successSpan) successSpan.style.display = 'none';
+    }
+
+    function showPinSuccess() {
+        showPinLoading(false);
+        const errorSpan = document.getElementById('pin-error');
+        const successSpan = document.getElementById('pin-success');
+        if (errorSpan) errorSpan.style.display = 'none';
+        if (successSpan) successSpan.style.display = 'inline-block';
+    }
+
+    // Administrative district overrides for reorganized districts in India
+    const DISTRICT_OVERRIDES = {
+        '522612': { district: 'Palnadu', state: 'Andhra Pradesh' }
+    };
+
+    function normalizePostalDistrict(pin, rawState, rawDistrict) {
+        let state = rawState || '';
+        let district = rawDistrict || '';
+
+        const cleanPin = (pin || '').trim();
+        if (DISTRICT_OVERRIDES[cleanPin]) {
+            if (DISTRICT_OVERRIDES[cleanPin].district) district = DISTRICT_OVERRIDES[cleanPin].district;
+            if (DISTRICT_OVERRIDES[cleanPin].state) state = DISTRICT_OVERRIDES[cleanPin].state;
+        } else if (cleanPin === '522612' && district.toLowerCase() === 'guntur') {
+            district = 'Palnadu';
+        }
+        return { state, district };
+    }
+
+    function applyPostalData(pin, postOffices, selectedCity = '') {
+        const stateInput = document.getElementById('state_input');
+        const districtInput = document.getElementById('district_input');
+        const citySelect = document.getElementById('city_input');
+
+        if (!Array.isArray(postOffices) || postOffices.length === 0) {
+            showPinError("Invalid PIN code or postal information unavailable");
+            return;
+        }
+
+        const firstPo = postOffices[0];
+        const rawState = firstPo.State || '';
+        const rawDistrict = firstPo.District || '';
+        const { state, district } = normalizePostalDistrict(pin, rawState, rawDistrict);
+
+        if (stateInput) stateInput.value = state;
+        if (districtInput) districtInput.value = district;
+
+        if (citySelect) {
+            citySelect.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = `-- Select Village / City (${postOffices.length} options) --`;
+            citySelect.appendChild(defaultOpt);
+
+            const uniqueNames = [];
+            postOffices.forEach(po => {
+                const name = (po.Name || '').trim();
+                if (name && !uniqueNames.includes(name)) {
+                    uniqueNames.push(name);
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    if (selectedCity && name.toLowerCase() === selectedCity.toLowerCase()) {
+                        opt.selected = true;
+                    }
+                    citySelect.appendChild(opt);
+                }
+            });
+
+            // If only 1 village/post office returned, auto-select it
+            if (uniqueNames.length === 1) {
+                citySelect.value = uniqueNames[0];
+            }
+        }
+
+        showPinSuccess();
+    }
+
+    async function handlePinLookup(pinValue, preselectedCity = '') {
+        const cleanPin = (pinValue || '').trim().replace(/\D/g, '');
+        
+        // Cancel any in-flight request
+        if (pinFetchAbortController) {
+            pinFetchAbortController.abort();
+        }
+
+        // Do not make request until exactly 6 digits
+        if (cleanPin.length !== 6) {
+            resetPostalFields(true);
+            return;
+        }
+
+        // Clear old values and show loading
+        resetPostalFields(false);
+        showPinLoading(true);
+
+        // Check in-memory cache to prevent unnecessary repeated API calls
+        if (pinCache[cleanPin]) {
+            applyPostalData(cleanPin, pinCache[cleanPin], preselectedCity);
+            return;
+        }
+
+        pinFetchAbortController = new AbortController();
+
+        try {
+            // Primary lookup: direct to Indian Postal API
+            let data = null;
+            try {
+                const res = await fetch(`https://api.postalpincode.in/pincode/${cleanPin}`, {
+                    signal: pinFetchAbortController.signal
+                });
+                if (res.ok) {
+                    data = await res.json();
+                }
+            } catch (netErr) {
+                if (netErr.name === 'AbortError') return;
+                console.warn("[PINCODE] Direct fetch failed, trying local proxy...", netErr);
+            }
+
+            // Secondary fallback: local proxy endpoint
+            if (!data) {
+                const proxyRes = await fetch(`/api/pincode/${cleanPin}`, {
+                    signal: pinFetchAbortController.signal
+                });
+                if (proxyRes.ok) {
+                    data = await proxyRes.json();
+                }
+            }
+
+            if (data && Array.isArray(data) && data[0]) {
+                const entry = data[0];
+                if (entry.Status === "Success" && Array.isArray(entry.PostOffice) && entry.PostOffice.length > 0) {
+                    pinCache[cleanPin] = entry.PostOffice;
+                    applyPostalData(cleanPin, entry.PostOffice, preselectedCity);
+                } else {
+                    resetPostalFields(true);
+                    showPinError("Invalid PIN code or postal information unavailable");
+                }
+            } else {
+                resetPostalFields(true);
+                showPinError("Invalid PIN code or postal information unavailable");
+            }
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.error("[PINCODE] Lookup error:", err);
+            resetPostalFields(true);
+            showPinError("Failed to fetch postal information. Please try again.");
+        }
+    }
+
+    // Bind event listeners on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const zipInput = document.getElementById('zip_input');
+        if (zipInput) {
+            zipInput.addEventListener('input', function() {
+                // Strip non-numeric characters in real-time
+                this.value = this.value.replace(/\D/g, '').slice(0, 6);
+                handlePinLookup(this.value);
+            });
+
+            zipInput.addEventListener('change', function() {
+                handlePinLookup(this.value);
+            });
+
+            // Pre-fill on page load if user already has 6-digit PIN
+            const initialPin = zipInput.value.trim().replace(/\D/g, '');
+            const currentCity = "{{ current_user.city or '' }}";
+            if (initialPin.length === 6) {
+                handlePinLookup(initialPin, currentCity);
+            }
+        }
+    });
+
+    // Razorpay Integration Logic
+    const checkoutForm = document.getElementById('checkout-form');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', async function(e) {
+            const paymentRadio = this.querySelector('input[name="payment_method"]:checked');
+            const paymentMethod = paymentRadio ? paymentRadio.value : 'razorpay';
+            const btn = document.getElementById('submit-btn-real');
+
+            if (paymentMethod === 'razorpay') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Validate required fields
+                const fnameEl = document.getElementById('fname');
+                const lnameEl = document.getElementById('lname');
+                const addrEl = document.getElementById('address_input');
+                const stateEl = document.getElementById('state_input');
+                const districtEl = document.getElementById('district_input');
+                const cityEl = document.getElementById('city_input');
+                const zipEl = document.getElementById('zip_input');
+                const phoneEl = document.getElementById('user_phone');
+
+                if (!fnameEl || !fnameEl.value.trim()) { alert('Please enter your first name.'); if (fnameEl) fnameEl.focus(); return false; }
+                if (!lnameEl || !lnameEl.value.trim()) { alert('Please enter your last name.'); if (lnameEl) lnameEl.focus(); return false; }
+                if (!addrEl || !addrEl.value.trim()) { alert('Please enter your full street address.'); if (addrEl) addrEl.focus(); return false; }
+                if (!zipEl || !zipEl.value.trim() || zipEl.value.trim().length !== 6) { alert('Please enter a valid 6-digit PIN code.'); if (zipEl) zipEl.focus(); return false; }
+                if (!stateEl || !stateEl.value.trim()) { alert('Please enter or select your State.'); if (stateEl) stateEl.focus(); return false; }
+                if (!cityEl || !cityEl.value.trim()) { alert('Please select your Village / City / Post Office.'); if (cityEl) cityEl.focus(); return false; }
+                if (!phoneEl || !phoneEl.value.trim()) { alert('Please enter your mobile contact number.'); if (phoneEl) phoneEl.focus(); return false; }
+
+                const billingData = {
+                    first_name: fnameEl.value.trim(),
+                    last_name: lnameEl.value.trim(),
+                    address: addrEl.value.trim(),
+                    city: cityEl.value.trim(),
+                    district: districtEl ? districtEl.value.trim() : '',
+                    state: stateEl.value.trim(),
+                    zip_code: zipEl.value.trim(),
+                    phone: phoneEl.value.trim()
+                };
+
+                const originalBtnHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Initializing Secure Gateway...';
+                btn.disabled = true;
+
+                try {
+                    const response = await fetch('/create_order', { 
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (!response.ok || !data.success || data.error) {
+                        throw new Error(data.error || 'Failed to initialize payment gateway.');
+                    }
+
+                    if (typeof Razorpay === 'undefined') {
+                        throw new Error('Razorpay Checkout SDK could not be loaded. Please check your internet connection.');
+                    }
+
+                    const options = {
+                        "key": data.key,
+                        "amount": data.amount,
+                        "currency": data.currency || "INR",
+                        "name": "Fashion World Pro",
+                        "description": "Fashion World Pro Order Payment",
+                        "image": "/static/images/logo.png",
+                        "order_id": data.order_id,
+                        "prefill": {
+                            "name": data.name || (billingData.first_name + " " + billingData.last_name).trim(),
+                            "email": data.email || "",
+                            "contact": billingData.phone || data.phone || ""
+                        },
+                        "notes": {
+                            "shipping_address": billingData.address + ", " + billingData.city + ", " + billingData.state + " - " + billingData.zip_code
+                        },
+                        "theme": {
+                            "color": "#0f172a"
+                        },
+                        "modal": {
+                            "ondismiss": function() {
+                                btn.disabled = false;
+                                btn.innerHTML = originalBtnHtml;
+                                if (typeof showToast === 'function') {
+                                    showToast('Payment window closed. You can retry when ready.');
+                                }
+                            }
+                        },
+                        "handler": async function(response) {
+                            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Verifying Payment Signature...';
+                            try {
+                                const verifyResp = await fetch('/verify_payment', {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Content-Type': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    body: JSON.stringify({
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                        ...billingData
+                                    })
+                                });
+                                
+                                const verifyData = await verifyResp.json();
+                                if (verifyResp.ok && verifyData.status === 'success') {
+                                    window.location.href = verifyData.redirect_url || `/track/${verifyData.order_id}`;
+                                } else {
+                                    alert(verifyData.error || "Payment verification failed. Please contact support.");
+                                    btn.innerHTML = originalBtnHtml;
+                                    btn.disabled = false;
+                                }
+                            } catch (vErr) {
+                                alert("An error occurred during payment verification: " + vErr.message);
+                                btn.innerHTML = originalBtnHtml;
+                                btn.disabled = false;
+                            }
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function(resp) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalBtnHtml;
+                        const errorMsg = (resp && resp.error && resp.error.description) 
+                            ? resp.error.description 
+                            : 'Payment could not be completed.';
+                        alert('Payment Failed: ' + errorMsg);
+                    });
+                    
+                    rzp.open();
+                } catch (err) {
+                    alert(err.message || 'Payment initialization failed.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                }
+            }
+        });
+    }
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}

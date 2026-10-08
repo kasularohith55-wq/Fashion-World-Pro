@@ -1,0 +1,622 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Admin Account | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ================= PAGE HEADER & BREADCRUMB ================= */
+    .page-header-wrapper {
+        margin-bottom: 24px;
+    }
+
+    .page-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #64748b;
+        text-decoration: none;
+    }
+
+    .breadcrumb-item.active {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .breadcrumb-separator {
+        font-size: 9px;
+        color: #94a3b8;
+    }
+
+    .page-main-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .page-sub-title {
+        font-size: 13.5px;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    /* ================= SETTINGS GRID LAYOUT ================= */
+    .settings-stack-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .settings-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .settings-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .header-title-flex {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .settings-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    .icon-profile { background: #fef3c7; color: #b45309; }
+    .icon-email { background: #eff6ff; color: #1d4ed8; }
+    .icon-security { background: #fef2f2; color: #dc2626; }
+
+    .settings-card-title {
+        font-size: 17px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.2px;
+    }
+
+    .settings-card-desc {
+        font-size: 12.5px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .badge-super-admin {
+        background: rgba(212, 175, 55, 0.15);
+        color: #92400e;
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.3px;
+    }
+
+    /* ================= PROFILE CARD 2-COLUMN SPLIT ================= */
+    .profile-card-body-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 32px;
+        align-items: start;
+    }
+
+    .profile-form-inputs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 20px;
+    }
+
+    .form-group-full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .form-input-styled {
+        width: 100%;
+        height: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #0f172a;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .form-input-styled:focus {
+        outline: none;
+        border-color: #0f172a;
+        box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .form-input-styled.readonly-field {
+        background: #f8fafc;
+        color: #64748b;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+    }
+
+    /* Right Side Identity Summary Box */
+    .admin-identity-summary-card {
+        background: linear-gradient(180deg, #fdfbf7 0%, #f8fafc 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: var(--radius-md);
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .admin-avatar-lg {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #fbbf24;
+        font-weight: 800;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(212, 175, 55, 0.4);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        margin-bottom: 12px;
+    }
+
+    .identity-name {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+
+    .identity-job-title {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 12px;
+    }
+
+    .identity-meta-box {
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+    }
+
+    .meta-label {
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .meta-value {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    /* ================= DUAL CARDS GRID (EMAIL & PASSWORD) ================= */
+    .dual-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .password-field-wrapper {
+        position: relative;
+    }
+
+    .password-field-wrapper input {
+        padding-right: 42px;
+    }
+
+    .pwd-toggle-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 15px;
+        padding: 4px;
+        transition: color 0.15s ease;
+    }
+
+    .pwd-toggle-btn:hover {
+        color: #0f172a;
+    }
+
+    .info-notice-box {
+        background: #f8fafc;
+        border-left: 3px solid #0f172a;
+        padding: 12px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #475569;
+        margin-bottom: 18px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        line-height: 1.5;
+    }
+
+    .info-notice-box.warning {
+        background: #fffbeb;
+        border-left-color: #f59e0b;
+        color: #92400e;
+    }
+
+    /* Buttons */
+    .btn-save-profile {
+        background: #0f172a;
+        color: #ffffff;
+        border: 1px solid #0f172a;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+
+    .btn-save-profile:hover {
+        background: #1e293b;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+    }
+
+    .btn-dark-navy-block {
+        width: 100%;
+        height: 42px;
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+
+    .btn-dark-navy-block:hover {
+        background: #1e293b;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+    }
+
+    /* ================= RESPONSIVE LAYOUT ================= */
+    @media (max-width: 1024px) {
+        .profile-card-body-grid {
+            grid-template-columns: 1fr;
+        }
+        .dual-cards-grid {
+            grid-template-columns: 1fr;
+        }
+        .admin-identity-summary-card {
+            margin-top: 10px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .profile-form-inputs-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header & Breadcrumb -->
+<div class="page-header-wrapper">
+    <div class="page-breadcrumb">
+        <span class="breadcrumb-item"><i class="fa-solid fa-gear"></i> Settings</span>
+        <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+        <span class="breadcrumb-item active">Admin Account</span>
+    </div>
+    <h1 class="page-main-title">Admin Account</h1>
+    <p class="page-sub-title">Manage your administrative identity, branding, and contact information.</p>
+</div>
+
+<div class="settings-stack-container">
+
+    <!-- Section 1: Administrator Profile (Large Horizontal Card) -->
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <div class="header-title-flex">
+                <div class="settings-card-icon icon-profile">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <h2 class="settings-card-title">Administrator Profile</h2>
+                    <p class="settings-card-desc">Manage administrative identity, branding, and contact info</p>
+                </div>
+            </div>
+            <div>
+                <span class="badge-super-admin">
+                    <i class="fa-solid fa-shield-halved"></i> Super Administrator
+                </span>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_update_profile') }}">
+            <div class="profile-card-body-grid">
+                <!-- Left Column: Editable Form Fields -->
+                <div>
+                    <div class="profile-form-inputs-grid">
+                        <div class="form-group">
+                            <label for="username">Admin Username / Display Name *</label>
+                            <input type="text" id="username" name="username" class="form-input-styled" required value="{{ current_user.username }}" placeholder="Admin">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="current_email_display">Primary Login Email (Verified)</label>
+                            <input type="text" id="current_email_display" class="form-input-styled readonly-field" value="{{ current_user.email }}" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input type="text" id="first_name" name="first_name" class="form-input-styled" value="{{ current_user.first_name or '' }}" placeholder="e.g. John">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" class="form-input-styled" value="{{ current_user.last_name or '' }}" placeholder="e.g. Doe">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Contact Phone</label>
+                            <input type="text" id="phone" name="phone" class="form-input-styled" value="{{ current_user.phone or '' }}" placeholder="e.g. +91 9876543210">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Account Status</label>
+                            <input type="text" class="form-input-styled readonly-field" value="Active (Super Admin)" readonly>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 22px;">
+                        <button type="submit" class="btn-save-profile">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Profile Details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Administrator Identity Summary Card -->
+                <div class="admin-identity-summary-card">
+                    <div class="admin-avatar-lg">
+                        {{ current_user.username[0]|upper if current_user.username else 'A' }}
+                    </div>
+                    <div class="identity-name">
+                        {{ current_user.first_name ~ ' ' ~ current_user.last_name if current_user.first_name else current_user.username }}
+                    </div>
+                    <div class="identity-job-title">Lead Platform Administrator</div>
+                    
+                    <span class="badge-super-admin">
+                        <i class="fa-solid fa-crown"></i> Super Administrator
+                    </span>
+
+                    <div class="identity-meta-box">
+                        <div class="meta-row">
+                            <span class="meta-label">Member Since:</span>
+                            <span class="meta-value">{{ current_user.created_at.strftime('%d %B %Y') if current_user.created_at else 'Active' }}</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Role:</span>
+                            <span class="meta-value" style="color: #b45309;">Super Admin</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Auth Method:</span>
+                            <span class="meta-value">{{ current_user.auth_provider|upper if current_user.auth_provider else 'PASSWORD' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Section 2: Dual Column Grid (Change Email & Change Password) -->
+    <div class="dual-cards-grid">
+
+        <!-- Card A: Change Admin Email -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="header-title-flex">
+                    <div class="settings-card-icon icon-email">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h2 class="settings-card-title">Change Admin Email</h2>
+                        <p class="settings-card-desc">Update primary administrator login address</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-notice-box">
+                <i class="fa-solid fa-circle-info" style="margin-top: 2px; color: #1d4ed8;"></i>
+                <div>
+                    Updating your email address changes your primary sign-in credential immediately. Current security password is required.
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin_change_email') }}">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="form-group">
+                        <label for="current_email_info">Current Registered Email</label>
+                        <input type="email" id="current_email_info" class="form-input-styled readonly-field" value="{{ current_user.email }}" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_email">New Email Address *</label>
+                        <input type="email" id="new_email" name="new_email" class="form-input-styled" required placeholder="newadmin@fashionworld.pro" autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_new_email">Confirm New Email Address *</label>
+                        <input type="email" id="confirm_new_email" name="confirm_new_email" class="form-input-styled" required placeholder="Re-enter new email" autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_current_password">Current Security Password *</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="email_current_password" name="current_password" class="form-input-styled" required placeholder="Enter current password" autocomplete="current-password">
+                            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('email_current_password', this)" aria-label="Toggle password visibility">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-dark-navy-block">
+                    <i class="fa-solid fa-circle-check"></i> Update Admin Email
+                </button>
+            </form>
+        </div>
+
+        <!-- Card B: Change Security Password -->
+        <div class="settings-card">
+            <div class="settings-card-header">
+                <div class="header-title-flex">
+                    <div class="settings-card-icon icon-security">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div>
+                        <h2 class="settings-card-title">Change Security Password</h2>
+                        <p class="settings-card-desc">Update your administrator password securely</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-notice-box warning">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-top: 2px;"></i>
+                <div>
+                    For maximum security, changing your password will invalidate the current session and require you to authenticate again.
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin_change_password') }}">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="form-group">
+                        <label for="pwd_current">Current Security Password *</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="pwd_current" name="current_password" class="form-input-styled" required placeholder="Enter current password" autocomplete="current-password">
+                            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('pwd_current', this)" aria-label="Toggle password visibility">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pwd_new">New Password (Min 6 Characters) *</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="pwd_new" name="new_password" class="form-input-styled" required minlength="6" placeholder="Enter strong new password" autocomplete="new-password">
+                            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('pwd_new', this)" aria-label="Toggle password visibility">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pwd_confirm">Confirm New Password *</label>
+                        <div class="password-field-wrapper">
+                            <input type="password" id="pwd_confirm" name="confirm_new_password" class="form-input-styled" required minlength="6" placeholder="Re-type new password" autocomplete="new-password">
+                            <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility('pwd_confirm', this)" aria-label="Toggle password visibility">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-dark-navy-block">
+                    <i class="fa-solid fa-lock"></i> Change Password & Re-authenticate
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function togglePasswordVisibility(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+    }
+}
+</script>
+{% endblock %}

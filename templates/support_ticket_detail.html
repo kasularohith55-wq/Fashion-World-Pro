@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.ticket_number }} | Fashion World Pro{% endblock %}
+
+{% block content %}
+<style>
+    .ticket-detail-container {
+        padding: 140px 8% 80px 8%;
+        max-width: 1000px;
+        margin: 0 auto;
+        min-height: 80vh;
+    }
+
+    .ticket-nav-back {
+        margin-bottom: 25px;
+    }
+
+    .ticket-nav-back a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+
+    .ticket-nav-back a:hover {
+        color: #0f172a;
+    }
+
+    .ticket-header-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+
+    .ticket-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    .ticket-title-group h1 {
+        font-family: 'Lora', serif;
+        font-size: 1.8rem;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+        font-weight: 600;
+    }
+
+    .ticket-id-tag {
+        display: inline-block;
+        background: #0f172a;
+        color: #c5a880;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .ticket-badges-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .status-pill-large {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-open { background: #fef3c7; color: #92400e; }
+    .status-in-progress { background: #e0f2fe; color: #0369a1; }
+    .status-resolved { background: #dcfce7; color: #15803d; }
+    .status-closed { background: #f1f5f9; color: #64748b; }
+
+    .ticket-meta-bar {
+        display: flex;
+        gap: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #f1f5f9;
+        font-size: 0.85rem;
+        color: #64748b;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .message-thread {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .message-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        position: relative;
+    }
+
+    .message-card.admin-reply-card {
+        background: #f8fafc;
+        border: 1.5px solid #c5a880;
+    }
+
+    .message-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .sender-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sender-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #0f172a;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .sender-avatar.admin-avatar {
+        background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        color: #c5a880;
+        border: 2px solid #c5a880;
+    }
+
+    .sender-info h4 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .sender-info span {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+
+    .message-timestamp {
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+
+    .message-body {
+        color: #334155;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    .awaiting-reply-card {
+        background: #fffbeb;
+        border: 1px dashed #f59e0b;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        color: #92400e;
+    }
+
+    .awaiting-reply-card i {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="ticket-detail-container">
+    <div class="ticket-nav-back">
+        <a href="{{ url_for('customer_support') }}">
+            <i class="fa-solid fa-arrow-left"></i> Return to Support Portal
+        </a>
+    </div>
+
+    <!-- Ticket Summary Header -->
+    <div class="ticket-header-card">
+        <div class="ticket-header-top">
+            <div class="ticket-title-group">
+                <span class="ticket-id-tag">#{{ ticket.ticket_number }}</span>
+                <h1 style="margin-top: 10px;">{{ ticket.subject }}</h1>
+            </div>
+            <div class="ticket-badges-group">
+                <span class="status-pill-large status-{{ ticket.status.lower().replace(' ', '-') }}">
+                    {% if ticket.status.lower() == 'resolved' %}
+                    <i class="fa-solid fa-circle-check"></i>
+                    {% elif ticket.status.lower() == 'in progress' %}
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    {% else %}
+                    <i class="fa-regular fa-clock"></i>
+                    {% endif %}
+                    {{ ticket.status }}
+                </span>
+            </div>
+        </div>
+
+        <div class="ticket-meta-bar">
+            <div class="meta-item">
+                <i class="fa-solid fa-folder-open"></i>
+                <span>Category: <strong>{{ ticket.category }}</strong></span>
+            </div>
+            {% if ticket.order_id %}
+            <div class="meta-item">
+                <i class="fa-solid fa-box"></i>
+                <span>Order Ref: 
+                    {% if related_order %}
+                    <a href="{{ url_for('track_order', order_id=related_order.id) }}" style="color: #0f172a; font-weight: 700;">#{{ ticket.order_id }}</a>
+                    {% else %}
+                    <strong>#{{ ticket.order_id }}</strong>
+                    {% endif %}
+                </span>
+            </div>
+            {% endif %}
+            <div class="meta-item">
+                <i class="fa-regular fa-calendar"></i>
+                <span>Submitted on {{ ticket.created_at.strftime('%d %B %Y at %I:%M %p') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Thread -->
+    <div class="message-thread">
+        <!-- Customer's Original Inquiry -->
+        <div class="message-card">
+            <div class="message-card-header">
+                <div class="sender-profile">
+                    <div class="sender-avatar">
+                        {{ ticket.customer_name[0] | upper }}
+                    </div>
+                    <div class="sender-info">
+                        <h4>{{ ticket.customer_name }}</h4>
+                        <span>Customer (You) &bull; {{ ticket.customer_email }}</span>
+                    </div>
+                </div>
+                <div class="message-timestamp">
+                    {{ ticket.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                </div>
+            </div>
+            <div class="message-body">
+{{ ticket.message }}
+            </div>
+        </div>
+
+        <!-- Administrator Reply -->
+        {% if ticket.admin_reply %}
+        <div class="message-card admin-reply-card">
+            <div class="message-card-header">
+                <div class="sender-profile">
+                    <div class="sender-avatar admin-avatar">
+                        <i class="fa-solid fa-gem"></i>
+                    </div>
+                    <div class="sender-info">
+                        <h4>{{ ticket.admin_replied_by or 'Fashion World Support Concierge' }}</h4>
+                        <span style="color: #c5a880; font-weight: 600;">Official Support Response</span>
+                    </div>
+                </div>
+                <div class="message-timestamp">
+                    {% if ticket.replied_at %}
+                    {{ ticket.replied_at.strftime('%d %b %Y, %I:%M %p') }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="message-body">
+{{ ticket.admin_reply }}
+            </div>
+        </div>
+        {% else %}
+        <div class="awaiting-reply-card">
+            <i class="fa-regular fa-clock"></i>
+            <h4 style="margin: 0 0 6px 0; font-weight: 700;">Awaiting Concierge Response</h4>
+            <p style="margin: 0; font-size: 0.9rem;">Our team is reviewing your ticket and will post a response here shortly.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

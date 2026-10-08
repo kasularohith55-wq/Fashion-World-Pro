@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fashion World Pro | Luxury Apparel{% endblock %}</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Lora:ital,wght@0,400..700;1,400..700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='upgraded_header_v5') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/storefront_header.css', v='nav_icon_24px_v2') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/collections.css', v='hero_clean_cta_v4') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css', v='fw_assistant_v1') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- ==========================================================================
+         STOREFRONT LUXURY HEADER MASTER
+         ========================================================================== -->
+    <header class="storefront-header-master">
+        <!-- Main Brand & Navigation Header (White, Spacious, Premium) -->
+        <div class="main-brand-header">
+            <div class="main-header-container">
+                <!-- Mobile Menu Button -->
+                <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Open Navigation Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <!-- Left: Logo & "Style Lives Here" script -->
+                <div class="header-brand-group">
+                    <a href="{{ url_for('home') }}" class="brand-logo-anchor">
+                        <div class="brand-emblem-gem">
+                            <i class="fa-solid fa-gem"></i>
+                        </div>
+                        <div class="brand-title-box">
+                            <div class="brand-name-row">
+                                <span class="brand-name-main">FASHION WORLD</span>
+                                <span class="brand-pro-pill">PRO</span>
+                            </div>
+                            <span class="brand-sub-slogan">ELEGANCE REDEFINED</span>
+                        </div>
+                    </a>
+                    
+                    <div class="brand-script-phrase">
+                        <span class="script-cursive">Style</span>
+                        <span class="script-caps">LIVES HERE</span>
+                    </div>
+                </div>
+
+                <!-- Center: Search Bar -->
+                <div class="header-search-wrapper">
+                    <form action="{{ url_for('search') }}" method="GET" class="header-search-form" id="storefrontSearchForm">
+                        <i class="fa-solid fa-magnifying-glass search-leading-icon"></i>
+                        <input type="text" name="query" id="headerSearchInput" placeholder="Search for dresses, tops, accessories, brands..." value="{{ request.args.get('query', '') }}" autocomplete="off" class="search-input-field" required>
+                        <button type="submit" class="search-submit-btn">Search</button>
+                    </form>
+                    <div class="search-suggestions-dropdown" id="searchSuggestionsDropdown" role="listbox" aria-label="Search suggestions"></div>
+                </div>
+
+                <!-- Right: Main Navigation Icons -->
+                <nav class="header-nav-actions">
+                    <!-- Home -->
+                    <a href="{{ url_for('home') }}" class="nav-action-item {% if request.endpoint == 'home' and not request.args.get('collection') %}active{% endif %}" title="Home">
+                        <div class="nav-action-icon"><i class="fa-solid fa-house"></i></div>
+                        <span class="nav-action-label">HOME</span>
+                    </a>
+
+                    <!-- Collections -->
+                    <a href="{{ url_for('home') }}#collections" class="nav-action-item {% if request.args.get('collection') %}active{% endif %}" title="Curated Collections">
+                        <div class="nav-action-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <span class="nav-action-label">COLLECTIONS</span>
+                    </a>
+
+                    <!-- Shop -->
+                    <a href="{{ url_for('products') }}" class="nav-action-item {% if request.endpoint == 'products' and not request.args.get('filter') and not request.args.get('category') and not request.args.get('collection') %}active{% endif %}" title="Shop Collection">
+                        <div class="nav-action-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                        <span class="nav-action-label">SHOP</span>
+                    </a>
+
+                    <!-- Specials (HOT/NEW Badge) -->
+                    <a href="{{ url_for('specials') }}" class="nav-action-item specials-item {% if request.endpoint == 'specials' %}active{% endif %}" title="Special Offers">
+                        <span class="nav-floating-badge hot">NEW</span>
+                        <div class="nav-action-icon specials-icon"><i class="fa-solid fa-tag"></i></div>
+                        <span class="nav-action-label specials-label">SPECIALS</span>
+                    </a>
+
+                    <!-- Build Outfit (Styling Studio) -->
+                    <a href="{{ url_for('build_outfit') }}" class="nav-action-item {% if request.endpoint == 'build_outfit' %}active{% endif %}" title="Build My Outfit">
+                        <div class="nav-action-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <span class="nav-action-label">OUTFIT</span>
+                    </a>
+
+                    <!-- Cart -->
+                    <a href="{{ url_for('cart') }}" class="nav-action-item {% if request.endpoint == 'cart' %}active{% endif %}" title="Shopping Bag">
+                        <span class="nav-floating-badge cart-count-pill" id="cartCountBadge">{{ cart_count }}</span>
+                        <div class="nav-action-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                        <span class="nav-action-label">CART</span>
+                    </a>
+
+                    <!-- Wishlist -->
+                    <a href="{{ url_for('wishlist') }}" class="nav-action-item {% if request.endpoint == 'wishlist' %}active{% endif %}" title="My Wishlist">
+                        {% if wishlist_count and wishlist_count > 0 %}
+                        <span class="nav-floating-badge wishlist-count-pill" id="wishlistCountBadge">{{ wishlist_count }}</span>
+                        {% endif %}
+                        <div class="nav-action-icon"><i class="fa-solid fa-heart"></i></div>
+                        <span class="nav-action-label">WISHLIST</span>
+                    </a>
+
+                    <!-- My Orders -->
+                    <a href="{{ url_for('dashboard') }}" class="nav-action-item {% if request.endpoint in ['dashboard', 'orders'] %}active{% endif %}" title="My Orders">
+                        <div class="nav-action-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+                        <span class="nav-action-label">MY ORDERS</span>
+                    </a>
+
+                    <!-- Support -->
+                    <a href="{{ url_for('customer_support') }}" class="nav-action-item {% if request.endpoint in ['customer_support', 'customer_ticket_detail'] %}active{% endif %}" title="Customer Support">
+                        <div class="nav-action-icon"><i class="fa-solid fa-headset"></i></div>
+                        <span class="nav-action-label">SUPPORT</span>
+                    </a>
+
+                    <!-- Account / User Dropdown -->
+                    <div class="nav-action-dropdown-wrapper account-dropdown-wrap">
+                        {% if current_user.is_authenticated %}
+                        <button class="nav-action-item account-trigger-btn" id="accountMenuTrigger" aria-expanded="false" title="My Account">
+                            <div class="nav-action-icon"><i class="fa-solid fa-circle-user"></i></div>
+                            <span class="nav-action-label">HI, {{ (current_user.username|truncate(8, True, '') if current_user.username else 'USER')|upper }} <i class="fa-solid fa-chevron-down dropdown-arrow"></i></span>
+                        </button>
+                        <div class="account-menu-popover" id="accountMenuPopover">
+                            <div class="account-popover-header">
+                                <div class="user-avatar-initial">{{ current_user.username[0]|upper if current_user.username else 'U' }}</div>
+                                <div class="user-info-text">
+                                    <strong>{{ current_user.username }}</strong>
+                                    <span>{{ current_user.email }}</span>
+                                </div>
+                            </div>
+                            <div class="account-popover-links">
+                                <a href="{{ url_for('dashboard') }}"><i class="fa-solid fa-box-open"></i> My Orders</a>
+                                <a href="{{ url_for('wishlist') }}"><i class="fa-solid fa-heart"></i> My Wishlist</a>
+                                <a href="{{ url_for('customer_support') }}"><i class="fa-solid fa-headset"></i> Help & Support</a>
+                                {% if current_user.is_admin %}
+                                <a href="{{ url_for('admin_dashboard') }}" class="admin-link-highlight"><i class="fa-solid fa-shield-halved"></i> Admin Control Panel</a>
+                                {% endif %}
+                                <div class="popover-divider"></div>
+                                <a href="{{ url_for('logout') }}" class="logout-link"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('login') }}" class="nav-action-item" title="Login or Register">
+                            <div class="nav-action-icon"><i class="fa-solid fa-circle-user"></i></div>
+                            <span class="nav-action-label">ACCOUNT</span>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Far Right Luxury Mood Badge -->
+                    <div class="brand-mood-badge">
+                        <span class="mood-script">Good</span>
+                        <span class="mood-caps">FASHION</span>
+                        <span class="mood-sub">GOOD MOOD ♡</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Slide-out Drawer -->
+    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+    <div class="mobile-nav-drawer" id="mobileNavDrawer">
+        <div class="mobile-drawer-header">
+            <div class="mobile-drawer-brand">
+                <i class="fa-solid fa-gem gold-emblem"></i>
+                <span>FASHION WORLD PRO</span>
+            </div>
+            <button class="mobile-drawer-close" id="mobileDrawerClose" aria-label="Close menu">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Search -->
+        <form action="{{ url_for('search') }}" method="GET" class="mobile-drawer-search">
+            <input type="text" name="query" placeholder="Search apparel, dresses, brands..." required>
+            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+
+        <div class="mobile-drawer-links">
+            <a href="{{ url_for('home') }}" class="mobile-drawer-link"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="{{ url_for('home') }}#collections" class="mobile-drawer-link"><i class="fa-solid fa-layer-group"></i> Collections</a>
+            <a href="{{ url_for('products') }}" class="mobile-drawer-link"><i class="fa-solid fa-bag-shopping"></i> Shop All</a>
+            <a href="{{ url_for('specials') }}" class="mobile-drawer-link highlight-red"><i class="fa-solid fa-tag"></i> Special Offers <span class="mobile-pill">HOT</span></a>
+            <a href="{{ url_for('build_outfit') }}" class="mobile-drawer-link" style="color: #caa66e; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> Build My Outfit <span class="mobile-pill" style="background: #caa66e; color: #111;">NEW</span></a>
+            <a href="{{ url_for('products', filter='new_arrivals') }}" class="mobile-drawer-link"><i class="fa-solid fa-sparkles"></i> New Arrivals</a>
+            
+            <div class="mobile-drawer-divider"></div>
+            <div class="mobile-section-heading">Categories</div>
+            <a href="{{ url_for('products', category='Men') }}" class="mobile-drawer-link"><i class="fa-solid fa-mars"></i> Men's Collection</a>
+            <a href="{{ url_for('products', category='Women') }}" class="mobile-drawer-link"><i class="fa-solid fa-venus"></i> Women's Collection</a>
+            <a href="{{ url_for('products', category='Accessories') }}" class="mobile-drawer-link"><i class="fa-solid fa-glasses"></i> Accessories</a>
+            <a href="{{ url_for('products', category='Footwear') }}" class="mobile-drawer-link"><i class="fa-solid fa-shoe-prints"></i> Footwear</a>
+            <a href="{{ url_for('products', category='Beauty') }}" class="mobile-drawer-link"><i class="fa-solid fa-wand-magic-sparkles"></i> Beauty & Fragrances</a>
+            <a href="{{ url_for('products', category='Brands') }}" class="mobile-drawer-link"><i class="fa-solid fa-award"></i> Top Brands</a>
+
+            <div class="mobile-drawer-divider"></div>
+            <div class="mobile-section-heading">Account & Orders</div>
+            <a href="{{ url_for('cart') }}" class="mobile-drawer-link"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart ({{ cart_count }})</a>
+            <a href="{{ url_for('wishlist') }}" class="mobile-drawer-link"><i class="fa-solid fa-heart"></i> My Wishlist</a>
+            <a href="{{ url_for('dashboard') }}" class="mobile-drawer-link"><i class="fa-solid fa-clipboard-list"></i> My Orders</a>
+            <a href="{{ url_for('customer_support') }}" class="mobile-drawer-link"><i class="fa-solid fa-headset"></i> Customer Support</a>
+            
+            {% if current_user.is_authenticated %}
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin_dashboard') }}" class="mobile-drawer-link admin-highlight"><i class="fa-solid fa-shield-halved"></i> Admin Control Panel</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="mobile-drawer-link logout-red"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout ({{ current_user.username }})</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="mobile-drawer-link"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
+                <a href="{{ url_for('register') }}" class="mobile-drawer-link"><i class="fa-solid fa-user-plus"></i> Register</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="storefront-main-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="storefront-alerts-container" style="max-width: 1200px; margin: 20px auto 0; padding: 0 20px;">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="text-align: center; padding: 14px 20px; border-radius: 8px; margin-bottom: 12px; font-weight: 500; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); {% if category == 'success' %}background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;{% elif category == 'danger' or category == 'error' %}background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;{% elif category == 'warning' %}background: #fffbeb; color: #92400e; border: 1px solid #fde68a;{% else %}background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;{% endif %}">{{ message }}</div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Sockets & Core JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script>
+        // Global User Data for Sockets
+        const CURRENT_USER_ID = "{{ current_user.id if current_user.is_authenticated else '' }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    <!-- Storefront Header Interactive Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Account Dropdown Popover Toggle
+            const accountMenuTrigger = document.getElementById('accountMenuTrigger');
+            const accountMenuPopover = document.getElementById('accountMenuPopover');
+
+            if (accountMenuTrigger && accountMenuPopover) {
+                accountMenuTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isExpanded = accountMenuPopover.classList.toggle('show');
+                    accountMenuTrigger.setAttribute('aria-expanded', isExpanded);
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!accountMenuPopover.contains(e.target) && !accountMenuTrigger.contains(e.target)) {
+                        accountMenuPopover.classList.remove('show');
+                        accountMenuTrigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            // Mobile Drawer Toggle
+            const mobileNavToggle = document.getElementById('mobileNavToggle');
+            const mobileNavDrawer = document.getElementById('mobileNavDrawer');
+            const mobileDrawerOverlay = document.getElementById('mobileDrawerOverlay');
+            const mobileDrawerClose = document.getElementById('mobileDrawerClose');
+
+            function openMobileDrawer() {
+                if (mobileNavDrawer && mobileDrawerOverlay) {
+                    mobileNavDrawer.classList.add('active');
+                    mobileDrawerOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            function closeMobileDrawer() {
+                if (mobileNavDrawer && mobileDrawerOverlay) {
+                    mobileNavDrawer.classList.remove('active');
+                    mobileDrawerOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            if (mobileNavToggle) mobileNavToggle.addEventListener('click', openMobileDrawer);
+            if (mobileDrawerClose) mobileDrawerClose.addEventListener('click', closeMobileDrawer);
+            if (mobileDrawerOverlay) mobileDrawerOverlay.addEventListener('click', closeMobileDrawer);
+
+            // Sync Cart Socket Badge Updates with Header Elements
+            if (typeof io !== 'undefined') {
+                window.addEventListener('cart_badge_updated', (e) => {
+                    const badge = document.getElementById('cartCountBadge');
+                    if (badge && e.detail && typeof e.detail.count !== 'undefined') {
+                        badge.textContent = e.detail.count;
+                    }
+                });
+            }
+
+            // Live Search Suggestions Autocomplete
+            const searchInput = document.getElementById('headerSearchInput');
+            const searchDropdown = document.getElementById('searchSuggestionsDropdown');
+            let searchDebounceTimer = null;
+            let searchAbortController = null;
+
+            if (searchInput && searchDropdown) {
+                function escapeHtml(str) {
+                    if (!str) return '';
+                    return String(str).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+                }
+
+                function renderSuggestions(data) {
+                    if (!data || ((!data.categories || data.categories.length === 0) && (!data.products || data.products.length === 0))) {
+                        searchDropdown.innerHTML = `<div class="suggestion-empty"><i class="fa-solid fa-circle-question" style="margin-right:6px; color:#c5a059;"></i>No matching pieces found for "${escapeHtml(searchInput.value.trim())}"</div>`;
+                        searchDropdown.classList.add('show');
+                        return;
+                    }
+
+                    let html = '';
+
+                    // Categories Section
+                    if (data.categories && data.categories.length > 0) {
+                        const headerTitle = data.intent === 'men' ? "MEN'S WEAR" : (data.intent === 'women' ? "WOMEN'S WEAR" : (data.intent === 'kids' ? "KIDS WEAR" : "CATEGORIES"));
+                        html += `
+                            <div class="suggestion-section-header">
+                                <i class="fa-solid fa-sparkles"></i> ${headerTitle}
+                            </div>
+                            <div class="suggestion-cat-list">
+                        `;
+                        data.categories.forEach(cat => {
+                            html += `
+                                <a href="${cat.url}" class="suggestion-cat-item">
+                                    <div class="suggestion-cat-left">
+                                        <div class="suggestion-cat-icon"><i class="${cat.icon || 'fa-solid fa-tag'}"></i></div>
+                                        <span>${escapeHtml(cat.name)}</span>
+                                    </div>
+                                    <i class="fa-solid fa-arrow-right suggestion-cat-arrow"></i>
+                                </a>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Products Section
+                    if (data.products && data.products.length > 0) {
+                        html += `
+                            <div class="suggestion-section-header">
+                                <i class="fa-solid fa-bag-shopping"></i> FEATURED PIECES
+                            </div>
+                            <div class="suggestion-prod-list">
+                        `;
+                        data.products.forEach(prod => {
+                            html += `
+                                <a href="${prod.url}" class="suggestion-prod-item">
+                                    <img src="${prod.image_url}" alt="${escapeHtml(prod.name)}" class="suggestion-prod-thumb" onerror="this.src='/static/images/p1.png'">
+                                    <div class="suggestion-prod-details">
+                                        <div class="suggestion-prod-title">${escapeHtml(prod.name)}</div>
+                                        <div class="suggestion-prod-sub">
+                                            <span class="suggestion-prod-category">${escapeHtml(prod.category)}</span>
+                                            <span class="suggestion-prod-price ${prod.original_price ? 'discounted' : ''}">${prod.price}</span>
+                                            ${prod.original_price ? `<span style="text-decoration:line-through;color:#94a3b8;font-size:10px;">${prod.original_price}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right suggestion-cat-arrow"></i>
+                                </a>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // View All Footer
+                    if (data.view_all_url) {
+                        html += `
+                            <a href="${data.view_all_url}" class="suggestion-view-all">
+                                ${escapeHtml(data.view_all_text || 'View All Results →')}
+                            </a>
+                        `;
+                    }
+
+                    searchDropdown.innerHTML = html;
+                    searchDropdown.classList.add('show');
+                }
+
+                function fetchSuggestions(query) {
+                    if (!query || query.trim().length === 0) {
+                        searchDropdown.classList.remove('show');
+                        searchDropdown.innerHTML = '';
+                        return;
+                    }
+
+                    if (searchAbortController) {
+                        searchAbortController.abort();
+                    }
+                    searchAbortController = new AbortController();
+
+                    fetch(`/api/search/suggestions?q=${encodeURIComponent(query.trim())}`, { signal: searchAbortController.signal })
+                        .then(res => res.json())
+                        .then(data => {
+                            renderSuggestions(data);
+                        })
+                        .catch(err => {
+                            if (err.name !== 'AbortError') {
+                                console.error('Search suggestion error:', err);
+                            }
+                        });
+                }
+
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchDebounceTimer);
+                    const q = e.target.value;
+                    if (!q || !q.trim()) {
+                        searchDropdown.classList.remove('show');
+                        searchDropdown.innerHTML = '';
+                        return;
+                    }
+                    searchDebounceTimer = setTimeout(() => {
+                        fetchSuggestions(q);
+                    }, 100);
+                });
+
+                searchInput.addEventListener('focus', () => {
+                    const q = searchInput.value;
+                    if (q && q.trim().length > 0) {
+                        fetchSuggestions(q);
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!searchDropdown.contains(e.target) && !searchInput.contains(e.target)) {
+                        searchDropdown.classList.remove('show');
+                    }
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        searchDropdown.classList.remove('show');
+                    }
+                });
+            }
+        });
+    </script>
+    {% include 'components/chatbot.html' %}
+    <script src="{{ url_for('static', filename='js/chatbot.js', v='fw_assistant_v1') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

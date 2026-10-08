@@ -1,0 +1,148 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Reviews & Ratings | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .page-header-wrapper {
+        margin-bottom: 24px;
+    }
+
+    .page-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: #64748b;
+        text-decoration: none;
+    }
+
+    .breadcrumb-item.active {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .breadcrumb-separator {
+        font-size: 9px;
+        color: #94a3b8;
+    }
+
+    .page-main-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .page-sub-title {
+        font-size: 13.5px;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    .star-rating-gold {
+        color: #f59e0b;
+        font-size: 12px;
+        display: inline-flex;
+        gap: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header & Breadcrumb -->
+<div class="page-header-wrapper">
+    <div class="page-breadcrumb">
+        <span class="breadcrumb-item"><i class="fa-solid fa-bullhorn"></i> Marketing</span>
+        <span class="breadcrumb-separator"><i class="fa-solid fa-chevron-right"></i></span>
+        <span class="breadcrumb-item active">Reviews & Ratings</span>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div>
+            <h1 class="page-main-title">Customer Reviews & Ratings</h1>
+            <p class="page-sub-title">Moderation panel for verified customer reviews and star feedback.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="text-align: right;">
+                <span style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Average Store Rating</span>
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a;">
+                    <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 15px;"></i> {{ avg_rating }} / 5.0
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Table Card -->
+<div class="admin-card">
+    <div class="card-header-between" style="margin-bottom: 18px;">
+        <div>
+            <h3 class="card-title-lg" style="font-size: 16px;"><i class="fa-solid fa-comments" style="color: var(--gold-500); margin-right: 6px;"></i> All Product Feedback ({{ reviews|length }})</h3>
+            <span class="card-subtitle-sm">Customer feedback submitted on product catalog pages</span>
+        </div>
+    </div>
+
+    <div class="table-responsive-wrapper">
+        <table class="admin-modern-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rev in reviews %}
+                <tr>
+                    <td>
+                        <strong style="color: #0f172a;">{{ rev.user.username if rev.user else 'Verified Customer' }}</strong>
+                    </td>
+                    <td>
+                        <strong style="color: #0f172a;">{{ rev.product.name if rev.product else 'Product' }}</strong>
+                    </td>
+                    <td>
+                        <div class="star-rating-gold">
+                            {% for i in range(rev.rating) %}
+                            <i class="fa-solid fa-star"></i>
+                            {% endfor %}
+                            {% for i in range(5 - rev.rating) %}
+                            <i class="fa-regular fa-star" style="color: #cbd5e1;"></i>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td style="max-width: 320px;">
+                        <span style="color: #334155; font-size: 12.5px;">{{ rev.comment or 'No written comments.' }}</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <form method="POST" action="{{ url_for('admin_delete_review', review_id=rev.id) }}" onsubmit="return confirm('Remove this review permanently?')" style="display: inline;">
+                            <button type="submit" class="btn-outline-clean" style="color: #ef4444; border-color: #fecaca; padding: 5px 10px; font-size: 11.5px;">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #94a3b8; padding: 40px 20px;">
+                        <div style="font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 4px;">No customer reviews recorded yet</div>
+                        <span style="font-size: 12.5px;">Reviews submitted by buyers on product pages will appear here for moderation.</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

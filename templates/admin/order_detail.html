@@ -1,0 +1,258 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Order #FW-{{ order.id }} | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .order-detail-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .order-detail-title-group h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -0.3px;
+    }
+
+    .order-detail-layout-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 22px;
+    }
+
+    .form-group-clean {
+        margin-bottom: 16px;
+    }
+
+    .form-group-clean label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .form-control-clean {
+        width: 100%;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: var(--radius-md);
+        padding: 9px 12px;
+        font-size: 13px;
+        color: #0f172a;
+        outline: none;
+    }
+
+    .form-control-clean:focus {
+        background: #ffffff;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+    }
+
+    @media (max-width: 1024px) {
+        .order-detail-layout-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-header-bar">
+    <div class="order-detail-title-group">
+        <h1>
+            <i class="fa-solid fa-receipt" style="color: var(--gold-500);"></i> 
+            Order #FW-{{ order.id }}
+            <span class="status-pill status-{{ (order.status or 'pending')|lower }}">{{ order.status }}</span>
+        </h1>
+        <p style="font-size: 13px; color: #64748b; margin-top: 2px;">
+            Placed on {{ order.date_ordered.strftime('%d %B %Y at %I:%M %p') if order.date_ordered else '—' }}
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{{ url_for('admin_orders') }}" class="btn-outline-clean">
+            <i class="fa-solid fa-arrow-left"></i> Back to Orders
+        </a>
+        <a href="{{ url_for('invoice', order_id=order.id) }}" target="_blank" class="btn-outline-clean">
+            <i class="fa-solid fa-file-invoice"></i> View Invoice
+        </a>
+        <a href="{{ url_for('track_order', order_id=order.id) }}" target="_blank" class="btn-dark-primary">
+            <i class="fa-solid fa-location-dot"></i> Live Tracking
+        </a>
+    </div>
+</div>
+
+<div class="order-detail-layout-grid">
+    <!-- Left Column: Products & Customer Details -->
+    <div style="display: flex; flex-direction: column; gap: 22px;">
+        <!-- Order Items Card -->
+        <div class="admin-card">
+            <div class="card-header-between">
+                <h3 class="card-title-lg"><i class="fa-solid fa-box-open" style="color: var(--gold-500);"></i> Purchased Products ({{ order.items|length }})</h3>
+            </div>
+            <div class="table-responsive-wrapper">
+                <table class="admin-modern-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Product Description</th>
+                            <th>Unit Price</th>
+                            <th>Quantity</th>
+                            <th style="text-align: right;">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>
+                                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="product-img-table-thumb" onerror="this.src='/static/images/p1.jpg'">
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: #0f172a; font-size: 13px;">{{ item.product.name }}</div>
+                                <div style="font-size: 11.5px; color: #64748b;">Category: {{ item.product.category }}</div>
+                            </td>
+                            <td>₹{{ "{:,.2f}".format(item.price_at_order) }}</td>
+                            <td><strong style="font-size: 13px;">x{{ item.quantity }}</strong></td>
+                            <td style="text-align: right; font-weight: 700; color: #0f172a;">
+                                ₹{{ "{:,.2f}".format(item.price_at_order * item.quantity) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Financial Summary -->
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; width: 280px; font-size: 13.5px; color: #64748b;">
+                    <span>Items Subtotal:</span>
+                    <strong style="color: #0f172a;">₹{{ "{:,.2f}".format(order.total_price) }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; width: 280px; font-size: 13.5px; color: #64748b;">
+                    <span>Express Delivery:</span>
+                    <span style="color: #059669; font-weight: 700;">FREE</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; width: 280px; font-size: 16px; font-weight: 800; border-top: 1px solid #e2e8f0; padding-top: 10px; color: #0f172a;">
+                    <span>Grand Total:</span>
+                    <span style="color: #0f172a;">₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer & Destination Details Card -->
+        <div class="admin-card">
+            <div class="card-header-between">
+                <h3 class="card-title-lg"><i class="fa-solid fa-truck-ramp-box" style="color: var(--gold-500);"></i> Delivery & Customer Profile</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Client Information</div>
+                    <div style="font-weight: 700; font-size: 14px; color: #0f172a;">{{ order.first_name }} {{ order.last_name }}</div>
+                    <div style="font-size: 12.5px; color: #475569; margin-top: 4px;"><i class="fa-regular fa-envelope" style="color: #94a3b8;"></i> {{ order.user.email if order.user else 'Guest' }}</div>
+                    <div style="font-size: 12.5px; color: #475569; margin-top: 2px;"><i class="fa-solid fa-phone" style="color: #94a3b8;"></i> {{ order.phone or (order.user.phone if order.user else 'N/A') }}</div>
+                    <div style="margin-top: 12px;">
+                        <a href="{{ url_for('admin_customer_detail', customer_id=order.user_id) }}" class="btn-outline-clean" style="padding: 5px 10px; font-size: 11.5px;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> View Customer History
+                        </a>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Shipping Destination</div>
+                    <div style="font-weight: 600; font-size: 13.5px; color: #0f172a;">{{ order.address or 'Standard Shipping Address' }}</div>
+                    <div style="font-size: 12.5px; color: #475569; margin-top: 4px;">{{ order.city }}, {{ order.state }} - {{ order.zip_code }}</div>
+                    <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;"><i class="fa-solid fa-location-dot" style="color: #94a3b8;"></i> India</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Status Controls & Payment Meta -->
+    <div style="display: flex; flex-direction: column; gap: 22px;">
+        <!-- Fulfillment Controls Card -->
+        <div class="admin-card">
+            <div class="card-header-between">
+                <h3 class="card-title-lg"><i class="fa-solid fa-sliders" style="color: var(--gold-500);"></i> Fulfillment Controls</h3>
+            </div>
+            
+            <form method="POST" action="{{ url_for('admin_update_order_status', order_id=order.id) }}">
+                <div class="form-group-clean">
+                    <label for="status">Order Status</label>
+                    <select name="status" id="status" class="form-control-clean">
+                        <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                        <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="form-group-clean">
+                    <label for="payment_status">Payment Status</label>
+                    <select name="payment_status" id="payment_status" class="form-control-clean">
+                        <option value="Pending" {% if order.payment_status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Paid" {% if order.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                        <option value="Failed" {% if order.payment_status == 'Failed' %}selected{% endif %}>Failed</option>
+                        <option value="Refunded" {% if order.payment_status == 'Refunded' %}selected{% endif %}>Refunded</option>
+                    </select>
+                </div>
+
+                <div class="form-group-clean">
+                    <label for="tracking_number">Tracking / Consignment #</label>
+                    <input type="text" id="tracking_number" name="tracking_number" class="form-control-clean" value="{{ order.tracking_number or '' }}" placeholder="e.g. BLUEDART-FW-9988">
+                </div>
+
+                <button type="submit" class="btn-luxury-gold" style="width: 100%; justify-content: center; margin-top: 8px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Save & Notify Customer
+                </button>
+            </form>
+        </div>
+
+        <!-- Payment Meta Card -->
+        <div class="admin-card">
+            <div class="card-header-between">
+                <h3 class="card-title-lg"><i class="fa-solid fa-credit-card" style="color: var(--gold-500);"></i> Payment Transaction</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Method:</span>
+                    <strong style="color: #0f172a;">{{ order.payment_method or 'Razorpay' }}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Payment Status:</span>
+                    <span class="status-pill status-{{ (order.payment_status or 'paid')|lower }}">{{ order.payment_status or 'Paid' }}</span>
+                </div>
+                {% if order.payment_id %}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Razorpay Payment ID:</span>
+                    <span style="font-family: monospace; font-size: 12px; color: #0f172a; font-weight: 700;">{{ order.payment_id }}</span>
+                </div>
+                {% endif %}
+                {% if order.razorpay_order_id %}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Razorpay Order ID:</span>
+                    <span style="font-family: monospace; font-size: 12px; color: #475569;">{{ order.razorpay_order_id }}</span>
+                </div>
+                {% endif %}
+                {% if order.payment_verified_at %}
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Verified At:</span>
+                    <span style="font-size: 11.5px; color: #64748b;">{{ order.payment_verified_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

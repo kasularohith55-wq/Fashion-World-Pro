@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Bag | Fashion World Pro{% endblock %}
+
+{% block content %}
+<section class="cart-section" style="padding: 150px 8%; max-width: 1200px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; margin-bottom: 50px; text-transform: uppercase; letter-spacing: 2px;">Your Shopping Bag</h1>
+    
+    {% if items %}
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 80px;">
+        <div class="cart-items">
+            {% for item in items %}
+            <div style="display: flex; gap: 30px; border-bottom: 1px solid #eee; padding: 30px 0;">
+                <div style="width: 120px; aspect-ratio: 4/5; overflow: hidden; border-radius: 5px; background: #f9f9f9;">
+                    <img src="{{ item.product.image_url if db_cart else item.image_url }}" alt="{{ item.product.name if db_cart else item.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div style="flex-grow: 1;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">{{ item.product.name if db_cart else item.name }}</h3>
+                    <p style="color: #888; font-size: 0.9rem; margin-bottom: 6px;">{{ item.product.category if db_cart else "" }}</p>
+                    {% if (db_cart and item.size) or (not db_cart and item.size) %}
+                    <p style="margin: 2px 0 10px; font-size: 0.85rem; color: #555;">Size: <span style="display: inline-block; padding: 2px 8px; background: #f0ede6; border: 1px solid #dcd4c7; border-radius: 4px; font-weight: 600; color: #1a1a1a; font-size: 0.78rem;">{{ item.size if db_cart else (item.size or item.get('size')) }}</span></p>
+                    {% endif %}
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                        <span style="font-size: 0.9rem; color: #555;">Quantity:</span>
+                        <form action="{{ url_for('update_cart_quantity', item_id=item.id if db_cart else item.id) }}" method="POST" style="display: inline-flex; align-items: center; gap: 4px;">
+                            <input type="hidden" name="action" value="decrease">
+                            <button type="submit" style="width: 26px; height: 26px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold;">-</button>
+                        </form>
+                        <strong style="font-size: 0.95rem; min-width: 20px; text-align: center;">{{ item.quantity if db_cart else item.get('quantity', 1) }}</strong>
+                        <form action="{{ url_for('update_cart_quantity', item_id=item.id if db_cart else item.id) }}" method="POST" style="display: inline-flex; align-items: center; gap: 4px;">
+                            <input type="hidden" name="action" value="increase">
+                            <button type="submit" style="width: 26px; height: 26px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
+                        </form>
+                    </div>
+                    <p class="price" style="font-size: 1.1rem; margin-top:10px;">₹{{ "{:,.2f}".format((item.product.discount_price if item.product.discount_price else item.product.price) if db_cart else item.price) }}</p>
+                </div>
+                <div>
+                  <a href="{{ url_for('remove_from_cart', item_id=item.id if db_cart else item.id) }}" style="color: #e74c3c; text-decoration: none; font-size: 0.8rem; text-transform: uppercase;">Remove</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="cart-summary" style="background: #fafafa; padding: 40px; border-radius: 5px; height: fit-content;">
+            <h3 style="font-size: 1.2rem; margin-bottom: 30px; text-transform: uppercase;">Order Summary</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #666;">
+                <span>Subtotal</span>
+                <span>₹{{ "{:,.2f}".format(total) }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #666;">
+                <span>Shipping</span>
+                <span>Calculated at checkout</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 30px; border-top: 1px solid #ddd; font-weight: 600; font-size: 1.2rem;">
+                <span>Total</span>
+                <span>₹{{ "{:,.2f}".format(total) }}</span>
+            </div>
+            
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('checkout') }}" class="btn btn-dark" style="width: 100%; text-align: center; margin-top: 40px; padding: 20px; text-decoration: none; display: block; background: #000; color: #fff;">Checkout Now</a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-dark" style="width: 100%; text-align: center; margin-top: 40px; padding: 20px; text-decoration: none; display: block; background: #000; color: #fff;">Login to Checkout</a>
+            {% endif %}
+            <p style="margin-top: 20px; text-align: center; font-size: 0.8rem; color: #999;">Prices include VAT if applicable.</p>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 100px 0;">
+        <i class="fa fa-shopping-bag" style="font-size: 3rem; color: #eee; margin-bottom: 30px;"></i>
+        <p style="font-size: 1.2rem; margin-bottom: 30px; color: #777;">Your shopping bag is empty.</p>
+        <a href="{{ url_for('products') }}" class="btn btn-dark">Start Shopping</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

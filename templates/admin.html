@@ -1,0 +1,726 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | Fashion World Pro{% endblock %}
+
+{% block content %}
+<!-- Font Awesome & Chart.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --admin-sidebar-bg: #1e1e2d;
+        --admin-sidebar-hover: #2b2b3f;
+        --admin-content-bg: #f5f6fa;
+        --accent-purple: #745af2;
+        --text-muted: #8e8ea1;
+        --status-completed: #22c55e;
+        --status-in-progress: #f59e0b;
+        --status-canceled: #ef4444;
+    }
+
+    body {
+        margin: 0;
+        background: var(--admin-content-bg) !important;
+        background-image: none !important; /* Override background from base.html */
+    }
+
+    .admin-layout {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+        width: 280px;
+        background: var(--admin-sidebar-bg);
+        color: #fff;
+        padding: 30px 20px;
+        display: flex;
+        flex-direction: column;
+        transition: 0.3s;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 40px;
+        padding-left: 10px;
+    }
+
+    .sidebar-header .logo-icon {
+        font-size: 1.8rem;
+        color: var(--accent-purple);
+    }
+
+    .sidebar-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .nav-section {
+        margin-bottom: 30px;
+    }
+
+    .nav-section h4 {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+        padding-left: 10px;
+    }
+
+    .nav-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 15px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background: var(--admin-sidebar-hover);
+        color: #fff;
+    }
+
+    .nav-link i {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .nav-link.active i {
+        color: var(--accent-purple);
+    }
+
+    /* Main Content Styles */
+    .main-content {
+        flex: 1;
+        padding: 40px;
+        background: var(--admin-content-bg);
+        overflow-y: auto;
+    }
+
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+
+    .top-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .btn-create {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.2s;
+    }
+
+    .btn-create:hover { background: #f8fafc; }
+
+    /* Stat Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        background: #fff;
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .stat-card i {
+        background: #f0f7ff;
+        color: #007bff;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+    }
+
+    .stat-card.rev i { background: #fdf2f8; color: #db2777; }
+    .stat-card.visit i { background: #ecfdf5; color: #059669; }
+    .stat-card.sale i { background: #fffbeb; color: #d97706; }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .stat-trend {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .trend-up { color: #22c55e; }
+    .trend-down { color: #ef4444; }
+
+    /* Dashboard Grid (Tables + Charts) */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    }
+
+    .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .card-title h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    /* Table Styles */
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-table th {
+        text-align: left;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .admin-table td {
+        padding: 20px 0;
+        border-bottom: 1px solid #f8fafc;
+        vertical-align: middle;
+    }
+
+    .product-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .product-cell img {
+        width: 45px;
+        height: 55px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .product-info p { font-size: 0.95rem; font-weight: 600; }
+    .product-info span { font-size: 0.8rem; color: var(--text-muted); }
+
+    .status-pill {
+        padding: 6px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: capitalize;
+    }
+
+    .status-paid { background: #ecfdf5; color: #059669; }
+    .status-pending { background: #fffbeb; color: #d97706; }
+    .status-cancelled { background: #fef2f2; color: #b91c1c; }
+
+    /* Platform List */
+    .platform-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .platform-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .platform-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .platform-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+
+    .status-tag {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--status-completed);
+    }
+
+    /* Modal Styling */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 40px;
+        width: 500px;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+
+    .modal-content h2 { margin-bottom: 25px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-family: inherit;
+    }
+</style>
+
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-cube logo-icon"></i>
+            <h2>DecorLab Admin</h2>
+        </div>
+
+        <div class="nav-section">
+            <h4>GENERAL</h4>
+            <ul class="nav-list">
+                <li><a href="javascript:void(0)" onclick="showSection('dashboard')" class="nav-link active" id="nav-dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="javascript:void(0)" onclick="openModal()" class="nav-link"><i class="fa-solid fa-plus-circle"></i> Add Product</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('inventory')" class="nav-link" id="nav-inventory"><i class="fa-solid fa-box"></i> Inventory</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('orders')" class="nav-link" id="nav-orders"><i class="fa-solid fa-cart-shopping"></i> Orders</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('customers')" class="nav-link" id="nav-customers"><i class="fa-solid fa-users"></i> Customers</a></li>
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <h4>PLATFORM INTEGRATION</h4>
+            <ul class="nav-list">
+                <li><a href="#" class="nav-link"><i class="fa-solid fa-key"></i> API Key</a></li>
+                <li><a href="#" class="nav-link"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            </ul>
+        </div>
+
+        <div style="margin-top: auto;">
+            <a href="{{ url_for('admin_logout') }}" class="nav-link"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Overview of your fashion empire</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-create" onclick="openModal()"><i class="fa fa-plus"></i> Add Product</button>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="fa-regular fa-bell" style="font-size: 1.2rem; color: var(--text-muted);"></i>
+                    <img src="https://i.pravatar.cc/100?u=admin" style="width: 40px; height: 40px; border-radius: 50%;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fa-solid fa-users"></i>
+                <span class="stat-label">Total Customers</span>
+                <span class="stat-value">{{ total_customers }}</span>
+                <span class="stat-trend trend-up">+10% Increase</span>
+            </div>
+            <div class="stat-card rev">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+                <span class="stat-label">Total Revenue</span>
+                <span class="stat-value">₹{{ "{:,.0f}".format(total_revenue) }}</span>
+                <span class="stat-trend trend-up">{{ total_orders }} Orders</span>
+            </div>
+            <div class="stat-card visit">
+                <i class="fa-solid fa-eye"></i>
+                <span class="stat-label">Today Results</span>
+                <span class="stat-value">{{ orders_today_count }}</span>
+                <span class="stat-trend trend-up">+12 Orders Today</span>
+            </div>
+            <div class="stat-card sale">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="stat-label">Today Sale</span>
+                <span class="stat-value">₹{{ "{:,.0f}".format(today_revenue) }}</span>
+                <span class="stat-trend trend-down">-4% Today</span>
+            </div>
+        </div>
+
+        <!-- Charts + Tables Grid -->
+        <div class="dashboard-grid">
+            <!-- Order History -->
+                <div id="dashboard-section">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders[:10] %}
+                            <tr>
+                                <td>
+                                    <div class="product-cell">
+                                        <img src="{{ order.items[0].product.image_url if order.items else '/static/images/p1.jpg' }}">
+                                        <div class="product-info">
+                                            <p>{{ order.items[0].product.name if order.items else 'Multiple Items' }}</p>
+                                            <span>Order #{{ order.id }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.date_ordered.strftime('%b %d, %Y') }}</td>
+                                <td><span class="status-pill status-{{ order.status.lower() }}">{{ order.status }}</span></td>
+                                <td style="font-weight: 700;">₹{{ "{:,.2f}".format(order.total_price) }}</td>
+                                <td>
+                                    <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST" style="display: flex; gap: 5px;">
+                                        <select name="status" onchange="this.form.submit()" style="font-size: 0.7rem; padding: 2px 5px; border-radius: 4px;">
+                                            <option value="">Status</option>
+                                            <option value="Processing">Processing</option>
+                                            <option value="Shipped">Shipped</option>
+                                            <option value="Delivered">Delivered</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Hidden Inventory Section -->
+                <div id="inventory-section" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Manage Products</h3>
+                        <p style="font-size: 0.8rem; color: #64748b;">Showing {{ products|length }} items</p>
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Item Details</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products[:20] %}
+                            <tr>
+                                <td>
+                                    <div class="product-cell">
+                                        <img src="{{ product.image_url }}">
+                                        <div class="product-info">
+                                            <p>{{ product.name }}</p>
+                                            <span style="font-size: 0.7rem; color: #94a3b8;">PID: #{{ product.id }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ product.category }}</td>
+                                <td>₹{{ "{:,.2f}".format(product.price) }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin_delete_product', product_id=product.id) }}" 
+                                       onclick="return confirm('Archive this product?')" 
+                                       style="color: #ef4444; font-size: 1.1rem; padding: 5px;"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Hidden Orders Section -->
+                <div id="orders-section" style="display: none;">
+                    <h3>All Master Orders</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Manage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>{{ order.user.username }}<br><span style="font-size: 0.7rem; color: #94a3b8;">{{ order.user.email }}</span></td>
+                                <td><span class="status-pill status-{{ order.status.lower() }}">{{ order.status }}</span></td>
+                                <td style="font-weight: 700;">₹{{ "{:,.2f}".format(order.total_price) }}</td>
+                                <td>
+                                    <form action="{{ url_for('update_order_status', order_id=order.id) }}" method="POST">
+                                        <select name="status" onchange="this.form.submit()" style="font-size: 0.7rem;">
+                                            <option value="">Update</option>
+                                            <option value="Shipped">Ship</option>
+                                            <option value="Delivered">Deliver</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            <!-- Platform Stats -->
+            <div style="display: flex; flex-direction: column; gap: 30px;">
+                <div class="card">
+                    <div class="card-title">
+                        <h3>Platforms</h3>
+                        <button style="font-size: 0.8rem; background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px;">+ Add Platform</button>
+                    </div>
+                    <div class="platform-list">
+                        <div class="platform-item">
+                            <div class="platform-info">
+                                <div class="platform-icon" style="background: #22c55e;"><i class="fa-brands fa-shopify"></i></div>
+                                <strong>Shopify</strong>
+                            </div>
+                            <span class="status-tag">Connected</span>
+                        </div>
+                        <div class="platform-item">
+                            <div class="platform-info">
+                                <div class="platform-icon" style="background: #3b82f6;"><i class="fa-brands fa-amazon"></i></div>
+                                <strong>Amazon</strong>
+                            </div>
+                            <span class="status-tag">Connected</span>
+                        </div>
+                        <div class="platform-item">
+                            <div class="platform-info">
+                                <div class="platform-icon" style="background: #fbbf24;"><i class="fa-solid fa-cart-shopping"></i></div>
+                                <strong>Flipkart</strong>
+                            </div>
+                            <span class="status-tag" style="color: #64748b;">Syncing...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <h3>Total Sales</h3>
+                    </div>
+                    <canvas id="salesChart" height="200"></canvas>
+                </div>
+            </div>
+                <!-- Hidden Customers Section -->
+                <div id="customers-section" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>User Management</h3>
+                        <p style="font-size: 0.8rem; color: #64748b;">{{ users|length }} Total Registered Humans</p>
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Name / Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>#{{ user.id }}</td>
+                                <td style="font-weight: 700;">{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.is_admin %}
+                                    <span class="status-pill status-paid">Administrator</span>
+                                    {% else %}
+                                    <span class="status-pill status-processing">Customer</span>
+                                    {% endif %}
+                                </td>
+                                <td style="color: #64748b; font-size: 0.8rem;">{{ user.id * 7 }} Days Ago</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Update Collection</h2>
+            <i class="fa fa-times" onclick="closeModal()" style="cursor: pointer; font-size: 1.5rem;"></i>
+        </div>
+        <form action="{{ url_for('admin_add_product') }}" method="POST">
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" name="name" required placeholder="Luxurious Silk Skirt">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Price (INR)</label>
+                    <input type="number" step="0.01" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="Women">Women</option>
+                        <option value="Men">Men</option>
+                        <option value="Kids">Kids</option>
+                        <option value="Formal">Formal</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="text" name="image_url" required placeholder="/static/images/p1.jpg">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn-create" style="width: 100%; justify-content: center; background: var(--accent-purple); color: #fff; padding: 15px; font-size: 1rem;">Add to Catalog</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() { document.getElementById('productModal').style.display = 'block'; }
+    function closeModal() { document.getElementById('productModal').style.display = 'none'; }
+
+    function showSection(sectionId) {
+        // Hide all sections
+        document.getElementById('dashboard-section').style.display = 'none';
+        document.getElementById('inventory-section').style.display = 'none';
+        document.getElementById('orders-section').style.display = 'none';
+        document.getElementById('customers-section').style.display = 'none';
+        
+        // Remove active class from all nav links
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        
+        // Show target section
+        document.getElementById(sectionId + '-section').style.display = 'block';
+        
+        // Add active class to clicked nav
+        document.getElementById('nav-' + sectionId).classList.add('active');
+    }
+
+    // Chart.js Implementation
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Direct', 'Social', 'Email'],
+            datasets: [{
+                data: [65, 20, 15],
+                backgroundColor: ['#745af2', '#22c55e', '#f59e0b'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            cutout: '75%',
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+            }
+        }
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        let modal = document.getElementById('productModal');
+        if (event.target == modal) closeModal();
+    }
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}

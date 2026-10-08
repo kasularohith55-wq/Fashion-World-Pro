@@ -1,0 +1,282 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Products Catalog | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .products-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .products-title-group h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -0.3px;
+    }
+
+    .products-sub-text {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .products-filter-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 22px;
+    }
+
+    .products-filter-form {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .filter-fields-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .product-img-table-thumb {
+        width: 44px;
+        height: 52px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .pagination-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid #f1f5f9;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .pagination-links {
+        display: flex;
+        gap: 6px;
+    }
+
+    .page-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 12px;
+        transition: all 0.15s ease;
+    }
+
+    .page-btn.active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+    }
+
+    .page-btn:hover:not(.active) {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="products-header-bar">
+    <div class="products-title-group">
+        <h1><i class="fa-solid fa-shirt" style="color: var(--gold-500);"></i> Products Catalog</h1>
+        <p class="products-sub-text">Manage catalog inventory, pricing, stock levels, and store visibility</p>
+    </div>
+    <a href="{{ url_for('admin_add_product') }}" class="btn-luxury-gold">
+        <i class="fa-solid fa-circle-plus"></i> Add New Product
+    </a>
+</div>
+
+<!-- Filter Toolbar -->
+<div class="products-filter-card">
+    <form method="GET" action="{{ url_for('admin_products') }}" class="products-filter-form">
+        <div class="filter-fields-row">
+            <input type="text" name="query" value="{{ query }}" placeholder="Search by product name..." class="form-control" style="max-width: 260px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px;">
+            
+            <select name="category" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #fff; cursor: pointer;">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.name }}" {% if selected_category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="stock_status" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #fff; cursor: pointer;">
+                <option value="">All Stock Levels</option>
+                <option value="in_stock" {% if stock_status == 'in_stock' %}selected{% endif %}>In Stock (>5)</option>
+                <option value="low_stock" {% if stock_status == 'low_stock' %}selected{% endif %}>Low Stock (1-5)</option>
+                <option value="out_of_stock" {% if stock_status == 'out_of_stock' %}selected{% endif %}>Out of Stock (0)</option>
+            </select>
+
+            <button type="submit" class="btn-dark-primary" style="padding: 8px 16px; font-size: 12.5px;">
+                <i class="fa-solid fa-filter"></i> Filter
+            </button>
+
+            {% if query or selected_category or stock_status %}
+            <a href="{{ url_for('admin_products') }}" class="btn-outline-clean" style="padding: 8px 14px; font-size: 12.5px; color: #ef4444; border-color: #fecaca;">
+                <i class="fa-solid fa-xmark"></i> Clear
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Products Table Card -->
+<div class="admin-card">
+    <div class="card-header-between">
+        <h3 class="card-title-lg">
+            <i class="fa-solid fa-boxes-stacked" style="color: var(--gold-500);"></i> Inventory Records
+            <span style="font-size: 13px; font-weight: 500; color: #64748b;">({{ pagination.total }} total items)</span>
+        </h3>
+        <span style="font-size: 12.5px; color: #64748b;">Showing page {{ pagination.page }} of {{ pagination.pages or 1 }}</span>
+    </div>
+
+    <div class="table-responsive-wrapper">
+        <table class="admin-modern-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Product Title</th>
+                    <th>Category</th>
+                    <th>Regular Price</th>
+                    <th>Offer Price</th>
+                    <th>Stock</th>
+                    <th>Store Status</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-img-table-thumb" onerror="this.src='/static/images/p1.jpg'">
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13px;">{{ product.name }}</div>
+                        {% if product.is_featured %}
+                        <span style="font-size: 9.5px; background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase;">Featured</span>
+                        {% endif %}
+                        {% if product.is_new_arrival %}
+                        <span style="font-size: 9.5px; background: #ecfdf5; color: #065f46; padding: 1px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-left: 4px;">New Arrival</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="background: #f1f5f9; color: #334155; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600;">
+                            {{ product.category }}
+                        </span>
+                    </td>
+                    <td><strong>₹{{ "{:,.2f}".format(product.price) }}</strong></td>
+                    <td>
+                        {% if product.discount_price %}
+                        <span style="color: #059669; font-weight: 800;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                        {% else %}
+                        <span style="color: #cbd5e1;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.stock <= 0 %}
+                        <span class="status-pill status-critical">Out of Stock (0)</span>
+                        {% elif product.stock <= 5 %}
+                        <span class="status-pill status-low"><i class="fa-solid fa-triangle-exclamation"></i> Only {{ product.stock }} left</span>
+                        {% else %}
+                        <span class="status-pill status-delivered">{{ product.stock }} in stock</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_toggle_product', product_id=product.id) }}" style="display: inline;">
+                            <button type="submit" class="status-pill {% if product.is_active %}status-delivered{% else %}status-critical{% endif %}" style="border: none; cursor: pointer;" title="Toggle Visibility">
+                                {% if product.is_active %}
+                                <i class="fa-solid fa-eye"></i> Active
+                                {% else %}
+                                <i class="fa-solid fa-eye-slash"></i> Hidden
+                                {% endif %}
+                            </button>
+                        </form>
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <div style="display: inline-flex; gap: 6px;">
+                            <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn-outline-clean" style="padding: 6px 10px; font-size: 12px;" title="Edit Product">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" target="_blank" class="btn-outline-clean" style="padding: 6px 10px; font-size: 12px;" title="View Live Product">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin_delete_product_action', product_id=product.id) }}" onsubmit="return confirm('Delete product {{ product.name }}?');" style="display: inline;">
+                                <button type="submit" class="btn-outline-clean" style="padding: 6px 10px; font-size: 12px; color: #ef4444; border-color: #fca5a5;" title="Delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fa-solid fa-shirt" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 12px;"></i>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a;">No Products Found</h4>
+                        <p style="font-size: 13px;">No items match your search filter.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="pagination-bar">
+        <span>Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} to {{ [pagination.page * pagination.per_page, pagination.total]|min }} of {{ pagination.total }} products</span>
+        <div class="pagination-links">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin_products', page=pagination.prev_num, query=query, category=selected_category, stock_status=stock_status) }}" class="page-btn">
+                <i class="fa-solid fa-chevron-left"></i> Prev
+            </a>
+            {% endif %}
+
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                    <a href="{{ url_for('admin_products', page=p, query=query, category=selected_category, stock_status=stock_status) }}" class="page-btn {% if p == pagination.page %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% else %}
+                    <span style="padding: 6px 8px; color: #94a3b8;">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin_products', page=pagination.next_num, query=query, category=selected_category, stock_status=stock_status) }}" class="page-btn">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
