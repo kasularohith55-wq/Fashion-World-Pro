@@ -14,3 +14,5 @@ flask-socketio
 gevent
 gevent-websocket
 replicate
+gunicorn
+gradio_client
