@@ -42,6 +42,7 @@ scratch/
 scratch_*
 scratch_chrome_profile/
 tryon_test/
+migrate_sqlite_to_postgres.py
 _backup/
 *.bak
 *.zip
