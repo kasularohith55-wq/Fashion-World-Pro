@@ -16,3 +16,4 @@ gevent-websocket
 replicate
 gunicorn
 gradio_client
+psycopg2-binary
