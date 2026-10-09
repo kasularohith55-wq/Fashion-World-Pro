@@ -27,6 +27,14 @@
                         <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 50px; background: #dcfce7; color: #15803d; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">
                             <i class="fa-solid fa-circle-check"></i> Paid ({{ order.payment_method or 'Razorpay' }})
                         </span>
+                        {% elif order.payment_status == 'Refunded' %}
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 50px; background: #dbeafe; color: #1e40af; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">
+                            <i class="fa-solid fa-rotate-left"></i> Refunded
+                        </span>
+                        {% elif order.payment_status == 'Refund Pending' %}
+                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 50px; background: #fef3c7; color: #92400e; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">
+                            <i class="fa-solid fa-clock"></i> Refund Pending
+                        </span>
                         {% else %}
                         <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 50px; background: #fef9c3; color: #854d0e; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">
                             {{ order.payment_status or 'Pending' }}

@@ -115,6 +115,8 @@
             <option value="Processing" {% if status_filter == 'Processing' %}selected{% endif %}>Processing</option>
             <option value="Shipped" {% if status_filter == 'Shipped' %}selected{% endif %}>Shipped</option>
             <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+            <option value="Exchange Requested" {% if status_filter == 'Exchange Requested' %}selected{% endif %}>Exchange Requested</option>
+            <option value="Return Requested" {% if status_filter == 'Return Requested' %}selected{% endif %}>Return Requested</option>
             <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
         </select>
 
@@ -122,8 +124,9 @@
             <option value="">All Payment Types</option>
             <option value="Paid" {% if payment_filter == 'Paid' %}selected{% endif %}>Paid</option>
             <option value="Pending" {% if payment_filter == 'Pending' %}selected{% endif %}>Pending (COD)</option>
-            <option value="Failed" {% if payment_filter == 'Failed' %}selected{% endif %}>Failed</option>
+            <option value="Refund Pending" {% if payment_filter == 'Refund Pending' %}selected{% endif %}>Refund Pending</option>
             <option value="Refunded" {% if payment_filter == 'Refunded' %}selected{% endif %}>Refunded</option>
+            <option value="Failed" {% if payment_filter == 'Failed' %}selected{% endif %}>Failed</option>
         </select>
 
         <button type="submit" class="btn-dark-primary" style="padding: 8px 16px; font-size: 12.5px;">

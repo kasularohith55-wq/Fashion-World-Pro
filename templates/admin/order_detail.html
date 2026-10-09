@@ -194,6 +194,12 @@
                         <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
                         <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
                         <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="Exchange Requested" {% if order.status == 'Exchange Requested' %}selected{% endif %}>Exchange Requested</option>
+                        <option value="Exchange Approved" {% if order.status == 'Exchange Approved' %}selected{% endif %}>Exchange Approved</option>
+                        <option value="Replacement Dispatched" {% if order.status == 'Replacement Dispatched' %}selected{% endif %}>Replacement Dispatched</option>
+                        <option value="Return Requested" {% if order.status == 'Return Requested' %}selected{% endif %}>Return Requested</option>
+                        <option value="Return Received" {% if order.status == 'Return Received' %}selected{% endif %}>Return Received</option>
+                        <option value="Refunded" {% if order.status == 'Refunded' %}selected{% endif %}>Refunded</option>
                         <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
                     </select>
                 </div>
@@ -203,8 +209,10 @@
                     <select name="payment_status" id="payment_status" class="form-control-clean">
                         <option value="Pending" {% if order.payment_status == 'Pending' %}selected{% endif %}>Pending</option>
                         <option value="Paid" {% if order.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
-                        <option value="Failed" {% if order.payment_status == 'Failed' %}selected{% endif %}>Failed</option>
+                        <option value="Refund Pending" {% if order.payment_status == 'Refund Pending' %}selected{% endif %}>Refund Pending</option>
                         <option value="Refunded" {% if order.payment_status == 'Refunded' %}selected{% endif %}>Refunded</option>
+                        <option value="Failed" {% if order.payment_status == 'Failed' %}selected{% endif %}>Failed</option>
+                        <option value="Cancelled" {% if order.payment_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
                     </select>
                 </div>
 
@@ -218,6 +226,104 @@
                 </button>
             </form>
         </div>
+
+        <!-- Customer Requests & Lifecycle Management (If Any) -->
+        {% if order.requests %}
+        <div class="admin-card">
+            <div class="card-header-between">
+                <h3 class="card-title-lg"><i class="fa-solid fa-arrows-rotate" style="color: var(--gold-500);"></i> Customer Requests ({{ order.requests|length }})</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% for req_item in order.requests %}
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 800; font-size: 13px; color: #0f172a; text-transform: uppercase;">
+                            {{ req_item.request_type }} (#REQ-{{ req_item.id }})
+                        </span>
+                        <span class="status-pill status-{{ (req_item.status or 'pending')|lower|replace(' ', '-') }}">
+                            {{ req_item.status }}
+                        </span>
+                    </div>
+
+                    <div style="font-size: 12.5px; color: #475569; margin-bottom: 6px;">
+                        <strong>Reason:</strong> {{ req_item.reason }}
+                    </div>
+
+                    {% if req_item.replacement_size %}
+                    <div style="font-size: 12.5px; color: #475569; margin-bottom: 6px;">
+                        <strong>Requested Replacement:</strong> {{ req_item.replacement_size }}
+                    </div>
+                    {% endif %}
+
+                    {% if req_item.refund_amount and req_item.refund_amount > 0 %}
+                    <div style="font-size: 12.5px; color: #475569; margin-bottom: 6px;">
+                        <strong>Eligible Refund:</strong> <strong style="color: #0f172a;">₹{{ "{:,.2f}".format(req_item.refund_amount) }}</strong>
+                    </div>
+                    {% endif %}
+
+                    {% if req_item.bank_or_upi_details %}
+                    <div style="font-size: 12px; color: #475569; margin-bottom: 6px; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                        <strong>Bank / UPI Details:</strong> {{ req_item.bank_or_upi_details }}
+                    </div>
+                    {% endif %}
+
+                    {% if req_item.details %}
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">
+                        <strong>Notes:</strong> {{ req_item.details }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Admin Resolution Form -->
+                    <form method="POST" action="{{ url_for('admin_update_request', request_id=req_item.id) }}" style="margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+                        <div class="form-group-clean">
+                            <label for="req_status_{{ req_item.id }}">Update Request Status</label>
+                            <select name="status" id="req_status_{{ req_item.id }}" class="form-control-clean" style="padding: 6px 10px; font-size: 12px;">
+                                {% if req_item.request_type == 'exchange' %}
+                                <option value="Pending Review" {% if req_item.status == 'Pending Review' %}selected{% endif %}>Pending Review</option>
+                                <option value="Approved" {% if req_item.status == 'Approved' %}selected{% endif %}>Approved (Schedule Pickup)</option>
+                                <option value="Item Received" {% if req_item.status == 'Item Received' %}selected{% endif %}>Item Received at Hub</option>
+                                <option value="Replacement Dispatched" {% if req_item.status == 'Replacement Dispatched' %}selected{% endif %}>Replacement Dispatched</option>
+                                <option value="Completed" {% if req_item.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                <option value="Rejected" {% if req_item.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                {% elif req_item.request_type == 'return' %}
+                                <option value="Pending Review" {% if req_item.status == 'Pending Review' %}selected{% endif %}>Pending Review</option>
+                                <option value="Approved" {% if req_item.status == 'Approved' %}selected{% endif %}>Approved (Pickup Arranged)</option>
+                                <option value="Item Received" {% if req_item.status == 'Item Received' %}selected{% endif %}>Item Received at Hub</option>
+                                <option value="Refund Processed" {% if req_item.status == 'Refund Processed' %}selected{% endif %}>Refund Processed</option>
+                                <option value="Completed" {% if req_item.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                <option value="Rejected" {% if req_item.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                {% else %}
+                                <option value="Pending" {% if req_item.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Refund Pending" {% if req_item.status == 'Refund Pending' %}selected{% endif %}>Refund Pending</option>
+                                <option value="Refund Processed" {% if req_item.status == 'Refund Processed' %}selected{% endif %}>Refund Processed</option>
+                                <option value="Completed" {% if req_item.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        {% if order.payment_status in ['Paid', 'Refund Pending'] and order.payment_id and req_item.status != 'Refund Processed' %}
+                        <div style="margin-bottom: 10px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                            <input type="checkbox" name="process_razorpay_refund" value="1" id="proc_razorpay_{{ req_item.id }}">
+                            <label for="proc_razorpay_{{ req_item.id }}" style="color: #047857; font-weight: 700; cursor: pointer;">
+                                Execute online Razorpay refund (₹{{ "{:,.2f}".format(req_item.refund_amount or order.total_price) }})
+                            </label>
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group-clean">
+                            <label for="admin_notes_{{ req_item.id }}">Admin Notes for Customer</label>
+                            <input type="text" name="admin_notes" id="admin_notes_{{ req_item.id }}" class="form-control-clean" style="padding: 6px 10px; font-size: 12px;" value="{{ req_item.admin_notes or '' }}" placeholder="e.g. Courier pickup scheduled for tomorrow">
+                        </div>
+
+                        <button type="submit" class="btn-dark-primary" style="padding: 6px 12px; font-size: 12px; width: 100%; justify-content: center;">
+                            Update Request & Notify
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Payment Meta Card -->
         <div class="admin-card">

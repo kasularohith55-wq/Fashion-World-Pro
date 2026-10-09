@@ -282,6 +282,7 @@ class Order(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     items = db.relationship('OrderItem', backref='order', lazy=True)
+    requests = db.relationship('OrderRequest', backref='order', lazy=True, order_by='OrderRequest.created_at.desc()', cascade='all, delete-orphan')
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -291,6 +292,28 @@ class OrderItem(db.Model):
     price_at_order = db.Column(db.Float, nullable=False)
     size = db.Column(db.String(50), nullable=True)
     product = db.relationship('Product')
+
+class OrderRequest(db.Model):
+    __tablename__ = 'order_request'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    request_type = db.Column(db.String(30), nullable=False) # 'cancellation', 'exchange', 'return'
+    item_id = db.Column(db.Integer, db.ForeignKey('order_item.id'), nullable=True)
+    reason = db.Column(db.String(150), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    replacement_size = db.Column(db.String(50), nullable=True)
+    refund_amount = db.Column(db.Float, default=0.0)
+    bank_or_upi_details = db.Column(db.String(200), nullable=True)
+    status = db.Column(db.String(50), default='Pending') # 'Pending', 'Pending Review', 'Approved', 'Rejected', 'Pickup Scheduled', 'Item Received', 'Replacement Dispatched', 'Refund Processed', 'Refund Pending', 'Completed', 'Cancelled'
+    admin_notes = db.Column(db.Text, nullable=True)
+    admin_action_by = db.Column(db.String(100), nullable=True)
+    action_date = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = db.relationship('User')
+    item = db.relationship('OrderItem')
 
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -361,6 +384,7 @@ def inject_global_data():
     wishlist_count = 0
     open_tickets_count = 0
     low_stock_badge_count = 0
+    pending_requests_count = 0
     if current_user.is_authenticated:
         try:
             cart_count = sum(item.quantity for item in current_user.cart_items)
@@ -379,10 +403,20 @@ def inject_global_data():
                 low_stock_badge_count = Product.query.filter(Product.stock <= 5).count()
             except Exception:
                 low_stock_badge_count = 0
+            try:
+                pending_requests_count = OrderRequest.query.filter(OrderRequest.status.in_(['Pending', 'Pending Review', 'Refund Pending'])).count()
+            except Exception:
+                pending_requests_count = 0
     else:
         cart = session.get('cart', [])
         cart_count = len(cart)
-    return dict(cart_count=cart_count, wishlist_count=wishlist_count, open_tickets_count=open_tickets_count, low_stock_badge_count=low_stock_badge_count)
+    return dict(
+        cart_count=cart_count, 
+        wishlist_count=wishlist_count, 
+        open_tickets_count=open_tickets_count, 
+        low_stock_badge_count=low_stock_badge_count,
+        pending_requests_count=pending_requests_count
+    )
 
 # SocketIO Events
 @socketio.on('join')
@@ -3387,8 +3421,210 @@ def track_order(order_id):
         
     # Calculate delivery date based on order date + 5 days
     delivery_date = (order.date_ordered + timedelta(days=5)).strftime('%d %B %Y')
+    is_confirmed = request.args.get('confirmed') == 'true'
     
-    return render_template('track.html', order=order, delivery_date=delivery_date)
+    return render_template('track.html', order=order, delivery_date=delivery_date, is_confirmed=is_confirmed)
+
+@app.route('/order_confirmation/<int:order_id>')
+@login_required
+def order_confirmation(order_id):
+    """Customer order confirmation landing view after successful checkout"""
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id and not current_user.is_admin:
+        flash('Access denied!', 'danger')
+        return redirect(url_for('home'))
+    return redirect(url_for('track_order', order_id=order.id, confirmed='true'))
+
+@app.route('/orders/<int:order_id>/cancel', methods=['POST'])
+@login_required
+def cancel_order(order_id):
+    """Safely cancels an order before shipment, restores inventory, and initiates refund if paid"""
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id and not current_user.is_admin:
+        flash('Permission denied.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # 1. Eligibility Check
+    current_status = (order.status or '').strip().lower()
+    if current_status in ['shipped', 'out for delivery', 'delivered']:
+        flash(f'Order #FW-{order.id} is already {order.status} and cannot be cancelled directly. You can request a return or exchange once delivered.', 'warning')
+        return redirect(url_for('track_order', order_id=order.id))
+    
+    if current_status == 'cancelled':
+        flash(f'Order #FW-{order.id} has already been cancelled.', 'info')
+        return redirect(url_for('track_order', order_id=order.id))
+        
+    reason = (request.form.get('reason') or 'Customer requested cancellation').strip()
+    comments = (request.form.get('comments') or '').strip()
+    
+    # 2. Restore Inventory Atomically
+    for item in order.items:
+        if item.product and item.product.stock is not None:
+            item.product.stock = item.product.stock + item.quantity
+            
+    # 3. Handle Payment Refund if Paid
+    refund_status = 'Completed'
+    if order.payment_status == 'Paid' and order.payment_method == 'Razorpay' and order.payment_id:
+        client, key_id, key_secret, is_configured = get_razorpay_client()
+        if client and key_secret:
+            try:
+                amount_paise = int(round(order.total_price * 100))
+                client.payment.refund(order.payment_id, {
+                    'amount': amount_paise,
+                    'notes': {'order_id': f'FW-{order.id}', 'reason': reason}
+                })
+                order.payment_status = 'Refunded'
+                refund_status = 'Refund Processed'
+            except Exception as ref_err:
+                print(f"[RAZORPAY REFUND NOTE] {ref_err}")
+                order.payment_status = 'Refund Pending'
+                refund_status = 'Refund Pending'
+        else:
+            order.payment_status = 'Refund Pending'
+            refund_status = 'Refund Pending'
+    elif order.payment_status == 'Paid':
+        order.payment_status = 'Refund Pending'
+        refund_status = 'Refund Pending'
+    else:
+        order.payment_status = 'Cancelled'
+        refund_status = 'Completed'
+        
+    order.status = 'Cancelled'
+    
+    # 4. Record OrderRequest Audit Log
+    cancel_request = OrderRequest(
+        order_id=order.id,
+        user_id=current_user.id,
+        request_type='cancellation',
+        reason=reason,
+        details=comments,
+        refund_amount=order.total_price if order.payment_status in ['Refunded', 'Refund Pending'] else 0.0,
+        status=refund_status,
+        admin_notes='Order cancelled by customer before dispatch.'
+    )
+    db.session.add(cancel_request)
+    db.session.commit()
+    
+    # Real-time WebSocket event
+    socketio.emit('order_status_updated', {
+        'order_id': order.id,
+        'status': 'Cancelled',
+        'payment_status': order.payment_status,
+        'message': f"Order #FW-{order.id} has been cancelled."
+    }, room=f"user_{order.user_id}")
+    
+    if order.payment_status == 'Refunded':
+        flash(f"Order #FW-{order.id} has been cancelled. Full refund of ₹{order.total_price:,.2f} has been processed via Razorpay.", "success")
+    elif order.payment_status == 'Refund Pending':
+        flash(f"Order #FW-{order.id} has been cancelled. Your refund of ₹{order.total_price:,.2f} is pending manual review by our finance team.", "info")
+    else:
+        flash(f"Order #FW-{order.id} has been cancelled successfully.", "success")
+        
+    return redirect(url_for('track_order', order_id=order.id))
+
+@app.route('/orders/<int:order_id>/exchange', methods=['POST'])
+@login_required
+def exchange_order(order_id):
+    """Customer requests replacement size/variant for eligible delivered items"""
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id and not current_user.is_admin:
+        flash('Permission denied.', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    # 1. Eligibility Check (must be Delivered)
+    if (order.status or '').strip().lower() != 'delivered':
+        flash('Exchange requests are only available for delivered packages.', 'warning')
+        return redirect(url_for('track_order', order_id=order.id))
+        
+    # 2. Check for duplicate pending requests
+    pending_req = OrderRequest.query.filter_by(order_id=order.id, status='Pending Review').first()
+    if pending_req:
+        flash('You already have a pending exchange or return request for this order.', 'info')
+        return redirect(url_for('track_order', order_id=order.id))
+        
+    item_id = request.form.get('item_id', type=int)
+    reason = (request.form.get('reason') or 'Size / Fit Exchange').strip()
+    replacement_size = (request.form.get('replacement_size') or '').strip()
+    details = (request.form.get('details') or '').strip()
+    
+    order_req = OrderRequest(
+        order_id=order.id,
+        user_id=current_user.id,
+        request_type='exchange',
+        item_id=item_id,
+        reason=reason,
+        replacement_size=replacement_size,
+        details=details,
+        status='Pending Review'
+    )
+    order.status = 'Exchange Requested'
+    db.session.add(order_req)
+    db.session.commit()
+    
+    socketio.emit('order_status_updated', {
+        'order_id': order.id,
+        'status': order.status,
+        'message': f"Exchange request received for Order #FW-{order.id}."
+    }, room=f"user_{order.user_id}")
+    
+    flash(f"Exchange request submitted successfully for Order #FW-{order.id}. Our concierge team will review within 24 hours.", "success")
+    return redirect(url_for('track_order', order_id=order.id))
+
+@app.route('/orders/<int:order_id>/return', methods=['POST'])
+@login_required
+def return_order(order_id):
+    """Customer requests return and refund for eligible delivered items"""
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id and not current_user.is_admin:
+        flash('Permission denied.', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    # 1. Eligibility Check (must be Delivered)
+    if (order.status or '').strip().lower() != 'delivered':
+        flash('Return requests are only available for delivered packages.', 'warning')
+        return redirect(url_for('track_order', order_id=order.id))
+        
+    # 2. Check for duplicate pending requests
+    pending_req = OrderRequest.query.filter_by(order_id=order.id, status='Pending Review').first()
+    if pending_req:
+        flash('You already have a pending exchange or return request for this order.', 'info')
+        return redirect(url_for('track_order', order_id=order.id))
+        
+    item_id = request.form.get('item_id', type=int)
+    reason = (request.form.get('reason') or 'Return & Refund').strip()
+    details = (request.form.get('details') or '').strip()
+    bank_or_upi = (request.form.get('bank_or_upi') or '').strip()
+    
+    # Calculate refund amount
+    refund_amount = order.total_price
+    if item_id:
+        target_item = OrderItem.query.filter_by(id=item_id, order_id=order.id).first()
+        if target_item:
+            refund_amount = target_item.price_at_order * target_item.quantity
+            
+    order_req = OrderRequest(
+        order_id=order.id,
+        user_id=current_user.id,
+        request_type='return',
+        item_id=item_id,
+        reason=reason,
+        details=details,
+        refund_amount=refund_amount,
+        bank_or_upi_details=bank_or_upi,
+        status='Pending Review'
+    )
+    order.status = 'Return Requested'
+    db.session.add(order_req)
+    db.session.commit()
+    
+    socketio.emit('order_status_updated', {
+        'order_id': order.id,
+        'status': order.status,
+        'message': f"Return & refund request received for Order #FW-{order.id}."
+    }, room=f"user_{order.user_id}")
+    
+    flash(f"Return & refund request submitted for Order #FW-{order.id}. Eligible refund amount: ₹{refund_amount:,.2f}.", "success")
+    return redirect(url_for('track_order', order_id=order.id))
 
 @app.route('/live_tracking/<int:order_id>')
 @login_required
@@ -4042,6 +4278,128 @@ def admin_update_order_status(order_id):
     
     flash(f"Order #FW-{order.id} updated successfully.", "success")
     return redirect(url_for('admin_order_detail', order_id=order.id))
+
+@app.route('/admin/requests')
+@admin_required
+def admin_requests():
+    """Admin view for all customer cancellations, exchanges, and return/refund requests"""
+    page = request.args.get('page', 1, type=int)
+    type_filter = request.args.get('type', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    query = request.args.get('query', '').strip()
+    
+    req_query = OrderRequest.query
+    
+    if type_filter:
+        req_query = req_query.filter(OrderRequest.request_type == type_filter)
+    if status_filter:
+        req_query = req_query.filter(OrderRequest.status == status_filter)
+    if query:
+        clean_q = query.replace('#', '').replace('FW-', '').replace('fw-', '').strip()
+        conds = [
+            OrderRequest.reason.ilike(f'%{query}%'),
+            OrderRequest.details.ilike(f'%{query}%')
+        ]
+        if clean_q.isdigit():
+            conds.append(OrderRequest.order_id == int(clean_q))
+        from sqlalchemy import or_
+        req_query = req_query.filter(or_(*conds))
+        
+    pagination = req_query.order_by(OrderRequest.created_at.desc()).paginate(page=page, per_page=15, error_out=False)
+    
+    # Summary Metrics
+    pending_cancellations = OrderRequest.query.filter_by(request_type='cancellation').filter(OrderRequest.status.in_(['Pending', 'Refund Pending'])).count()
+    pending_exchanges = OrderRequest.query.filter_by(request_type='exchange', status='Pending Review').count()
+    pending_returns = OrderRequest.query.filter_by(request_type='return', status='Pending Review').count()
+    total_processed = OrderRequest.query.filter(OrderRequest.status.in_(['Completed', 'Refund Processed', 'Approved', 'Replacement Dispatched'])).count()
+    
+    return render_template(
+        'admin/requests.html',
+        requests=pagination.items,
+        pagination=pagination,
+        type_filter=type_filter,
+        status_filter=status_filter,
+        query=query,
+        pending_cancellations=pending_cancellations,
+        pending_exchanges=pending_exchanges,
+        pending_returns=pending_returns,
+        total_processed=total_processed
+    )
+
+@app.route('/admin/requests/<int:request_id>/update', methods=['POST'])
+@admin_required
+def admin_update_request(request_id):
+    """Admin action handler to review, approve, reject, schedule pickup, dispatch replacement, or process refund"""
+    req_obj = OrderRequest.query.get_or_404(request_id)
+    new_status = request.form.get('status', '').strip()
+    admin_notes = (request.form.get('admin_notes') or '').strip()
+    process_razorpay = request.form.get('process_razorpay_refund') == '1'
+    
+    if new_status:
+        req_obj.status = new_status
+    if admin_notes:
+        req_obj.admin_notes = admin_notes
+        
+    req_obj.admin_action_by = current_user.username
+    req_obj.action_date = datetime.utcnow()
+    
+    # Synchronize parent Order status based on request workflow
+    order = req_obj.order
+    if order:
+        if req_obj.request_type == 'exchange':
+            if new_status in ['Approved', 'Pickup Scheduled']:
+                order.status = 'Exchange Approved'
+            elif new_status == 'Item Received':
+                order.status = 'Exchange Processing'
+            elif new_status in ['Replacement Dispatched', 'Completed']:
+                order.status = 'Replacement Dispatched'
+            elif new_status == 'Rejected':
+                order.status = 'Delivered'
+        elif req_obj.request_type == 'return':
+            if new_status in ['Approved', 'Pickup Scheduled']:
+                order.status = 'Return Approved'
+            elif new_status == 'Item Received':
+                order.status = 'Return Received'
+            elif new_status in ['Refund Processed', 'Completed']:
+                order.status = 'Refunded'
+                order.payment_status = 'Refunded'
+            elif new_status == 'Rejected':
+                order.status = 'Delivered'
+        elif req_obj.request_type == 'cancellation':
+            if new_status in ['Completed', 'Refund Processed']:
+                order.status = 'Cancelled'
+                if new_status == 'Refund Processed':
+                    order.payment_status = 'Refunded'
+                    
+        # Online Razorpay refund execution if requested by admin
+        if process_razorpay and order.payment_status in ['Paid', 'Refund Pending'] and order.payment_id:
+            client, key_id, key_secret, is_configured = get_razorpay_client()
+            if client and key_secret:
+                try:
+                    amount_paise = int(round((req_obj.refund_amount or order.total_price) * 100))
+                    client.payment.refund(order.payment_id, {
+                        'amount': amount_paise,
+                        'notes': {'order_id': f'FW-{order.id}', 'request_id': str(req_obj.id)}
+                    })
+                    order.payment_status = 'Refunded'
+                    req_obj.status = 'Refund Processed'
+                    flash(f"Razorpay refund of ₹{(req_obj.refund_amount or order.total_price):,.2f} processed successfully.", "success")
+                except Exception as r_err:
+                    print(f"[ADMIN RAZORPAY REFUND ERROR] {r_err}")
+                    flash(f"Razorpay refund execution note: {str(r_err)}", "warning")
+                    
+    db.session.commit()
+    
+    # Notify Customer Room
+    socketio.emit('order_status_updated', {
+        'order_id': order.id if order else 0,
+        'request_id': req_obj.id,
+        'status': req_obj.status,
+        'message': f"Your {req_obj.request_type.capitalize()} request for Order #FW-{order.id if order else ''} status has been updated to '{req_obj.status}'."
+    }, room=f"user_{req_obj.user_id}")
+    
+    flash(f"Request #{req_obj.id} ({req_obj.request_type.capitalize()}) updated to '{req_obj.status}'.", "success")
+    return redirect(request.referrer or url_for('admin_requests'))
 
 @app.route('/admin/customers')
 @admin_required

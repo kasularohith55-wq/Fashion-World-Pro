@@ -7,19 +7,70 @@
     :root {
         --amazon-green: #067D62;
         --amazon-orange: #FF9900;
-        --text-dark: #111;
+        --text-dark: #0f172a;
         --text-light: #565959;
+        --gold-primary: #c5a880;
+        --gold-dark: #9a7b56;
     }
 
     .track-page-container {
         padding: 120px 5% 60px;
         max-width: 1200px;
         margin: 0 auto;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: inherit;
+    }
+
+    /* Confirmation Banner */
+    .confirmation-banner {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        padding: 24px 30px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(197, 168, 128, 0.4);
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .confirmation-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .confirmation-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 2px solid #10b981;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .confirmation-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+        color: #ffffff;
+    }
+
+    .confirmation-sub {
+        font-size: 0.9rem;
+        color: #cbd5e1;
+        margin: 0;
     }
 
     .track-header {
-        margin-bottom: 30px;
+        margin-bottom: 25px;
     }
 
     .track-header h1 {
@@ -38,22 +89,26 @@
     /* Left Column: Progress & Timeline */
     .track-card {
         background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 30px;
-        margin-bottom: 30px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 28px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     }
 
     .status-banner {
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid #f1f5f9;
         padding-bottom: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
     }
 
     .status-banner h2 {
         font-size: 1.4rem;
         color: var(--amazon-green);
         margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .status-banner p {
@@ -66,7 +121,7 @@
         display: flex;
         justify-content: space-between;
         position: relative;
-        margin: 40px 0;
+        margin: 35px 0 30px;
     }
 
     .amazon-progress-line-bg {
@@ -75,7 +130,7 @@
         left: 0;
         right: 0;
         height: 6px;
-        background: #e7e9ec;
+        background: #e2e8f0;
         border-radius: 3px;
         z-index: 1;
     }
@@ -103,7 +158,7 @@
         height: 18px;
         border-radius: 50%;
         background: #fff;
-        border: 4px solid #e7e9ec;
+        border: 4px solid #cbd5e1;
         margin: 0 auto 10px;
         transition: 0.3s;
     }
@@ -114,24 +169,25 @@
     }
 
     .amazon-step-label {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-weight: 600;
-        color: #888;
+        color: #94a3b8;
     }
 
     .amazon-step-label[data-active="true"] {
         color: var(--text-dark);
+        font-weight: 700;
     }
 
     /* Timeline Section */
     .updates-timeline {
-        padding-top: 20px;
+        padding-top: 15px;
     }
 
     .timeline-item {
         display: flex;
-        gap: 20px;
-        padding-bottom: 30px;
+        gap: 18px;
+        padding-bottom: 24px;
         position: relative;
     }
 
@@ -139,21 +195,21 @@
         content: '';
         position: absolute;
         left: 7px;
-        top: 20px;
+        top: 18px;
         bottom: 0;
         width: 2px;
-        background: #eee;
+        background: #e2e8f0;
     }
 
     .timeline-dot {
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #ddd;
+        background: #cbd5e1;
         flex-shrink: 0;
         z-index: 2;
         position: relative;
-        top: 4px;
+        top: 3px;
     }
 
     .timeline-dot.active {
@@ -181,19 +237,22 @@
     /* Right Column: Order Info */
     .side-card {
         background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
     }
 
     .side-card h4 {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
         color: var(--text-dark);
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 8px;
+        letter-spacing: 0.5px;
+        font-weight: 700;
     }
 
     .side-card p {
@@ -212,10 +271,12 @@
         border: 1px solid #FCD200;
         border-radius: 8px;
         color: #0F1111;
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 0.9rem;
         text-decoration: none;
-        margin-top: 15px;
-        box-shadow: 0 2px 5px rgba(213,217,217,.5);
+        margin-top: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
     .btn-amazon:hover {
@@ -223,19 +284,254 @@
         border-color: #f2c200;
     }
 
+    .btn-outline-action {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 9px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        color: #334155;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-decoration: none;
+        margin-top: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-action:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+
+    .btn-danger-action {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 9px;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 8px;
+        color: #b91c1c;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-decoration: none;
+        margin-top: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-danger-action:hover {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
     .product-thumb {
         width: 60px;
         height: 80px;
         object-fit: cover;
-        border-radius: 4px;
-        border: 1px solid #eee;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Modal Styles */
+    .fw-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
+
+    .fw-modal-backdrop.show {
+        display: flex;
+    }
+
+    .fw-modal-box {
+        background: #ffffff;
+        border-radius: 14px;
+        max-width: 520px;
+        width: 100%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalPop {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .fw-modal-header {
+        padding: 18px 24px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .fw-modal-header h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .fw-modal-close {
+        background: transparent;
+        border: none;
+        font-size: 1.2rem;
+        color: #94a3b8;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .fw-modal-close:hover {
+        color: #0f172a;
+    }
+
+    .fw-modal-body {
+        padding: 22px 24px;
+    }
+
+    .fw-modal-footer {
+        padding: 14px 24px 18px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .fw-form-group {
+        margin-bottom: 16px;
+    }
+
+    .fw-form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .fw-form-control {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        color: #0f172a;
+        background: #fff;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .fw-form-control:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+    }
+
+    /* Request Item History Card */
+    .request-item-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+    }
+
+    .request-item-box:last-child {
+        margin-bottom: 0;
+    }
+
+    .req-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .req-pending { background: #fef3c7; color: #92400e; }
+    .req-approved { background: #dbeafe; color: #1e40af; }
+    .req-completed { background: #dcfce7; color: #166534; }
+    .req-rejected { background: #fee2e2; color: #991b1b; }
+
+    @media (max-width: 900px) {
+        .track-main-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
 <div class="track-page-container">
+
+    <!-- Confirmation Banner (Visible when is_confirmed=True or newly placed) -->
+    {% if is_confirmed or request.args.get('confirmed') == 'true' %}
+    <div class="confirmation-banner">
+        <div class="confirmation-left">
+            <div class="confirmation-icon">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+                <h2 class="confirmation-title">Order Confirmed! Thank you, {{ order.first_name or 'Customer' }}</h2>
+                <p class="confirmation-sub">We've sent an order confirmation with receipt to <strong>{{ order.user.email if order.user else 'your email' }}</strong>.</p>
+            </div>
+        </div>
+        <a href="{{ url_for('invoice', order_id=order.id) }}" class="btn-amazon" style="display: inline-block; width: auto; padding: 8px 18px; margin: 0; background: #fff; border-color: #cbd5e1; color: #0f172a;">
+            <i class="fa-solid fa-file-invoice"></i> Download Invoice
+        </a>
+    </div>
+    {% endif %}
+
     <div class="track-header">
-        <h1>Track Package</h1>
-        <p style="font-size: 0.9rem; color: #565959;">Order #FW-{{ order.id }} | Placed on {{ order.date_ordered.strftime('%B %d, %Y') }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h1>Track Package & Order Details</h1>
+                <p style="font-size: 0.9rem; color: #565959; margin: 0;">Order <strong>#FW-{{ order.id }}</strong> | Placed on {{ order.date_ordered.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                {% if order.payment_status == 'Paid' %}
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; background: #dcfce7; color: #15803d; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    <i class="fa-solid fa-circle-check"></i> Paid ({{ order.payment_method or 'Razorpay' }})
+                </span>
+                {% elif order.payment_status == 'Refunded' %}
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; background: #dbeafe; color: #1e40af; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    <i class="fa-solid fa-rotate-left"></i> Refunded
+                </span>
+                {% elif order.payment_status == 'Refund Pending' %}
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; background: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    <i class="fa-solid fa-clock"></i> Refund Pending
+                </span>
+                {% else %}
+                <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; background: #fef9c3; color: #854d0e; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    {{ order.payment_status or 'Pending' }}
+                </span>
+                {% endif %}
+                
+                <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; background: #0f172a; color: #ffffff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                    {{ order.status }}
+                </span>
+            </div>
+        </div>
     </div>
 
     <div class="track-main-grid">
@@ -244,24 +540,52 @@
             <div class="track-card">
                 <div class="status-banner">
                     <h2>
-                        {% if order.status == 'Pending' %}Order Received{% endif %}
-                        {% if order.status == 'Paid' %}Payment Verified & Processing{% endif %}
-                        {% if order.status == 'Shipped' %}Shipped with Carrier{% endif %}
-                        {% if order.status == 'Out for Delivery' %}Out for Delivery today{% endif %}
-                        {% if order.status == 'Delivered' %}Delivered{% endif %}
+                        {% set st = (order.status or '').strip().lower() %}
+                        {% if st == 'cancelled' %}
+                            <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Order Cancelled
+                        {% elif st == 'exchange requested' %}
+                            <i class="fa-solid fa-arrows-rotate" style="color: #3b82f6;"></i> Exchange Request Under Review
+                        {% elif st == 'exchange approved' %}
+                            <i class="fa-solid fa-truck-ramp-box" style="color: #10b981;"></i> Exchange Approved - Pickup Scheduled
+                        {% elif st == 'return requested' %}
+                            <i class="fa-solid fa-box-archive" style="color: #f59e0b;"></i> Return & Refund Request Under Review
+                        {% elif st == 'refunded' %}
+                            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Package Returned & Refund Processed
+                        {% elif st == 'pending' %}
+                            <i class="fa-solid fa-clock" style="color: #f59e0b;"></i> Order Placed & Processing
+                        {% elif st == 'paid' %}
+                            <i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Payment Verified & Preparing Dispatch
+                        {% elif st == 'shipped' %}
+                            <i class="fa-solid fa-truck-fast" style="color: #067D62;"></i> Shipped with Carrier
+                        {% elif st == 'out for delivery' %}
+                            <i class="fa-solid fa-route" style="color: #067D62;"></i> Out for Delivery Today
+                        {% elif st == 'delivered' %}
+                            <i class="fa-solid fa-circle-check" style="color: #067D62;"></i> Delivered
+                        {% else %}
+                            {{ order.status }}
+                        {% endif %}
                     </h2>
-                    <p>Estimated delivery: <strong>{{ delivery_date }}</strong></p>
+                    
+                    {% if st == 'cancelled' %}
+                        <p>This order was cancelled on {{ order.updated_at.strftime('%B %d, %Y') if order.updated_at else 'recent date' }}.</p>
+                    {% elif st == 'delivered' %}
+                        <p>Delivered on {{ order.updated_at.strftime('%B %d, %Y') if order.updated_at else delivery_date }}. Thank you for shopping with Fashion World Pro.</p>
+                    {% else %}
+                        <p>Estimated delivery date: <strong>{{ delivery_date }}</strong></p>
+                    {% endif %}
+
                     {% if order.status in ['Shipped', 'Out for Delivery'] %}
-                    <a href="{{ url_for('live_tracking', order_id=order.id) }}" class="btn-amazon" style="display: inline-block; width: auto; padding: 10px 25px; margin-top: 15px; background: #c9a486; border-color: #b08d70; color: white;">
-                        <i class="fa fa-map-marker-alt"></i> View Live Tracking
+                    <a href="{{ url_for('live_tracking', order_id=order.id) }}" class="btn-amazon" style="display: inline-block; width: auto; padding: 10px 25px; margin-top: 15px; background: #c5a880; border-color: #9a7b56; color: white;">
+                        <i class="fa-solid fa-map-location-dot"></i> View Live Tracking
                     </a>
                     {% endif %}
                 </div>
 
-                <!-- Amazon Style Horizontal Bar -->
+                <!-- Progress Bar (Only shown for active fulfillment) -->
+                {% if st not in ['cancelled'] %}
                 <div class="amazon-progress-container">
                     <div class="amazon-progress-line-bg"></div>
-                    {% set prog_val = { 'Pending': 10, 'Paid': 30, 'Shipped': 55, 'Out for Delivery': 80, 'Delivered': 100 }.get(order.status, 0) %}
+                    {% set prog_val = { 'pending': 10, 'paid': 30, 'processing': 35, 'shipped': 55, 'out for delivery': 80, 'delivered': 100, 'exchange requested': 100, 'return requested': 100, 'refunded': 100 }.get(st, 15) %}
                     <div class="amazon-progress-line-fill" style="--prog-width: {{ prog_val }}%;"></div>
 
                     {% set steps = [('Ordered', 10), ('Paid', 30), ('Shipped', 55), ('Out for Delivery', 80), ('Delivered', 100)] %}
@@ -273,17 +597,19 @@
                         </div>
                     {% endfor %}
                 </div>
+                {% endif %}
 
+                <!-- Timeline Updates -->
                 <div class="updates-timeline">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 25px;">Latest Updates</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 20px; font-weight: 700; color: #0f172a;">Fulfillment Activity</h3>
                     
                     {% if order.status == 'Delivered' %}
                     <div class="timeline-item">
                         <div class="timeline-dot active"></div>
                         <div class="timeline-content">
-                            <div class="time">Today, 2:45 PM</div>
-                            <div class="desc">Delivered</div>
-                            <div class="loc">Package was handed to resident</div>
+                            <div class="time">Completed</div>
+                            <div class="desc">Delivered to customer</div>
+                            <div class="loc">Signed and handed over</div>
                         </div>
                     </div>
                     {% endif %}
@@ -292,9 +618,9 @@
                     <div class="timeline-item">
                         <div class="timeline-dot active"></div>
                         <div class="timeline-content">
-                            <div class="time">Today, 9:20 AM</div>
+                            <div class="time">Local Hub</div>
                             <div class="desc">Out for Delivery</div>
-                            <div class="loc">Mumbai, MH Delivery Station</div>
+                            <div class="loc">Courier Agent En Route</div>
                         </div>
                     </div>
                     {% endif %}
@@ -303,28 +629,20 @@
                     <div class="timeline-item">
                         <div class="timeline-dot active"></div>
                         <div class="timeline-content">
-                            <div class="time">Yesterday, 11:30 PM</div>
-                            <div class="desc">Arrived at sort facility</div>
-                            <div class="loc">Mumbai Hub</div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot active"></div>
-                        <div class="timeline-content">
-                            <div class="time">Yesterday, 4:00 PM</div>
-                            <div class="desc">Shipped</div>
-                            <div class="loc">Warehouse - Fashion World Pro</div>
+                            <div class="time">Dispatch Hub</div>
+                            <div class="desc">Package Dispatched {% if order.tracking_number %}(AWB: {{ order.tracking_number }}){% endif %}</div>
+                            <div class="loc">Fashion World Logistics Centre</div>
                         </div>
                     </div>
                     {% endif %}
 
-                    {% if order.status in ['Paid', 'Shipped', 'Out for Delivery', 'Delivered'] %}
+                    {% if order.payment_status in ['Paid', 'Refunded'] %}
                     <div class="timeline-item">
                         <div class="timeline-dot active"></div>
                         <div class="timeline-content">
-                            <div class="time">Verified Success</div>
-                            <div class="desc">Payment Received</div>
-                            <div class="loc">Online Secure Gateway</div>
+                            <div class="time">Verified</div>
+                            <div class="desc">Payment Confirmed ({{ order.payment_method or 'Razorpay' }})</div>
+                            <div class="loc">Secure Payment Gateway</div>
                         </div>
                     </div>
                     {% endif %}
@@ -332,24 +650,81 @@
                     <div class="timeline-item">
                         <div class="timeline-dot active"></div>
                         <div class="timeline-content">
-                            <div class="time">{{ order.date_ordered.strftime('%B %d, %H:%M %p') }}</div>
+                            <div class="time">{{ order.date_ordered.strftime('%B %d, %Y, %I:%M %p') }}</div>
                             <div class="desc">Order Received</div>
-                            <div class="loc">Online Store, India</div>
+                            <div class="loc">Fashion World Pro Online Store</div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Customer Lifecycle Requests History (if any) -->
+            {% if order.requests %}
             <div class="track-card">
-                <h3 style="font-size: 1.1rem; margin-bottom: 20px;">Items in this package</h3>
+                <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--gold-primary);"></i> Service & Lifecycle Requests
+                </h3>
+                {% for req_item in order.requests %}
+                <div class="request-item-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                        <span style="font-weight: 700; font-size: 0.9rem; color: #0f172a; text-transform: capitalize;">
+                            <i class="fa-solid {% if req_item.request_type == 'cancellation' %}fa-ban{% elif req_item.request_type == 'exchange' %}fa-arrows-rotate{% else %}fa-rotate-left{% endif %}" style="margin-right: 4px;"></i>
+                            {{ req_item.request_type }} Request (#REQ-{{ req_item.id }})
+                        </span>
+                        
+                        {% set req_st = (req_item.status or '').lower() %}
+                        <span class="req-badge {% if 'approved' in req_st %}req-approved{% elif 'refund' in req_st or 'completed' in req_st %}req-completed{% elif 'rejected' in req_st %}req-rejected{% else %}req-pending{% endif %}">
+                            {{ req_item.status }}
+                        </span>
+                    </div>
+
+                    <p style="font-size: 0.85rem; color: #475569; margin: 0 0 4px;">
+                        <strong>Reason:</strong> {{ req_item.reason }}
+                    </p>
+                    
+                    {% if req_item.replacement_size %}
+                    <p style="font-size: 0.85rem; color: #475569; margin: 0 0 4px;">
+                        <strong>Requested Replacement Size:</strong> {{ req_item.replacement_size }}
+                    </p>
+                    {% endif %}
+
+                    {% if req_item.details %}
+                    <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 4px;">
+                        <strong>Notes:</strong> {{ req_item.details }}
+                    </p>
+                    {% endif %}
+
+                    {% if req_item.admin_notes %}
+                    <div style="background: #ffffff; border-left: 3px solid #f59e0b; padding: 8px 12px; margin-top: 8px; border-radius: 0 6px 6px 0; font-size: 0.82rem; color: #334155;">
+                        <strong>Concierge Note:</strong> {{ req_item.admin_notes }}
+                    </div>
+                    {% endif %}
+
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 8px;">
+                        Submitted on {{ req_item.created_at.strftime('%d %b %Y at %I:%M %p') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Purchased Items Card -->
+            <div class="track-card">
+                <h3 style="font-size: 1.1rem; margin-bottom: 20px; font-weight: 700; color: #0f172a;">Items in this Package</h3>
                 <div style="display: flex; flex-direction: column; gap: 15px;">
                     {% for item in order.items %}
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <img src="{{ item.product.image_url }}" class="product-thumb" alt="">
-                        <div>
-                            <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 5px;">{{ item.product.name }}</p>
-                            <p style="font-size: 0.85rem; color: #565959;">Qty: {{ item.quantity }} | Sold by: Fashion World Pro</p>
-                            <a href="{{ url_for('product_detail', product_id=item.product.id) }}" style="font-size: 0.85rem; color: #007185; text-decoration: none;">View item</a>
+                    <div style="display: flex; gap: 20px; align-items: center; border-bottom: 1px solid #f8fafc; padding-bottom: 12px;">
+                        <img src="{{ item.product.image_url }}" class="product-thumb" alt="{{ item.product.name }}">
+                        <div style="flex: 1;">
+                            <p style="font-weight: 700; font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">{{ item.product.name }}</p>
+                            <p style="font-size: 0.85rem; color: #565959; margin-bottom: 2px;">
+                                Qty: {{ item.quantity }} | Unit Price: ₹{{ "{:,.2f}".format(item.price_at_order) }}
+                                {% if item.size %} | Size: <strong>{{ item.size }}</strong>{% endif %}
+                            </p>
+                            <a href="{{ url_for('product_detail', product_id=item.product.id) }}" style="font-size: 0.85rem; color: #007185; font-weight: 600; text-decoration: none;">View Product Details <i class="fa-solid fa-arrow-right" style="font-size: 0.75rem;"></i></a>
+                        </div>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 1rem;">
+                            ₹{{ "{:,.2f}".format(item.price_at_order * item.quantity) }}
                         </div>
                     </div>
                     {% endfor %}
@@ -357,40 +732,271 @@
             </div>
         </div>
 
-        <!-- Right Column -->
+        <!-- Right Column: Sidebar & Actions -->
         <div class="sidebar">
+            
+            <!-- Order Actions (Cancel / Exchange / Return) -->
+            <div class="side-card">
+                <h4>Order Management</h4>
+                
+                {% set status_lower = (order.status or '').lower() %}
+                
+                <!-- If Eligible for Cancellation -->
+                {% if status_lower in ['pending', 'processing', 'paid', 'order placed'] %}
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Order is being processed. You can cancel before dispatch.</p>
+                <button type="button" class="btn-danger-action" onclick="openModal('cancelOrderModal')">
+                    <i class="fa-solid fa-ban"></i> Cancel Order
+                </button>
+                
+                <!-- If Delivered (Eligible for Exchange & Return) -->
+                {% elif status_lower == 'delivered' %}
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Need a different size or wish to return? We offer hassle-free concierge service within 7 days.</p>
+                <button type="button" class="btn-amazon" onclick="openModal('exchangeOrderModal')" style="background: #ffffff; border: 1px solid #c5a880; color: #9a7b56;">
+                    <i class="fa-solid fa-arrows-rotate"></i> Request Size Exchange
+                </button>
+                <button type="button" class="btn-outline-action" onclick="openModal('returnOrderModal')">
+                    <i class="fa-solid fa-rotate-left"></i> Request Return & Refund
+                </button>
+                
+                <!-- If Cancelled or Request in progress -->
+                {% elif status_lower == 'cancelled' %}
+                <div style="background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center;">
+                    <i class="fa-solid fa-circle-xmark"></i> Order Cancelled
+                </div>
+                {% elif 'exchange' in status_lower %}
+                <div style="background: #eff6ff; color: #1e40af; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center;">
+                    <i class="fa-solid fa-arrows-rotate"></i> Exchange in Progress
+                </div>
+                {% elif 'return' in status_lower %}
+                <div style="background: #fffbeb; color: #92400e; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center;">
+                    <i class="fa-solid fa-box-archive"></i> Return in Progress
+                </div>
+                {% else %}
+                <p style="font-size: 0.85rem; color: #64748b;">Your order is on the way. Once delivered, return & exchange options will be available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Shipping Address -->
             <div class="side-card">
                 <h4>Shipping Address</h4>
                 <p><strong>{{ order.first_name }} {{ order.last_name }}</strong></p>
                 <p>{{ order.address }}</p>
                 <p>{{ order.city }}, {{ order.state }} {{ order.zip_code }}</p>
                 <p>India</p>
+                {% if order.phone %}
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 6px;"><i class="fa-solid fa-phone" style="font-size: 0.75rem;"></i> {{ order.phone }}</p>
+                {% endif %}
             </div>
 
+            <!-- Order Summary -->
             <div class="side-card">
-                <h4>Order Summary</h4>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Items:</span>
-                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                <h4>Payment & Price Breakdown</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem;">
+                    <span style="color: #64748b;">Subtotal:</span>
+                    <strong style="color: #0f172a;">₹{{ "{:,.2f}".format(order.total_price) }}</strong>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Shipping:</span>
-                    <span>FREE</span>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem;">
+                    <span style="color: #64748b;">Express Shipping:</span>
+                    <span style="color: #15803d; font-weight: 700;">FREE</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
-                    <span>Grand Total:</span>
-                    <span>₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.15rem; margin-top: 10px; border-top: 1px solid #f1f5f9; padding-top: 10px; color: #0f172a;">
+                    <span>Total Amount:</span>
+                    <span style="color: var(--gold-dark);">₹{{ "{:,.2f}".format(order.total_price) }}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">
+                    Payment Method: <strong>{{ order.payment_method or 'Razorpay' }}</strong>
                 </div>
             </div>
 
+            <!-- Need Help -->
             <div class="side-card">
-                <h4>Need help?</h4>
-                <a href="{{ url_for('customer_support', order_id='FW-' ~ order.id) }}" class="btn-amazon"><i class="fa-solid fa-headset" style="margin-right: 6px;"></i> Contact Support</a>
-                <a href="{{ url_for('invoice', order_id=order.id) }}" class="btn-amazon" style="background: #fff; border: 1px solid #D5D9D9; margin-top: 10px;">Download Invoice</a>
+                <h4>Customer Care</h4>
+                <a href="{{ url_for('customer_support', order_id='FW-' ~ order.id) }}" class="btn-amazon" style="background: #0f172a; color: #ffffff; border-color: #0f172a;">
+                    <i class="fa-solid fa-headset" style="margin-right: 6px;"></i> Contact Concierge Support
+                </a>
+                <a href="{{ url_for('invoice', order_id=order.id) }}" class="btn-outline-action">
+                    <i class="fa-solid fa-file-invoice" style="margin-right: 4px;"></i> View Official Tax Invoice
+                </a>
             </div>
 
-            <a href="{{ url_for('dashboard') }}" style="display: block; text-align: center; color: #007185; text-decoration: none; font-size: 0.9rem; margin-top: 20px;">Return to Dashboard</a>
+            <a href="{{ url_for('dashboard') }}" style="display: block; text-align: center; color: #007185; text-decoration: none; font-size: 0.9rem; margin-top: 20px; font-weight: 600;">
+                <i class="fa-solid fa-arrow-left"></i> Return to My Dashboard
+            </a>
         </div>
     </div>
 </div>
+
+<!-- =========================================================
+     MODALS FOR CANCELLATION, EXCHANGE, AND RETURN
+     ========================================================= -->
+
+<!-- Cancel Order Modal -->
+<div class="fw-modal-backdrop" id="cancelOrderModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3><i class="fa-solid fa-ban" style="color: #ef4444;"></i> Cancel Order #FW-{{ order.id }}</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('cancelOrderModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('cancel_order', order_id=order.id) }}">
+            <div class="fw-modal-body">
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 16px;">
+                    Are you sure you want to cancel this order? If you paid online via Razorpay, a full refund of <strong>₹{{ "{:,.2f}".format(order.total_price) }}</strong> will be automatically credited.
+                </p>
+
+                <div class="fw-form-group">
+                    <label for="cancelReason">Reason for Cancellation <span style="color: #ef4444;">*</span></label>
+                    <select name="reason" id="cancelReason" class="fw-form-control" required>
+                        <option value="">Select a reason...</option>
+                        <option value="Ordered by mistake">Ordered by mistake</option>
+                        <option value="Need to change delivery address or contact number">Need to change delivery address or contact number</option>
+                        <option value="Need to change product size or variant">Need to change product size or variant</option>
+                        <option value="Found better price or deal">Found better price or deal</option>
+                        <option value="Delivery time is too long">Delivery time is too long</option>
+                        <option value="Other reasons">Other reasons</option>
+                    </select>
+                </div>
+
+                <div class="fw-form-group">
+                    <label for="cancelComments">Additional Comments (Optional)</label>
+                    <textarea name="comments" id="cancelComments" class="fw-form-control" rows="3" placeholder="Let us know how we can improve..."></textarea>
+                </div>
+            </div>
+            <div class="fw-modal-footer">
+                <button type="button" class="btn-outline-action" style="width: auto;" onclick="closeModal('cancelOrderModal')">Keep Order</button>
+                <button type="submit" class="btn-danger-action" style="width: auto; padding: 9px 20px; background: #ef4444; color: #fff; border-color: #dc2626;">Confirm Cancellation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Request Exchange Modal -->
+<div class="fw-modal-backdrop" id="exchangeOrderModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3><i class="fa-solid fa-arrows-rotate" style="color: #3b82f6;"></i> Request Size / Variant Exchange</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('exchangeOrderModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('exchange_order', order_id=order.id) }}">
+            <div class="fw-modal-body">
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 16px;">
+                    Exchange is available within 7 days of delivery. Our courier partner will pick up the original item and deliver your replacement.
+                </p>
+
+                <div class="fw-form-group">
+                    <label for="exchangeItem">Select Item to Exchange <span style="color: #ef4444;">*</span></label>
+                    <select name="item_id" id="exchangeItem" class="fw-form-control" required>
+                        {% for itm in order.items %}
+                        <option value="{{ itm.id }}">{{ itm.product.name }} (Current: {{ itm.size or 'Standard' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="fw-form-group">
+                    <label for="exchangeReason">Exchange Reason <span style="color: #ef4444;">*</span></label>
+                    <select name="reason" id="exchangeReason" class="fw-form-control" required>
+                        <option value="Size too small">Size too small</option>
+                        <option value="Size too large">Size too large</option>
+                        <option value="Fit or fabric not as expected">Fit or fabric not as expected</option>
+                        <option value="Defective / Damaged garment">Defective / Damaged garment</option>
+                        <option value="Different color / variant preferred">Different color / variant preferred</option>
+                    </select>
+                </div>
+
+                <div class="fw-form-group">
+                    <label for="replacementSize">Requested Replacement Size / Details <span style="color: #ef4444;">*</span></label>
+                    <input type="text" name="replacement_size" id="replacementSize" class="fw-form-control" placeholder="e.g. Size M, Size XL, or Blue Color" required>
+                </div>
+
+                <div class="fw-form-group">
+                    <label for="exchangeDetails">Special Instructions for Pickup</label>
+                    <textarea name="details" id="exchangeDetails" class="fw-form-control" rows="2" placeholder="e.g. Preferred pickup time, packaging notes..."></textarea>
+                </div>
+            </div>
+            <div class="fw-modal-footer">
+                <button type="button" class="btn-outline-action" style="width: auto;" onclick="closeModal('exchangeOrderModal')">Cancel</button>
+                <button type="submit" class="btn-amazon" style="width: auto; padding: 9px 20px; background: #0f172a; color: #fff; border-color: #0f172a;">Submit Exchange Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Request Return & Refund Modal -->
+<div class="fw-modal-backdrop" id="returnOrderModal">
+    <div class="fw-modal-box">
+        <div class="fw-modal-header">
+            <h3><i class="fa-solid fa-rotate-left" style="color: #f59e0b;"></i> Request Return & Full Refund</h3>
+            <button type="button" class="fw-modal-close" onclick="closeModal('returnOrderModal')">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('return_order', order_id=order.id) }}">
+            <div class="fw-modal-body">
+                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 16px;">
+                    Return request for Order #FW-{{ order.id }}. Once the item is verified at our facility, your refund will be issued promptly.
+                </p>
+
+                <div class="fw-form-group">
+                    <label for="returnItem">Select Item to Return</label>
+                    <select name="item_id" id="returnItem" class="fw-form-control">
+                        <option value="">Entire Package (All Items — ₹{{ "{:,.2f}".format(order.total_price) }})</option>
+                        {% for itm in order.items %}
+                        <option value="{{ itm.id }}">{{ itm.product.name }} (₹{{ "{:,.2f}".format(itm.price_at_order * itm.quantity) }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="fw-form-group">
+                    <label for="returnReason">Return Reason <span style="color: #ef4444;">*</span></label>
+                    <select name="reason" id="returnReason" class="fw-form-control" required>
+                        <option value="Garment quality not as expected">Garment quality not as expected</option>
+                        <option value="Defective or damaged piece">Defective or damaged piece</option>
+                        <option value="Item does not match website pictures">Item does not match website pictures</option>
+                        <option value="Incorrect product or size delivered">Incorrect product or size delivered</option>
+                        <option value="Changed mind">Changed mind</option>
+                    </select>
+                </div>
+
+                {% if order.payment_method == 'COD' %}
+                <div class="fw-form-group">
+                    <label for="bankDetails">UPI ID or Bank Details for Refund Transfer <span style="color: #ef4444;">*</span></label>
+                    <input type="text" name="bank_or_upi" id="bankDetails" class="fw-form-control" placeholder="e.g. yourname@okaxis or Bank Name, A/C, IFSC" required>
+                </div>
+                {% endif %}
+
+                <div class="fw-form-group">
+                    <label for="returnDetails">Additional Feedback (Optional)</label>
+                    <textarea name="details" id="returnDetails" class="fw-form-control" rows="2" placeholder="Please share any feedback for our quality team..."></textarea>
+                </div>
+            </div>
+            <div class="fw-modal-footer">
+                <button type="button" class="btn-outline-action" style="width: auto;" onclick="closeModal('returnOrderModal')">Cancel</button>
+                <button type="submit" class="btn-amazon" style="width: auto; padding: 9px 20px; background: #0f172a; color: #fff; border-color: #0f172a;">Submit Return Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Close on backdrop click
+    window.onclick = function(event) {
+        if (event.target.classList.contains('fw-modal-backdrop')) {
+            event.target.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    };
+</script>
 {% endblock %}

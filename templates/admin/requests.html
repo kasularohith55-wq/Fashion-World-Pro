@@ -1,0 +1,347 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Returns & Exchanges | Fashion World Pro Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .req-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .req-title-group h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -0.3px;
+    }
+
+    .req-sub-text {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .kpi-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-mini-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .kpi-mini-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .kpi-mini-icon.amber { background: #fef3c7; color: #d97706; }
+    .kpi-mini-icon.blue { background: #eff6ff; color: #2563eb; }
+    .kpi-mini-icon.red { background: #fee2e2; color: #dc2626; }
+    .kpi-mini-icon.green { background: #ecfdf5; color: #059669; }
+
+    .kpi-mini-data h4 {
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .kpi-mini-data p {
+        font-size: 11.5px;
+        color: #64748b;
+        margin: 2px 0 0;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .req-filter-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 22px;
+    }
+
+    .req-filter-form {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .req-badge-cancellation {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
+    }
+
+    .req-badge-exchange {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+    }
+
+    .req-badge-return {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    @media (max-width: 1024px) {
+        .kpi-mini-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .kpi-mini-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="req-header-bar">
+    <div class="req-title-group">
+        <h1><i class="fa-solid fa-arrows-rotate" style="color: var(--gold-500);"></i> Returns & Exchanges</h1>
+        <p class="req-sub-text">Manage customer cancellations, variant exchanges, returns inspection, and refund processing</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('admin_orders') }}" class="btn-outline-clean">
+            <i class="fa-solid fa-bag-shopping"></i> Customer Orders
+        </a>
+    </div>
+</div>
+
+<!-- KPI Metrics -->
+<div class="kpi-mini-grid">
+    <div class="kpi-mini-card">
+        <div class="kpi-mini-icon red">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+        <div class="kpi-mini-data">
+            <h4>{{ pending_cancellations }}</h4>
+            <p>Pending Cancellations</p>
+        </div>
+    </div>
+
+    <div class="kpi-mini-card">
+        <div class="kpi-mini-icon blue">
+            <i class="fa-solid fa-arrows-rotate"></i>
+        </div>
+        <div class="kpi-mini-data">
+            <h4>{{ pending_exchanges }}</h4>
+            <p>Pending Exchanges</p>
+        </div>
+    </div>
+
+    <div class="kpi-mini-card">
+        <div class="kpi-mini-icon amber">
+            <i class="fa-solid fa-box-archive"></i>
+        </div>
+        <div class="kpi-mini-data">
+            <h4>{{ pending_returns }}</h4>
+            <p>Pending Returns</p>
+        </div>
+    </div>
+
+    <div class="kpi-mini-card">
+        <div class="kpi-mini-icon green">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="kpi-mini-data">
+            <h4>{{ total_processed }}</h4>
+            <p>Total Resolved</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="req-filter-card">
+    <form method="GET" action="{{ url_for('admin_requests') }}" class="req-filter-form">
+        <input type="text" name="query" value="{{ query }}" placeholder="Search by Order ID, reason, or notes..." style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; min-width: 260px;">
+
+        <select name="type" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #fff; cursor: pointer;">
+            <option value="">All Request Types</option>
+            <option value="cancellation" {% if type_filter == 'cancellation' %}selected{% endif %}>Cancellation</option>
+            <option value="exchange" {% if type_filter == 'exchange' %}selected{% endif %}>Exchange</option>
+            <option value="return" {% if type_filter == 'return' %}selected{% endif %}>Return & Refund</option>
+        </select>
+
+        <select name="status" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #fff; cursor: pointer;">
+            <option value="">All Statuses</option>
+            <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="Pending Review" {% if status_filter == 'Pending Review' %}selected{% endif %}>Pending Review</option>
+            <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+            <option value="Item Received" {% if status_filter == 'Item Received' %}selected{% endif %}>Item Received</option>
+            <option value="Replacement Dispatched" {% if status_filter == 'Replacement Dispatched' %}selected{% endif %}>Replacement Dispatched</option>
+            <option value="Refund Processed" {% if status_filter == 'Refund Processed' %}selected{% endif %}>Refund Processed</option>
+            <option value="Refund Pending" {% if status_filter == 'Refund Pending' %}selected{% endif %}>Refund Pending</option>
+            <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+            <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+
+        <button type="submit" class="btn-dark-primary" style="padding: 8px 16px; font-size: 12.5px;">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+
+        {% if query or type_filter or status_filter %}
+        <a href="{{ url_for('admin_requests') }}" class="btn-outline-clean" style="padding: 8px 12px; font-size: 12.5px; color: #ef4444; border-color: #fca5a5;">
+            <i class="fa-solid fa-xmark"></i> Clear
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Requests Table Card -->
+<div class="admin-card">
+    <div class="card-header-between">
+        <h3 class="card-title-lg">
+            <i class="fa-solid fa-list-check" style="color: var(--gold-500);"></i> Requests Log
+            <span style="font-size: 13px; font-weight: 500; color: #64748b;">({{ pagination.total }} total requests)</span>
+        </h3>
+    </div>
+
+    <div class="table-responsive-wrapper">
+        <table class="admin-modern-table">
+            <thead>
+                <tr>
+                    <th>Req #</th>
+                    <th>Date</th>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Type</th>
+                    <th>Reason & Details</th>
+                    <th>Amount / Size</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>
+                        <strong style="font-size: 12.5px; color: #0f172a;">#REQ-{{ req.id }}</strong>
+                    </td>
+                    <td style="font-size: 12px; color: #64748b; white-space: nowrap;">
+                        {{ req.created_at.strftime('%d %b %Y, %I:%M %p') if req.created_at else '—' }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_order_detail', order_id=req.order_id) }}" style="font-weight: 700; color: #0284c7; text-decoration: none; font-size: 13px;">
+                            #FW-{{ req.order_id }}
+                        </a>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 13px;">{{ req.user.username if req.user else 'Customer' }}</div>
+                        <div style="font-size: 11.5px; color: #64748b;">{{ req.user.email if req.user else '' }}</div>
+                    </td>
+                    <td>
+                        <span class="status-pill req-badge-{{ req.request_type|lower }}">
+                            {{ req.request_type }}
+                        </span>
+                    </td>
+                    <td style="max-width: 260px;">
+                        <div style="font-weight: 600; color: #0f172a; font-size: 12.5px;">{{ req.reason }}</div>
+                        {% if req.details %}
+                        <div style="font-size: 11.5px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ req.details }}</div>
+                        {% endif %}
+                        {% if req.admin_notes %}
+                        <div style="font-size: 11px; color: #059669; font-weight: 600; margin-top: 2px;">
+                            <i class="fa-solid fa-comment-dots"></i> Admin: {{ req.admin_notes }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if req.request_type == 'exchange' %}
+                        <span style="font-size: 12px; font-weight: 700; color: #2563eb;">
+                            Size: {{ req.replacement_size or 'N/A' }}
+                        </span>
+                        {% elif req.refund_amount and req.refund_amount > 0 %}
+                        <strong style="font-size: 12.5px; color: #0f172a;">₹{{ "{:,.2f}".format(req.refund_amount) }}</strong>
+                        {% else %}
+                        <span style="color: #94a3b8; font-size: 12px;">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-pill status-{{ (req.status or 'pending')|lower|replace(' ', '-') }}">
+                            {{ req.status }}
+                        </span>
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <a href="{{ url_for('admin_order_detail', order_id=req.order_id) }}" class="btn-dark-primary" style="padding: 6px 12px; font-size: 12px;">
+                            Review Order <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 50px 20px; color: #64748b;">
+                        <i class="fa-solid fa-arrows-rotate" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 12px;"></i>
+                        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a;">No Requests Found</h4>
+                        <p style="font-size: 13px;">No cancellation, exchange, or return requests match your criteria.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="pagination-bar">
+        <span>Showing page {{ pagination.page }} of {{ pagination.pages }}</span>
+        <div class="pagination-links">
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('admin_requests', page=pagination.prev_num, query=query, type=type_filter, status=status_filter) }}" class="page-btn">
+                <i class="fa-solid fa-chevron-left"></i> Prev
+            </a>
+            {% endif %}
+
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                    <a href="{{ url_for('admin_requests', page=p, query=query, type=type_filter, status=status_filter) }}" class="page-btn {% if p == pagination.page %}active{% endif %}">
+                        {{ p }}
+                    </a>
+                {% else %}
+                    <span style="padding: 6px 8px; color: #94a3b8;">…</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <a href="{{ url_for('admin_requests', page=pagination.next_num, query=query, type=type_filter, status=status_filter) }}" class="page-btn">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
