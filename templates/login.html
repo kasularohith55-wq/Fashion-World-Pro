@@ -273,6 +273,38 @@ async function initRecaptcha() {
 }
 
 let emailOtpCooldownInterval = null;
+let isEmailOtpLoading = false;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timer);
+        return response;
+    } catch (err) {
+        clearTimeout(timer);
+        if (err.name === 'AbortError') {
+            const timeoutErr = new Error('Request timed out. Please try again.');
+            timeoutErr.isTimeout = true;
+            throw timeoutErr;
+        }
+        throw err;
+    }
+}
+
+async function parseJsonResponse(response) {
+    if (!response) return null;
+    const contentType = response.headers ? (response.headers.get('content-type') || '') : '';
+    if (contentType.includes('application/json')) {
+        try {
+            return await response.json();
+        } catch (e) {
+            return null;
+        }
+    }
+    return null;
+}
 
 function showEmailOtpAlert(message) {
     const alertBox = document.getElementById('email-otp-alert');
@@ -316,6 +348,7 @@ function startEmailOtpCooldown(seconds) {
 }
 
 async function sendEmailOtp() {
+    if (isEmailOtpLoading) return;
     hideEmailOtpAlert();
     const emailInput = document.getElementById('otp-email-input');
     const email = emailInput ? emailInput.value.trim() : '';
@@ -326,18 +359,22 @@ async function sendEmailOtp() {
     }
     
     const sendBtn = document.getElementById('send-email-otp-btn');
+    if (!sendBtn) return;
+    
+    isEmailOtpLoading = true;
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending Code...</span>';
     
     try {
-        const response = await fetch("{{ url_for('auth_email_otp_send') }}", {
+        const response = await fetchWithTimeout("{{ url_for('auth_email_otp_send') }}", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })
-        });
-        const data = await response.json();
+        }, 12000);
         
-        if (data.success) {
+        const data = await parseJsonResponse(response);
+        
+        if (response.ok && data && data.success) {
             document.getElementById('display-otp-email').innerText = email;
             document.getElementById('email-otp-step-1').style.display = 'none';
             document.getElementById('email-otp-step-2').style.display = 'block';
@@ -346,12 +383,17 @@ async function sendEmailOtp() {
             
             startEmailOtpCooldown(data.cooldown || 60);
         } else {
-            showEmailOtpAlert(data.message || 'Failed to send OTP. Please try again.');
+            const msg = (data && data.message) ? data.message : 'Failed to send OTP code. Please try again.';
+            showEmailOtpAlert(msg);
         }
     } catch (err) {
         console.error('Email OTP send error:', err);
-        showEmailOtpAlert('Network error while requesting OTP. Please try again.');
+        const errMsg = err.isTimeout 
+            ? 'Request timed out while contacting mail server. Please try again.'
+            : 'Network error while requesting OTP. Please check your connection and try again.';
+        showEmailOtpAlert(errMsg);
     } finally {
+        isEmailOtpLoading = false;
         sendBtn.disabled = false;
         sendBtn.innerHTML = '<span>Send OTP to Email</span> <i class="fa-solid fa-paper-plane"></i>';
     }
@@ -370,6 +412,7 @@ function changeEmailOtpAddress() {
 }
 
 async function resendEmailOtp() {
+    if (isEmailOtpLoading) return;
     hideEmailOtpAlert();
     const email = document.getElementById('otp-email-input').value.trim();
     if (!email) {
@@ -378,33 +421,43 @@ async function resendEmailOtp() {
     }
     
     const resendBtn = document.getElementById('resend-email-otp-btn');
+    if (!resendBtn) return;
+    
+    isEmailOtpLoading = true;
     resendBtn.disabled = true;
     resendBtn.innerText = 'Sending...';
     
     try {
-        const response = await fetch("{{ url_for('auth_email_otp_send') }}", {
+        const response = await fetchWithTimeout("{{ url_for('auth_email_otp_send') }}", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })
-        });
-        const data = await response.json();
+        }, 12000);
         
-        if (data.success) {
+        const data = await parseJsonResponse(response);
+        
+        if (response.ok && data && data.success) {
             startEmailOtpCooldown(data.cooldown || 60);
         } else {
-            showEmailOtpAlert(data.message || 'Failed to resend OTP.');
+            showEmailOtpAlert((data && data.message) ? data.message : 'Failed to resend OTP.');
             resendBtn.disabled = false;
             resendBtn.innerText = 'Resend OTP';
         }
     } catch (err) {
         console.error('Email OTP resend error:', err);
-        showEmailOtpAlert('Network error while resending OTP.');
+        const errMsg = err.isTimeout 
+            ? 'Request timed out while resending OTP. Please try again.'
+            : 'Network error while resending OTP. Please try again.';
+        showEmailOtpAlert(errMsg);
         resendBtn.disabled = false;
         resendBtn.innerText = 'Resend OTP';
+    } finally {
+        isEmailOtpLoading = false;
     }
 }
 
 async function verifyEmailOtp() {
+    if (isEmailOtpLoading) return;
     hideEmailOtpAlert();
     const emailInput = document.getElementById('otp-email-input');
     const email = emailInput ? emailInput.value.trim() : '';
@@ -416,26 +469,34 @@ async function verifyEmailOtp() {
     }
     
     const verifyBtn = document.getElementById('verify-email-otp-btn');
+    if (!verifyBtn) return;
+    
+    isEmailOtpLoading = true;
     verifyBtn.disabled = true;
     verifyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Verifying...</span>';
     
     try {
-        const response = await fetch("{{ url_for('auth_email_otp_verify') }}", {
+        const response = await fetchWithTimeout("{{ url_for('auth_email_otp_verify') }}", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email, otp: otp })
-        });
-        const data = await response.json();
+        }, 12000);
         
-        if (data.success && data.redirect) {
+        const data = await parseJsonResponse(response);
+        
+        if (response.ok && data && data.success && data.redirect) {
             window.location.href = data.redirect;
         } else {
-            showEmailOtpAlert(data.message || 'Verification failed. Please try again.');
+            showEmailOtpAlert((data && data.message) ? data.message : 'Verification failed. Please check your code and try again.');
         }
     } catch (err) {
         console.error('Email OTP verify error:', err);
-        showEmailOtpAlert('Network error while verifying OTP.');
+        const errMsg = err.isTimeout 
+            ? 'Verification timed out. Please try again.'
+            : 'Network error while verifying OTP. Please try again.';
+        showEmailOtpAlert(errMsg);
     } finally {
+        isEmailOtpLoading = false;
         verifyBtn.disabled = false;
         verifyBtn.innerHTML = '<span>Verify & Login</span> <i class="fa-solid fa-check"></i>';
     }

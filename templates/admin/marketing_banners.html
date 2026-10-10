@@ -108,8 +108,143 @@
         justify-content: space-between;
     }
 
+    /* Flash Sale Management Section */
+    .flash-sale-admin-card {
+        background: #ffffff;
+        border: 1px solid var(--admin-border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .flash-sale-admin-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #f59e0b 0%, #ef4444 100%);
+    }
+
+    .flash-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .chip-active {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .chip-scheduled {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+    }
+
+    .chip-ended {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .chip-disabled {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+
+    .flash-admin-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    .flash-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .flash-preview-panel {
+        background: linear-gradient(135deg, #181512 0%, #241e17 50%, #1a1612 100%);
+        border: 1px solid #3d3326;
+        border-radius: 12px;
+        padding: 20px;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .form-group-custom label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .form-input-custom {
+        width: 100%;
+        height: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 13px;
+        color: #0f172a;
+        background: #ffffff;
+        box-sizing: border-box;
+    }
+
+    .form-input-custom:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    }
+
+    .flash-toggle-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .flash-toggle-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: #d97706;
+    }
+
     @media (max-width: 1024px) {
         .campaign-cards-grid {
+            grid-template-columns: 1fr;
+        }
+        .flash-admin-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .flash-form-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -133,6 +268,127 @@
             <i class="fa-solid fa-shirt"></i> Manage Product Promotions
         </a>
     </div>
+</div>
+
+<!-- Flash Sale Scheduling & Management -->
+<div class="flash-sale-admin-card">
+    <div class="card-header-between" style="margin-bottom: 20px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                <h3 class="card-title-lg" style="font-size: 17px; margin: 0;">
+                    <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Flash Sale Scheduling & Live Management
+                </h3>
+                {% if flash_sale.status == 'active' %}
+                    <span class="flash-status-chip chip-active"><i class="fa-solid fa-circle-dot"></i> Active & Live</span>
+                {% elif flash_sale.status == 'scheduled' %}
+                    <span class="flash-status-chip chip-scheduled"><i class="fa-solid fa-clock"></i> Scheduled</span>
+                {% elif flash_sale.status == 'ended' %}
+                    <span class="flash-status-chip chip-ended"><i class="fa-solid fa-flag-checkered"></i> Ended</span>
+                {% else %}
+                    <span class="flash-status-chip chip-disabled"><i class="fa-solid fa-toggle-off"></i> Disabled</span>
+                {% endif %}
+            </div>
+            <p class="card-subtitle-sm" style="margin: 0;">Configure storefront flash sale dates, countdown duration, and promotional copy. Dates are saved in UTC with automatic local IST (+05:30) conversion.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('home') }}#flash-sale" target="_blank" class="btn-outline-clean" style="font-size: 12px; padding: 7px 14px;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Storefront Banner
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_update_flash_sale') }}" class="flash-admin-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div>
+            <!-- Status Toggle -->
+            <label class="flash-toggle-wrapper">
+                <input type="checkbox" name="is_active" value="1" class="flash-toggle-checkbox" {% if flash_sale.is_active_flag %}checked{% endif %}>
+                <div>
+                    <strong style="color: #0f172a; font-size: 13.5px; display: block;">Enable Flash Sale Promotion</strong>
+                    <span style="color: #64748b; font-size: 12px;">When enabled, the sale displays as Scheduled or Active based on the date range below.</span>
+                </div>
+            </label>
+
+            <!-- Schedule Inputs Grid -->
+            <div class="flash-form-grid">
+                <div class="form-group-custom">
+                    <label for="flash_start_time">
+                        <i class="fa-regular fa-calendar-check" style="color: #059669; margin-right: 4px;"></i> Start Date & Time (IST)
+                    </label>
+                    <input type="datetime-local" id="flash_start_time" name="start_time" class="form-input-custom" value="{{ flash_sale.start_ist_input }}">
+                    <span style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: block;">Current: {{ flash_sale.start_ist_display }}</span>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="flash_end_time">
+                        <i class="fa-regular fa-calendar-xmark" style="color: #dc2626; margin-right: 4px;"></i> End Date & Time (IST)
+                    </label>
+                    <input type="datetime-local" id="flash_end_time" name="end_time" class="form-input-custom" value="{{ flash_sale.end_ist_input }}">
+                    <span style="font-size: 11px; color: #94a3b8; margin-top: 4px; display: block;">Current: {{ flash_sale.end_ist_display }}</span>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="flash_title">Banner Headline Title</label>
+                    <input type="text" id="flash_title" name="title" class="form-input-custom" value="{{ flash_sale.title }}" placeholder="e.g. UP TO 40% OFF" required>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="flash_discount_text">Badge Tag Text</label>
+                    <input type="text" id="flash_discount_text" name="discount_text" class="form-input-custom" value="{{ flash_sale.discount_text }}" placeholder="e.g. FLASH SALE" required>
+                </div>
+            </div>
+
+            <div class="form-group-custom" style="margin-top: 14px;">
+                <label for="flash_subtitle">Subheading / Promo Caption</label>
+                <input type="text" id="flash_subtitle" name="subtitle" class="form-input-custom" value="{{ flash_sale.subtitle }}" placeholder="e.g. Limited Time Offer" required>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; align-items: center; gap: 12px;">
+                <button type="submit" class="btn-luxury-gold">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Schedule Settings
+                </button>
+                <span style="font-size: 12px; color: #64748b;">
+                    <i class="fa-solid fa-shield-halved" style="color: #059669;"></i> CSRF Protected & Validated
+                </span>
+            </div>
+        </div>
+
+        <!-- Live Status & Info Panel -->
+        <div class="flash-preview-panel">
+            <div>
+                <span style="font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #c8a355;">Storefront Preview</span>
+                <div style="margin-top: 10px;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(231,76,60,0.2); border: 1px solid rgba(231,76,60,0.5); padding: 3px 10px; border-radius: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 11px;">🔥</span>
+                        <span style="font-size: 10px; font-weight: 800; color: #ff6b5b; letter-spacing: 1.5px;">{{ flash_sale.discount_text }}</span>
+                    </div>
+                    <h4 style="margin: 0; color: #ffffff; font-size: 17px; font-weight: 800; letter-spacing: 1px;">{{ flash_sale.title }}</h4>
+                    <p style="margin: 2px 0 0; color: #c8a355; font-size: 12px; font-weight: 500;">{{ flash_sale.subtitle }}</p>
+                </div>
+
+                <div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(200,163,85,0.2);">
+                    <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">AUTOMATED STATUS</div>
+                    <div style="font-size: 13.5px; font-weight: 700; color: {% if flash_sale.status == 'active' %}#34d399{% elif flash_sale.status == 'scheduled' %}#60a5fa{% elif flash_sale.status == 'ended' %}#f87171{% else %}#94a3b8{% endif %};">
+                        {% if flash_sale.status == 'active' %}
+                            <i class="fa-solid fa-circle-play"></i> LIVE COUNTDOWN ACTIVE
+                        {% elif flash_sale.status == 'scheduled' %}
+                            <i class="fa-solid fa-hourglass-start"></i> SCHEDULED (STARTS SOON)
+                        {% elif flash_sale.status == 'ended' %}
+                            <i class="fa-solid fa-ban"></i> PROMOTION EXPIRED (SALE ENDED)
+                        {% else %}
+                            <i class="fa-solid fa-eye-slash"></i> BANNER HIDDEN / DISABLED
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 18px; font-size: 11.5px; color: #9ca3af; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+                <div><strong style="color: #e5e7eb;">Starts:</strong> {{ flash_sale.start_ist_display }}</div>
+                <div style="margin-top: 2px;"><strong style="color: #e5e7eb;">Ends:</strong> {{ flash_sale.end_ist_display }}</div>
+            </div>
+        </div>
+    </form>
 </div>
 
 <!-- Active Store Campaigns -->

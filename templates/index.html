@@ -77,24 +77,36 @@
 </section>
 
 <!-- ==========================================================================
-     3. FLASH SALE COUNTDOWN (PREMIUM LIMITED TIME PROMOTION)
+     3. FLASH SALE COUNTDOWN (DYNAMIC ADMIN-SCHEDULED PROMOTION)
      ========================================================================== -->
-<section id="flash-sale" class="flash-sale-countdown-section">
+{% if flash_sale and flash_sale.status != 'disabled' %}
+<section id="flash-sale" class="flash-sale-countdown-section" data-sale-status="{{ flash_sale.status }}">
     <div class="flash-sale-container">
         <!-- Left: Brand Promo Info -->
         <div class="flash-sale-info-block">
             <div class="flash-sale-badge">
                 <span class="flash-sale-fire-icon">🔥</span>
-                <span class="flash-sale-badge-text">FLASH SALE</span>
+                <span class="flash-sale-badge-text">{{ flash_sale.discount_text }}</span>
             </div>
-            <h2 class="flash-sale-title">UP TO 40% OFF</h2>
-            <p class="flash-sale-subtitle">Limited Time Offer</p>
+            <h2 class="flash-sale-title">{{ flash_sale.title }}</h2>
+            <p class="flash-sale-subtitle">{{ flash_sale.subtitle }}</p>
         </div>
 
-        <!-- Center: Fixed Expiry Countdown Clock -->
+        <!-- Center: Dynamic Expiry Countdown Clock -->
         <div class="flash-sale-timer-block">
-            <span class="flash-sale-ends-label">ENDS IN</span>
+            <span class="flash-sale-ends-label" id="flashSaleTimerLabel">
+                {% if flash_sale.status == 'scheduled' %}
+                    STARTS IN
+                {% elif flash_sale.status == 'active' %}
+                    ENDS IN
+                {% else %}
+                    PROMOTION STATUS
+                {% endif %}
+            </span>
             <div class="flash-sale-clock" id="flashSaleTimer">
+                {% if flash_sale.status == 'ended' %}
+                <div class="flash-sale-ended-badge" style="padding: 10px 24px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #ff6b5b; border-radius: 6px; font-weight: 800; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;">SALE ENDED</div>
+                {% else %}
                 <div class="flash-time-box">
                     <span class="time-digit" id="flashSaleDays">00</span>
                     <span class="time-unit">Days</span>
@@ -114,6 +126,7 @@
                     <span class="time-digit" id="flashSaleSeconds">00</span>
                     <span class="time-unit">Seconds</span>
                 </div>
+                {% endif %}
             </div>
         </div>
 
@@ -126,6 +139,7 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- Special Offers Section -->
 <section id="specials" class="products-section" style="background: #fffcf9; border-bottom: 2px solid #fdf2e9;">
@@ -136,20 +150,22 @@
     </div>
     <div class="product-grid">
         {% for product in specials %}
-        <div class="product-card">
-            <div class="product-image">
-                <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                <span class="sale-badge">SALE</span>
-                <div class="add-to-cart-overlay">
-                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+        <div class="product-card" data-product-id="{{ product.id }}">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card-link" title="{{ product.name }}">
+                <div class="product-image">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
+                    <span class="sale-badge">SALE</span>
                 </div>
-            </div>
-            <div class="product-info">
-                <h3>{{ product.name }}</h3>
-                <p class="price">
-                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
-                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left: 10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
-                </p>
+                <div class="product-info">
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">
+                        <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                        <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left: 10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                    </p>
+                </div>
+            </a>
+            <div class="add-to-cart-overlay">
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
             </div>
         </div>
         {% endfor %}
@@ -167,26 +183,28 @@
     </div>
     <div class="product-grid">
         {% for product in womens %}
-        <div class="product-card">
-            <div class="product-image">
-                <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                {% if product.discount_price %}
-                <span class="sale-badge">SALE</span>
-                {% endif %}
-                <div class="add-to-cart-overlay">
-                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
-                </div>
-            </div>
-            <div class="product-info">
-                <h3>{{ product.name }}</h3>
-                <p class="price">
+        <div class="product-card" data-product-id="{{ product.id }}">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card-link" title="{{ product.name }}">
+                <div class="product-image">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
                     {% if product.discount_price %}
-                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
-                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
-                    {% else %}
-                    ₹{{ "{:,.2f}".format(product.price) }}
+                    <span class="sale-badge">SALE</span>
                     {% endif %}
-                </p>
+                </div>
+                <div class="product-info">
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">
+                        {% if product.discount_price %}
+                        <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                        <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                        {% else %}
+                        ₹{{ "{:,.2f}".format(product.price) }}
+                        {% endif %}
+                    </p>
+                </div>
+            </a>
+            <div class="add-to-cart-overlay">
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
             </div>
         </div>
         {% endfor %}
@@ -201,26 +219,28 @@
     </div>
     <div class="product-grid">
         {% for product in mens %}
-        <div class="product-card">
-            <div class="product-image">
-                <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                {% if product.discount_price %}
-                <span class="sale-badge">SALE</span>
-                {% endif %}
-                <div class="add-to-cart-overlay">
-                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
-                </div>
-            </div>
-            <div class="product-info">
-                <h3>{{ product.name }}</h3>
-                <p class="price">
+        <div class="product-card" data-product-id="{{ product.id }}">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card-link" title="{{ product.name }}">
+                <div class="product-image">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
                     {% if product.discount_price %}
-                    <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
-                    <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
-                    {% else %}
-                    ₹{{ "{:,.2f}".format(product.price) }}
+                    <span class="sale-badge">SALE</span>
                     {% endif %}
-                </p>
+                </div>
+                <div class="product-info">
+                    <h3>{{ product.name }}</h3>
+                    <p class="price">
+                        {% if product.discount_price %}
+                        <span class="original-price">₹{{ "{:,.2f}".format(product.price) }}</span>
+                        <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.2f}".format(product.discount_price) }}</span>
+                        {% else %}
+                        ₹{{ "{:,.2f}".format(product.price) }}
+                        {% endif %}
+                    </p>
+                </div>
+            </a>
+            <div class="add-to-cart-overlay">
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
             </div>
         </div>
         {% endfor %}
@@ -241,24 +261,26 @@
             <h3 style="font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 1.1rem; border-left: 4px solid #d35400; padding-left: 15px; margin-bottom: 30px;">Men's Budget Finds</h3>
             <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
                 {% for product in mens_under_500 %}
-                <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
-                    <div class="product-image" style="position: relative; height: 300px; overflow: hidden;">
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        <span class="sale-badge" style="background: #27ae60; position: absolute; top: 15px; left: 15px; padding: 5px 12px; font-size: 0.7rem; color: white; border-radius: 4px; font-weight: bold;">JUST ₹{{ "{:,.0f}".format(product.discount_price if product.discount_price else product.price) }}</span>
-                        <div class="add-to-cart-overlay">
-                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                <div class="product-card" data-product-id="{{ product.id }}" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card-link" title="{{ product.name }}">
+                        <div class="product-image" style="position: relative; height: 300px; overflow: hidden;">
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                            <span class="sale-badge" style="background: #27ae60; position: absolute; top: 15px; left: 15px; padding: 5px 12px; font-size: 0.7rem; color: white; border-radius: 4px; font-weight: bold;">JUST ₹{{ "{:,.0f}".format(product.discount_price if product.discount_price else product.price) }}</span>
                         </div>
-                    </div>
-                    <div class="product-info" style="padding: 20px; text-align: center;">
-                        <h3 style="font-weight: 600; font-size: 1rem; margin-bottom: 10px; color: #333;">{{ product.name }}</h3>
-                        <p class="price" style="margin: 0;">
-                            {% if product.discount_price %}
-                            <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
-                            <span class="discount-price" style="color: #27ae60; font-weight: 700; margin-left: 10px; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
-                            {% else %}
-                            <span style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
-                            {% endif %}
-                        </p>
+                        <div class="product-info" style="padding: 20px; text-align: center;">
+                            <h3 style="font-weight: 600; font-size: 1rem; margin-bottom: 10px; color: #333;">{{ product.name }}</h3>
+                            <p class="price" style="margin: 0;">
+                                {% if product.discount_price %}
+                                <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                <span class="discount-price" style="color: #27ae60; font-weight: 700; margin-left: 10px; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
+                                {% else %}
+                                <span style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </a>
+                    <div class="add-to-cart-overlay">
+                        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -270,24 +292,26 @@
             <h3 style="font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 1.1rem; border-left: 4px solid #d35400; padding-left: 15px; margin-bottom: 30px;">Women's Budget Finds</h3>
             <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
                 {% for product in womens_under_500 %}
-                <div class="product-card" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
-                    <div class="product-image" style="position: relative; height: 300px; overflow: hidden;">
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        <span class="sale-badge" style="background: #27ae60; position: absolute; top: 15px; left: 15px; padding: 5px 12px; font-size: 0.7rem; color: white; border-radius: 4px; font-weight: bold;">JUST ₹{{ "{:,.0f}".format(product.discount_price if product.discount_price else product.price) }}</span>
-                        <div class="add-to-cart-overlay">
-                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
+                <div class="product-card" data-product-id="{{ product.id }}" style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: transform 0.3s ease;">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card-link" title="{{ product.name }}">
+                        <div class="product-image" style="position: relative; height: 300px; overflow: hidden;">
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                            <span class="sale-badge" style="background: #27ae60; position: absolute; top: 15px; left: 15px; padding: 5px 12px; font-size: 0.7rem; color: white; border-radius: 4px; font-weight: bold;">JUST ₹{{ "{:,.0f}".format(product.discount_price if product.discount_price else product.price) }}</span>
                         </div>
-                    </div>
-                    <div class="product-info" style="padding: 20px; text-align: center;">
-                        <h3 style="font-weight: 600; font-size: 1rem; margin-bottom: 10px; color: #333;">{{ product.name }}</h3>
-                        <p class="price" style="margin: 0;">
-                            {% if product.discount_price %}
-                            <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
-                            <span class="discount-price" style="color: #27ae60; font-weight: 700; margin-left: 10px; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
-                            {% else %}
-                            <span style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
-                            {% endif %}
-                        </p>
+                        <div class="product-info" style="padding: 20px; text-align: center;">
+                            <h3 style="font-weight: 600; font-size: 1rem; margin-bottom: 10px; color: #333;">{{ product.name }}</h3>
+                            <p class="price" style="margin: 0;">
+                                {% if product.discount_price %}
+                                <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                <span class="discount-price" style="color: #27ae60; font-weight: 700; margin-left: 10px; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
+                                {% else %}
+                                <span style="font-weight: 700; color: #2c3e50; font-size: 1.1rem;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </a>
+                    <div class="add-to-cart-overlay">
+                        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -309,26 +333,28 @@
         </div>
         <div class="product-grid">
             {% for product in womens %}
-            <div class="product-card">
-                <div class="product-image">
-                    <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                    {% if product.discount_price %}
-                    <span class="sale-badge">SALE</span>
-                    {% endif %}
-                    <div class="add-to-cart-overlay">
-                        <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <h3>{{ product.name }}</h3>
-                    <p class="price">
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-card-link" title="{{ product.name }}">
+                    <div class="product-image">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
                         {% if product.discount_price %}
-                        <span class="original-price">₹{{ "{:,.0f}".format(product.price) }}</span>
-                        <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
-                        {% else %}
-                        ₹{{ "{:,.0f}".format(product.price) }}
+                        <span class="sale-badge">SALE</span>
                         {% endif %}
-                    </p>
+                    </div>
+                    <div class="product-info">
+                        <h3>{{ product.name }}</h3>
+                        <p class="price">
+                            {% if product.discount_price %}
+                            <span class="original-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            <span class="discount-price" style="color: #e74c3c; font-weight: 600; margin-left:10px;">₹{{ "{:,.0f}".format(product.discount_price) }}</span>
+                            {% else %}
+                            ₹{{ "{:,.0f}".format(product.price) }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </a>
+                <div class="add-to-cart-overlay">
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-dark" style="font-size: 0.7rem;">Quick Add</a>
                 </div>
             </div>
             {% endfor %}
@@ -375,20 +401,28 @@
         }
 
         // ======================================================================
-        // Flash Sale Fixed-Timestamp Countdown
+        // Dynamic Flash Sale Countdown (Scheduled, Active, Ended)
         // ======================================================================
         (function initFlashSaleCountdown() {
-            // Configurable Fixed Expiry Timestamp (ISO 8601 with project timezone +05:30)
-            const FLASH_SALE_END = "2026-10-06T23:59:59+05:30";
-            const targetTimestamp = new Date(FLASH_SALE_END).getTime();
+            const saleSection = document.getElementById('flash-sale');
+            if (!saleSection) return;
 
-            const dEl = document.getElementById('flashSaleDays');
-            const hEl = document.getElementById('flashSaleHours');
-            const mEl = document.getElementById('flashSaleMinutes');
-            const sEl = document.getElementById('flashSaleSeconds');
+            const initialStatus = "{{ flash_sale.status if flash_sale else 'disabled' }}";
+            const targetIso = "{{ flash_sale.target_iso if flash_sale else '' }}";
+            const startIso = "{{ flash_sale.start_utc_iso if flash_sale else '' }}";
+            const endIso = "{{ flash_sale.end_utc_iso if flash_sale else '' }}";
+
+            if (initialStatus === 'disabled') return;
+
             const timerContainer = document.getElementById('flashSaleTimer');
+            const timerLabel = document.getElementById('flashSaleTimerLabel');
+            if (!timerContainer) return;
 
-            if (!dEl || !hEl || !mEl || !sEl || !timerContainer) return;
+            if (initialStatus === 'ended' || !targetIso) {
+                timerContainer.innerHTML = '<div class="flash-sale-ended-badge" style="padding: 10px 24px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #ff6b5b; border-radius: 6px; font-weight: 800; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;">SALE ENDED</div>';
+                if (timerLabel) timerLabel.textContent = 'PROMOTION STATUS';
+                return;
+            }
 
             function pad(n) {
                 return String(Math.max(0, n)).padStart(2, '0');
@@ -396,17 +430,72 @@
 
             let countdownInterval = null;
 
+            function renderClockHtml() {
+                timerContainer.innerHTML = `
+                    <div class="flash-time-box">
+                        <span class="time-digit" id="flashSaleDays">00</span>
+                        <span class="time-unit">Days</span>
+                    </div>
+                    <span class="time-separator">:</span>
+                    <div class="flash-time-box">
+                        <span class="time-digit" id="flashSaleHours">00</span>
+                        <span class="time-unit">Hours</span>
+                    </div>
+                    <span class="time-separator">:</span>
+                    <div class="flash-time-box">
+                        <span class="time-digit" id="flashSaleMinutes">00</span>
+                        <span class="time-unit">Minutes</span>
+                    </div>
+                    <span class="time-separator">:</span>
+                    <div class="flash-time-box">
+                        <span class="time-digit" id="flashSaleSeconds">00</span>
+                        <span class="time-unit">Seconds</span>
+                    </div>
+                `;
+            }
+
             function update() {
                 const now = Date.now();
-                const remainingMs = targetTimestamp - now;
+                const startMs = startIso ? new Date(startIso).getTime() : 0;
+                const endMs = endIso ? new Date(endIso).getTime() : 0;
 
-                if (remainingMs <= 0) {
-                    if (countdownInterval) {
-                        clearInterval(countdownInterval);
-                    }
+                let remainingMs = 0;
+                let currentPhase = 'active';
+
+                if (startMs && now < startMs) {
+                    currentPhase = 'scheduled';
+                    remainingMs = startMs - now;
+                    if (timerLabel) timerLabel.textContent = 'STARTS IN';
+                } else if (endMs && now < endMs) {
+                    currentPhase = 'active';
+                    remainingMs = endMs - now;
+                    if (timerLabel) timerLabel.textContent = 'ENDS IN';
+                } else {
+                    currentPhase = 'ended';
+                    remainingMs = 0;
+                }
+
+                if (currentPhase === 'ended' || (endMs && now >= endMs)) {
+                    if (countdownInterval) clearInterval(countdownInterval);
                     timerContainer.innerHTML = '<div class="flash-sale-ended-badge" style="padding: 10px 24px; background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #ff6b5b; border-radius: 6px; font-weight: 800; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase;">SALE ENDED</div>';
+                    if (timerLabel) timerLabel.textContent = 'PROMOTION STATUS';
                     return;
                 }
+
+                let dEl = document.getElementById('flashSaleDays');
+                let hEl = document.getElementById('flashSaleHours');
+                let mEl = document.getElementById('flashSaleMinutes');
+                let sEl = document.getElementById('flashSaleSeconds');
+
+                if (!dEl || !hEl || !mEl || !sEl) {
+                    renderClockHtml();
+                    dEl = document.getElementById('flashSaleDays');
+                    hEl = document.getElementById('flashSaleHours');
+                    mEl = document.getElementById('flashSaleMinutes');
+                    sEl = document.getElementById('flashSaleSeconds');
+                }
+
+                if (!dEl) return;
 
                 const totalSeconds = Math.floor(remainingMs / 1000);
                 const days = Math.floor(totalSeconds / 86400);

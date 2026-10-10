@@ -12,7 +12,7 @@ if os.path.exists(dotenv_path):
 # Allow HTTP for local OAuth testing (development)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = os.getenv('OAUTHLIB_INSECURE_TRANSPORT', '1')
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file, jsonify, make_response
 import razorpay
@@ -26,8 +26,9 @@ import re
 import secrets
 import hashlib
 from collections import defaultdict
-from flask_mail import Mail, Message
-from reportlab.lib.pagesizes import letter
+from flask_mail import Mail, Message, Connection
+import smtplib
+import socket
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.units import inch
@@ -133,6 +134,31 @@ app.config['MAIL_DEFAULT_SENDER'] = mail_sender if ('@' in mail_sender and '<' i
 
 db = SQLAlchemy(app)
 mail = Mail(app)
+
+class BoundedSMTPConnection(Connection):
+    """Flask-Mail Connection subclass enforcing an explicit, bounded network timeout for SMTP operations"""
+    def __init__(self, mail_instance, timeout=10.0):
+        super().__init__(mail_instance)
+        self.timeout = timeout
+
+    def configure_host(self):
+        if self.mail.use_ssl:
+            host = smtplib.SMTP_SSL(self.mail.server, self.mail.port, timeout=self.timeout)
+        else:
+            host = smtplib.SMTP(self.mail.server, self.mail.port, timeout=self.timeout)
+            
+        host.set_debuglevel(int(self.mail.debug))
+        if self.mail.use_tls:
+            host.starttls()
+        if self.mail.username and self.mail.password:
+            host.login(self.mail.username, self.mail.password)
+        return host
+
+def send_mail_with_timeout(message, timeout=10.0):
+    """Safely dispatches a Flask-Mail message using BoundedSMTPConnection with an explicit timeout"""
+    with BoundedSMTPConnection(mail, timeout=timeout) as conn:
+        conn.send(message)
+
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
 # Firebase Configuration & Admin SDK Initialization
@@ -343,6 +369,111 @@ class SupportTicket(db.Model):
     
     user = db.relationship('User', backref=db.backref('support_tickets', lazy=True, order_by='SupportTicket.created_at.desc()'))
 
+# -------------------------------
+# FLASH SALE PROMOTION MODEL & HELPERS
+# -------------------------------
+class FlashSaleSetting(db.Model):
+    __tablename__ = 'flash_sale_setting'
+    id = db.Column(db.Integer, primary_key=True)
+    is_active = db.Column(db.Boolean, default=False, nullable=False)
+    start_time = db.Column(db.DateTime, nullable=True) # Stored in UTC
+    end_time = db.Column(db.DateTime, nullable=True)   # Stored in UTC
+    title = db.Column(db.String(100), default='UP TO 40% OFF', nullable=False)
+    discount_text = db.Column(db.String(100), default='FLASH SALE', nullable=False)
+    subtitle = db.Column(db.String(150), default='Limited Time Offer', nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+def ensure_flash_sale_table():
+    """Idempotently ensures the flash_sale_setting table exists without modifying other tables"""
+    try:
+        FlashSaleSetting.__table__.create(db.engine, checkfirst=True)
+    except Exception as e:
+        print(f"[FLASH SALE] Note on table check: {e}")
+
+def get_flash_sale_state():
+    """
+    Returns the persistent Flash Sale configuration and evaluated status:
+    'scheduled', 'active', 'ended', or 'disabled'.
+    Consistent timezone strategy: stored/evaluated in UTC, formatted with IST (+05:30) for display.
+    """
+    ensure_flash_sale_table()
+    try:
+        setting = FlashSaleSetting.query.first()
+    except Exception:
+        setting = None
+
+    ist_tz = timezone(timedelta(hours=5, minutes=30))
+    now_utc = datetime.now(timezone.utc)
+
+    if not setting:
+        return {
+            'setting': None,
+            'status': 'disabled',
+            'is_live': False,
+            'is_scheduled': False,
+            'is_ended': False,
+            'is_active_flag': False,
+            'start_utc_iso': '',
+            'end_utc_iso': '',
+            'start_ist_input': '',
+            'end_ist_input': '',
+            'start_ist_display': '',
+            'end_ist_display': '',
+            'target_iso': '',
+            'title': 'UP TO 40% OFF',
+            'discount_text': 'FLASH SALE',
+            'subtitle': 'Limited Time Offer'
+        }
+
+    start_utc = setting.start_time.replace(tzinfo=timezone.utc) if setting.start_time else None
+    end_utc = setting.end_time.replace(tzinfo=timezone.utc) if setting.end_time else None
+
+    # Status evaluation
+    if not setting.is_active:
+        status = 'disabled'
+    elif start_utc and now_utc < start_utc:
+        status = 'scheduled'
+    elif end_utc and now_utc > end_utc:
+        status = 'ended'
+    else:
+        status = 'active'
+
+    # Format for HTML <input type="datetime-local"> in IST (YYYY-MM-DDTHH:MM)
+    start_ist_input = start_utc.astimezone(ist_tz).strftime('%Y-%m-%dT%H:%M') if start_utc else ''
+    end_ist_input = end_utc.astimezone(ist_tz).strftime('%Y-%m-%dT%H:%M') if end_utc else ''
+
+    # Formatted display strings for admin & UI in IST
+    start_ist_display = start_utc.astimezone(ist_tz).strftime('%d %b %Y, %I:%M %p IST') if start_utc else 'Not set'
+    end_ist_display = end_utc.astimezone(ist_tz).strftime('%d %b %Y, %I:%M %p IST') if end_utc else 'Not set'
+
+    # Target ISO timestamp for frontend countdown (if scheduled, counts down to start; if active, counts down to end)
+    target_iso = ''
+    if status == 'scheduled' and start_utc:
+        target_iso = start_utc.isoformat()
+    elif status == 'active' and end_utc:
+        target_iso = end_utc.isoformat()
+    elif status == 'ended' and end_utc:
+        target_iso = end_utc.isoformat()
+
+    return {
+        'setting': setting,
+        'status': status,
+        'is_live': (status == 'active'),
+        'is_scheduled': (status == 'scheduled'),
+        'is_ended': (status == 'ended'),
+        'is_active_flag': bool(setting.is_active),
+        'start_utc_iso': start_utc.isoformat() if start_utc else '',
+        'end_utc_iso': end_utc.isoformat() if end_utc else '',
+        'start_ist_input': start_ist_input,
+        'end_ist_input': end_ist_input,
+        'start_ist_display': start_ist_display,
+        'end_ist_display': end_ist_display,
+        'target_iso': target_iso,
+        'title': setting.title or 'UP TO 40% OFF',
+        'discount_text': setting.discount_text or 'FLASH SALE',
+        'subtitle': setting.subtitle or 'Limited Time Offer'
+    }
+
 # Helper Decorator for Admin Authentication Protection
 def admin_required(f):
     @wraps(f)
@@ -410,12 +541,19 @@ def inject_global_data():
     else:
         cart = session.get('cart', [])
         cart_count = len(cart)
+    csrf_token = session.get('csrf_token')
+    if not csrf_token:
+        csrf_token = secrets.token_hex(24)
+        session['csrf_token'] = csrf_token
+
     return dict(
         cart_count=cart_count, 
         wishlist_count=wishlist_count, 
         open_tickets_count=open_tickets_count, 
         low_stock_badge_count=low_stock_badge_count,
-        pending_requests_count=pending_requests_count
+        pending_requests_count=pending_requests_count,
+        flash_sale=get_flash_sale_state(),
+        csrf_token=csrf_token
     )
 
 # SocketIO Events
@@ -2377,7 +2515,7 @@ def forgot_password():
 def auth_email_otp_send():
     """Generates and sends a secure 6-digit OTP to the user's email via Gmail SMTP"""
     import re
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     email = data.get('email', '').strip().lower()
     
     # 1. Validate email format
@@ -2420,20 +2558,13 @@ def auth_email_otp_send():
     if not mail_user or not mail_pwd:
         return jsonify({
             'success': False, 
-            'message': 'Gmail SMTP is not configured yet. Please enter MAIL_USERNAME and MAIL_PASSWORD in your .env file.'
+            'message': 'Email delivery service is currently not configured. Please sign in with your password or Google.'
         }), 503
 
     # 4. Generate cryptographically secure 6-digit OTP (100000 - 999999)
     otp_code = str(secrets.randbelow(900000) + 100000)
     
-    # 5. Store hashed OTP and metadata in session (never in plain text)
-    session['email_otp_hash'] = generate_password_hash(otp_code, method='pbkdf2:sha256')
-    session['email_otp_target'] = email
-    session['email_otp_expires_at'] = (datetime.utcnow() + timedelta(minutes=5)).timestamp()
-    session['email_otp_attempts'] = 0
-    session['email_otp_last_sent'] = now_ts
-    
-    # 6. Compose and dispatch email via Flask-Mail
+    # 5. Compose and dispatch email via Flask-Mail
     sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_user
     
     html_body = f"""
@@ -2510,13 +2641,33 @@ If you did not request this code, please ignore this email.
             html=html_body,
             sender=sender
         )
-        mail.send(msg)
-        return jsonify({'success': True, 'message': 'Verification code sent to your email.'}), 200
+        send_mail_with_timeout(msg, timeout=10.0)
+        
+        # 6. Store hashed OTP and metadata in session ONLY AFTER successful email dispatch
+        session['email_otp_hash'] = generate_password_hash(otp_code, method='pbkdf2:sha256')
+        session['email_otp_target'] = email
+        session['email_otp_expires_at'] = (datetime.utcnow() + timedelta(minutes=5)).timestamp()
+        session['email_otp_attempts'] = 0
+        session['email_otp_last_sent'] = now_ts
+        
+        return jsonify({'success': True, 'message': 'Verification code sent to your email.', 'cooldown': 60}), 200
+    except (TimeoutError, socket.timeout):
+        print(f"[EMAIL OTP] SMTP connection timed out for {email}")
+        return jsonify({
+            'success': False, 
+            'message': 'Email delivery timed out while connecting to the mail server. Please try again or use another login method.'
+        }), 504
+    except smtplib.SMTPAuthenticationError as auth_err:
+        print(f"[EMAIL OTP] SMTP authentication failed: {auth_err}")
+        return jsonify({
+            'success': False, 
+            'message': 'Email service authentication failed. Please verify your Gmail address and App Password.'
+        }), 500
     except Exception as mail_err:
         print(f"[EMAIL OTP] SMTP send error: {mail_err}")
         return jsonify({
             'success': False, 
-            'message': 'Failed to send email via Gmail SMTP. Please check your Gmail address and App Password in .env.'
+            'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
         }), 500
 
 
@@ -3382,7 +3533,7 @@ def send_order_email(order):
                       recipients=[order.user.email])
         msg.body = f"Hello {order.first_name},\n\nThank you for your order! Your order ID is FW-{order.id}.\nTotal Amount: INR {order.total_price:,.2f}\n\nWe will notify you once it's shipped."
         msg.html = render_template('email_order_success.html', order=order)
-        mail.send(msg)
+        send_mail_with_timeout(msg, timeout=10.0)
         print(f"SUCCESS: Email sent to {order.user.email}")
     except Exception as e:
         print(f"ERROR: Failed to send email: {e}")
@@ -4696,12 +4847,103 @@ def admin_banners_offers():
     featured_products = Product.query.filter_by(is_featured=True).limit(10).all()
     special_offers = Product.query.filter(Product.discount_price.isnot(None)).order_by(Product.id.desc()).limit(15).all()
     new_arrivals = Product.query.filter_by(is_new_arrival=True).limit(10).all()
+    flash_sale_state = get_flash_sale_state()
     return render_template(
         'admin/marketing_banners.html',
         featured_products=featured_products,
         special_offers=special_offers,
-        new_arrivals=new_arrivals
+        new_arrivals=new_arrivals,
+        flash_sale=flash_sale_state
     )
+
+@app.route('/admin/marketing/flash-sale/update', methods=['POST'])
+@admin_required
+def admin_update_flash_sale():
+    """
+    Saves or updates Flash Sale schedule and active toggle.
+    Protected by admin_required, server-side validation, and session-based CSRF token.
+    Internal strategy: UTC storage with IST (+05:30) conversion.
+    """
+    # 1. CSRF Verification
+    session_csrf = session.get('csrf_token')
+    submitted_csrf = request.form.get('csrf_token') or request.headers.get('X-CSRFToken')
+    if not session_csrf or not submitted_csrf or session_csrf != submitted_csrf:
+        flash("Security validation failed (Invalid or missing CSRF token). Please try again.", "danger")
+        return redirect(url_for('admin_banners_offers'))
+
+    ensure_flash_sale_table()
+    setting = FlashSaleSetting.query.first()
+    if not setting:
+        setting = FlashSaleSetting(is_active=False)
+        db.session.add(setting)
+
+    is_active_val = (request.form.get('is_active') == '1' or request.form.get('is_active') == 'on')
+    start_str = request.form.get('start_time', '').strip()
+    end_str = request.form.get('end_time', '').strip()
+    title = request.form.get('title', '').strip() or 'UP TO 40% OFF'
+    discount_text = request.form.get('discount_text', '').strip() or 'FLASH SALE'
+    subtitle = request.form.get('subtitle', '').strip() or 'Limited Time Offer'
+
+    ist_tz = timezone(timedelta(hours=5, minutes=30))
+
+    def parse_user_datetime(dt_raw):
+        if not dt_raw:
+            return None
+        dt_clean = dt_raw.strip()
+        if not dt_clean:
+            return None
+        # ISO with Z
+        if dt_clean.endswith('Z'):
+            return datetime.fromisoformat(dt_clean[:-1]).replace(tzinfo=timezone.utc)
+        # ISO with explicit offset (+05:30 etc)
+        if re.search(r'[+-]\d{2}:\d{2}$', dt_clean):
+            return datetime.fromisoformat(dt_clean).astimezone(timezone.utc)
+        # HTML datetime-local: input format 'YYYY-MM-DDTHH:MM' or 'YYYY-MM-DDTHH:MM:SS'
+        # Treat as user local time (IST +05:30)
+        dt_naive = datetime.fromisoformat(dt_clean)
+        dt_with_ist = dt_naive.replace(tzinfo=ist_tz)
+        return dt_with_ist.astimezone(timezone.utc)
+
+    start_utc = None
+    end_utc = None
+
+    if start_str:
+        try:
+            start_utc = parse_user_datetime(start_str)
+        except Exception:
+            flash("Invalid Flash Sale start date/time format. Please select a valid date.", "danger")
+            return redirect(url_for('admin_banners_offers'))
+
+    if end_str:
+        try:
+            end_utc = parse_user_datetime(end_str)
+        except Exception:
+            flash("Invalid Flash Sale end date/time format. Please select a valid date.", "danger")
+            return redirect(url_for('admin_banners_offers'))
+
+    # Logical Validation: Start time must precede End time if both provided
+    if start_utc and end_utc and start_utc >= end_utc:
+        flash("Invalid schedule: Flash Sale start time must be earlier than the end time.", "danger")
+        return redirect(url_for('admin_banners_offers'))
+
+    # When enabling, an end time should be configured
+    if is_active_val and not end_utc:
+        flash("Please provide an end date and time before enabling the Flash Sale.", "warning")
+        return redirect(url_for('admin_banners_offers'))
+
+    # Store naive UTC in database (compatible with SQLite & PostgreSQL)
+    setting.is_active = is_active_val
+    setting.start_time = start_utc.replace(tzinfo=None) if start_utc else None
+    setting.end_time = end_utc.replace(tzinfo=None) if end_utc else None
+    setting.title = title
+    setting.discount_text = discount_text
+    setting.subtitle = subtitle
+    setting.updated_at = datetime.utcnow()
+
+    db.session.commit()
+
+    flash("Flash Sale settings and schedule updated successfully!", "success")
+    return redirect(url_for('admin_banners_offers'))
 
 @app.route('/admin/marketing/coupons')
 @admin_required
@@ -4951,7 +5193,7 @@ def send_ticket_reply_email(ticket):
             <p style="color: #64748b; font-size: 13px;">Thank you for shopping with Fashion World Pro.</p>
         </div>
         """
-        mail.send(msg)
+        send_mail_with_timeout(msg, timeout=10.0)
         print(f"[SUPPORT EMAIL] Notification sent to {ticket.customer_email}")
     except Exception as e:
         print(f"[SUPPORT EMAIL] Note: Email notification skipped or failed: {e}")

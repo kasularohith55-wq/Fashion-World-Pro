@@ -235,6 +235,17 @@ body {
     transition: var(--transition-slow);
 }
 
+.product-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.product-card-link:focus-visible {
+    outline: 2px solid var(--accent-color, #c8a355);
+    outline-offset: 2px;
+}
+
 .product-image {
     width: 100%;
     aspect-ratio: 4/5;

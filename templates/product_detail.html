@@ -622,37 +622,141 @@
         grid-template-columns: 1fr;
     }
     .luxury-actions-row {
-        flex-direction: column;
-        align-items: stretch;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
     }
-    .action-btn-cart, .action-btn-buy {
-        width: 100%;
-        height: 48px;
+    .action-btn-cart {
+        flex: 2;
+        min-width: 140px;
+        height: 50px;
+    }
+    .action-btn-buy {
+        flex: 1.4;
+        min-width: 120px;
+        height: 50px;
     }
     .action-btn-wishlist {
-        width: 100%;
-        height: 46px;
+        width: 50px;
+        min-width: 50px;
+        height: 50px;
+        flex-shrink: 0;
     }
 }
 
 @media (max-width: 600px) {
     .luxury-product-detail-section {
         padding: 80px 14px 40px;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+    .luxury-product-container {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
     .luxury-gallery-card {
         padding: 12px;
         border-radius: 14px;
+        box-sizing: border-box;
     }
     .gallery-image-frame {
         min-height: 260px;
         max-height: 360px;
     }
+    .gallery-nav-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 0.85rem;
+    }
+    .gallery-nav-btn.prev-btn { left: 10px; }
+    .gallery-nav-btn.next-btn { right: 10px; }
+    .gallery-thumb-item .thumb-mini-img {
+        width: 42px;
+        height: 50px;
+    }
+    .luxury-category-eyebrow {
+        font-size: 0.72rem;
+        letter-spacing: 2px;
+        margin-bottom: 6px;
+    }
     .luxury-product-title {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
+        line-height: 1.25;
         margin-bottom: 10px;
+        word-break: break-word;
+    }
+    .luxury-price-row {
+        gap: 10px;
+        margin-bottom: 16px;
+        align-items: baseline;
     }
     .luxury-current-price {
         font-size: 1.5rem;
+    }
+    .luxury-original-price {
+        font-size: 1.15rem;
+    }
+    .luxury-save-pill {
+        font-size: 0.74rem;
+        padding: 3px 10px;
+    }
+    .luxury-rating-summary {
+        font-size: 0.8rem;
+        padding: 5px 12px;
+        margin-bottom: 18px;
+    }
+    .luxury-desc-card {
+        padding: 18px 16px;
+        margin-bottom: 18px;
+        border-radius: 14px;
+    }
+    .luxury-desc-text {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    .luxury-highlights-grid {
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .luxury-highlight-item {
+        padding: 8px 12px;
+        font-size: 0.78rem;
+    }
+    .luxury-size-card {
+        padding: 18px 16px;
+        margin-bottom: 20px;
+        border-radius: 14px;
+    }
+    .size-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+    .size-title-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .size-heading-label {
+        font-size: 0.75rem;
+    }
+    .find-size-btn {
+        font-size: 0.75rem;
+    }
+    .tryon-luxury-btn {
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        gap: 4px;
+    }
+    .selected-size-text {
+        font-size: 0.78rem;
     }
     .size-buttons-flex {
         gap: 8px;
@@ -662,11 +766,185 @@
         height: 44px;
         font-size: 0.82rem;
         padding: 0 10px;
+        border-radius: 8px;
+    }
+    .luxury-actions-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        width: 100%;
+    }
+    .action-btn-cart {
+        flex: 1.15;
+        min-width: 0;
+        width: auto;
+        height: 46px;
+        padding: 0 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        border-radius: 10px;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .action-btn-cart i {
+        font-size: 0.88rem;
+    }
+    .action-btn-buy {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+        height: 46px;
+        padding: 0 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        border-radius: 10px;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .action-btn-buy i {
+        font-size: 0.88rem;
+    }
+    .action-btn-wishlist {
+        width: 46px;
+        min-width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        font-size: 1.15rem;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     .luxury-trust-card {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+    .trust-item {
+        font-size: 0.8rem;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .luxury-product-detail-section {
+        padding: 75px 12px 30px;
+    }
+    .luxury-product-title {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+    .luxury-price-row {
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+    .luxury-current-price {
+        font-size: 1.38rem;
+    }
+    .luxury-original-price {
+        font-size: 1.05rem;
+    }
+    .luxury-save-pill {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+    .gallery-image-frame {
+        min-height: 240px;
+        max-height: 320px;
+    }
+    .luxury-desc-card,
+    .luxury-size-card {
+        padding: 14px 12px;
+        margin-bottom: 16px;
+    }
+    .size-header-bar {
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+    .action-btn-cart {
+        font-size: 0.75rem;
+        letter-spacing: 0.4px;
+        padding: 0 8px;
+        gap: 5px;
+    }
+    .action-btn-buy {
+        font-size: 0.75rem;
+        letter-spacing: 0.4px;
+        padding: 0 8px;
+        gap: 5px;
+    }
+    .action-btn-wishlist {
+        font-size: 1.1rem;
+    }
+    .size-modal-card {
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    #sizeModalFormView, #sizeModalResultView {
+        padding: 18px 14px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .luxury-product-detail-section {
+        padding: 70px 10px 24px;
+    }
+    .luxury-product-title {
+        font-size: 1.18rem;
+    }
+    .luxury-price-row {
+        gap: 6px;
+    }
+    .luxury-current-price {
+        font-size: 1.25rem;
+    }
+    .luxury-original-price {
+        font-size: 0.95rem;
+    }
+    .size-btn {
+        min-width: 40px;
+        height: 40px;
+        font-size: 0.78rem;
+        padding: 0 6px;
+    }
+    .luxury-actions-row {
+        gap: 6px;
+    }
+    .action-btn-cart {
+        height: 44px;
+        font-size: 0.7rem;
+        letter-spacing: 0.2px;
+        padding: 0 6px;
+        gap: 4px;
+    }
+    .action-btn-cart i {
+        font-size: 0.8rem;
+    }
+    .action-btn-buy {
+        height: 44px;
+        font-size: 0.7rem;
+        letter-spacing: 0.2px;
+        padding: 0 6px;
+        gap: 4px;
+    }
+    .action-btn-buy i {
+        font-size: 0.8rem;
+    }
+    .action-btn-wishlist {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        font-size: 1.05rem;
+    }
+    .trust-item {
+        font-size: 0.75rem;
     }
 }
 </style>
