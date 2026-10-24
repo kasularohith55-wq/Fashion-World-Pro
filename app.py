@@ -36,6 +36,8 @@ from flask_socketio import SocketIO, emit, join_room
 from authlib.integrations.flask_client import OAuth
 import threading
 import time
+import requests
+from email.utils import parseaddr
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fashion-world-pro-secret-key-123')
@@ -158,6 +160,131 @@ def send_mail_with_timeout(message, timeout=10.0):
     """Safely dispatches a Flask-Mail message using BoundedSMTPConnection with an explicit timeout"""
     with BoundedSMTPConnection(mail, timeout=timeout) as conn:
         conn.send(message)
+
+
+# ------------------------------------------------------------------------------
+# Brevo (Sendinblue) Transactional Email API (HTTPS REST - Port 443)
+# ------------------------------------------------------------------------------
+class BrevoAPIError(Exception):
+    """Base exception for Brevo transactional email API errors"""
+    def __init__(self, message, status_code=None, response_data=None):
+        super().__init__(message)
+        self.status_code = status_code
+        self.response_data = response_data or {}
+
+class BrevoAuthError(BrevoAPIError):
+    """Raised when Brevo returns 401 Unauthorized or 403 Forbidden"""
+    pass
+
+class BrevoValidationError(BrevoAPIError):
+    """Raised when Brevo returns 400 or other 4xx rejection"""
+    pass
+
+class BrevoRateLimitError(BrevoAPIError):
+    """Raised when Brevo returns 429 Too Many Requests"""
+    pass
+
+class BrevoTimeoutError(BrevoAPIError):
+    """Raised when Brevo API request times out"""
+    pass
+
+class BrevoConnectionError(BrevoAPIError):
+    """Raised when connecting to Brevo API fails"""
+    pass
+
+
+def resolve_brevo_sender(sender=None):
+    """Extracts a valid sender name and email from configuration or passed argument"""
+    cand = (sender or os.getenv('MAIL_DEFAULT_SENDER', '') or os.getenv('MAIL_USERNAME', '')).strip()
+    name, email_addr = parseaddr(cand)
+    if not email_addr or '@' not in email_addr:
+        if '@' in cand:
+            email_addr = cand
+            name = "Fashion World Pro"
+        else:
+            email_addr = os.getenv('MAIL_USERNAME', '').strip() or "support@fashionworld.pro"
+            name = cand or "Fashion World Pro"
+    if not name:
+        name = "Fashion World Pro"
+    return {"name": name, "email": email_addr}
+
+
+def send_brevo_email(to_email, subject, html_content, text_content=None, sender=None, timeout=10.0, api_key=None):
+    """Dispatches a transactional email via Brevo's v3 HTTPS REST API (port 443).
+
+    Args:
+        to_email (str): Recipient email address.
+        subject (str): Email subject line.
+        html_content (str): HTML body content.
+        text_content (str, optional): Plain text body content.
+        sender (str or dict, optional): Sender descriptor or formatted string.
+        timeout (float): Request timeout in seconds (default 10.0).
+        api_key (str, optional): Brevo API key. Defaults to os.getenv('BREVO_API_KEY').
+
+    Returns:
+        dict: Parsed JSON response containing messageId upon success.
+    """
+    key = (api_key or os.getenv('BREVO_API_KEY', '')).strip()
+    if not key:
+        raise BrevoAuthError("Brevo API key is not configured.")
+
+    sender_payload = sender if (isinstance(sender, dict) and 'email' in sender) else resolve_brevo_sender(sender)
+
+    payload = {
+        "sender": sender_payload,
+        "to": [{"email": to_email.strip().lower()}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
+    if text_content:
+        payload["textContent"] = text_content
+
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": key
+    }
+
+    req_timeout = float(timeout) if timeout is not None else 10.0
+
+    try:
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers=headers,
+            timeout=req_timeout
+        )
+    except requests.exceptions.Timeout:
+        raise BrevoTimeoutError(f"Brevo API request timed out after {req_timeout}s.") from None
+    except requests.exceptions.ConnectionError:
+        raise BrevoConnectionError("Could not connect to Brevo API server.") from None
+    except requests.exceptions.RequestException as req_err:
+        raise BrevoAPIError(f"Brevo API request failed: {type(req_err).__name__}") from None
+
+    # Safe error parsing without leaking sensitive keys
+    err_json = {}
+    if response.status_code >= 400:
+        try:
+            err_json = response.json()
+        except Exception:
+            err_json = {}
+        raw_msg = err_json.get("message") or f"HTTP status {response.status_code}"
+        safe_msg = str(raw_msg).replace(key, "[REDACTED]")
+
+        if response.status_code in (401, 403):
+            raise BrevoAuthError(safe_msg, status_code=response.status_code, response_data=err_json)
+        elif response.status_code == 429:
+            raise BrevoRateLimitError(safe_msg, status_code=response.status_code, response_data=err_json)
+        elif 400 <= response.status_code < 500:
+            raise BrevoValidationError(safe_msg, status_code=response.status_code, response_data=err_json)
+        else:
+            raise BrevoAPIError(f"Brevo server error ({response.status_code}): {safe_msg}", status_code=response.status_code, response_data=err_json)
+
+    try:
+        return response.json()
+    except Exception:
+        return {"status": "success", "code": response.status_code}
+
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 
@@ -2513,7 +2640,7 @@ def forgot_password():
 
 @app.route('/auth/email_otp/send', methods=['POST'])
 def auth_email_otp_send():
-    """Generates and sends a secure 6-digit OTP to the user's email via Gmail SMTP"""
+    """Generates and sends a secure 6-digit OTP to the user's email via Brevo HTTPS API or Gmail SMTP"""
     import re
     data = request.get_json(silent=True) or {}
     email = data.get('email', '').strip().lower()
@@ -2530,32 +2657,22 @@ def auth_email_otp_send():
         remaining = int(60 - (now_ts - last_sent))
         return jsonify({'success': False, 'message': f'Please wait {remaining} seconds before requesting another code.'}), 429
 
-    # 3. Dynamic SMTP configuration reload from .env
-    if os.path.exists(dotenv_path):
+    # 3. Dynamic configuration reload from .env (skipped during testing)
+    if not app.testing and os.path.exists(dotenv_path):
         load_dotenv(dotenv_path, override=True)
         
+    brevo_api_key = os.getenv('BREVO_API_KEY', '').strip()
     mail_user = os.getenv('MAIL_USERNAME', '').strip()
-    mail_pwd = os.getenv('MAIL_PASSWORD', '').strip()
-    
-    app.config['MAIL_USERNAME'] = mail_user
-    app.config['MAIL_PASSWORD'] = mail_pwd
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com').strip()
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'true').lower() in ('true', '1', 't', 'yes')
-    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'false').lower() in ('true', '1', 't', 'yes')
+    mail_pwd = os.getenv('MAIL_PASSWORD', '').strip().replace(' ', '')
+    mail_server = os.getenv('MAIL_SERVER', 'smtp.gmail.com').strip()
+    mail_port = int(os.getenv('MAIL_PORT', 587))
+    mail_use_tls = os.getenv('MAIL_USE_TLS', 'true').lower() in ('true', '1', 't', 'yes')
+    mail_use_ssl = os.getenv('MAIL_USE_SSL', 'false').lower() in ('true', '1', 't', 'yes')
     mail_sender = os.getenv('MAIL_DEFAULT_SENDER', '').strip() or mail_user
     app.config['MAIL_DEFAULT_SENDER'] = mail_sender if ('@' in mail_sender and '<' in mail_sender) else f"Fashion World Pro <{mail_sender}>" if mail_sender else "Fashion World Pro"
 
-    # Refresh Flask-Mail instance attributes so AUTH LOGIN is executed
-    mail.server = app.config['MAIL_SERVER']
-    mail.port = app.config['MAIL_PORT']
-    mail.use_tls = app.config['MAIL_USE_TLS']
-    mail.use_ssl = app.config['MAIL_USE_SSL']
-    mail.username = mail_user
-    mail.password = mail_pwd
-    mail.default_sender = app.config['MAIL_DEFAULT_SENDER']
-
-    if not mail_user or not mail_pwd:
+    # Verify if at least one email delivery service is configured
+    if not brevo_api_key and (not mail_user or not mail_pwd):
         return jsonify({
             'success': False, 
             'message': 'Email delivery service is currently not configured. Please sign in with your password or Google.'
@@ -2564,8 +2681,9 @@ def auth_email_otp_send():
     # 4. Generate cryptographically secure 6-digit OTP (100000 - 999999)
     otp_code = str(secrets.randbelow(900000) + 100000)
     
-    # 5. Compose and dispatch email via Flask-Mail
-    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_user
+    # 5. Compose and dispatch email
+    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_sender or mail_user or "Fashion World Pro"
+    subject = f"Your Fashion World Pro Login Code: {otp_code}"
     
     html_body = f"""
     <!DOCTYPE html>
@@ -2633,42 +2751,118 @@ If you did not request this code, please ignore this email.
 (c) {datetime.utcnow().year} Fashion World Pro.
 """
 
-    try:
-        msg = Message(
-            subject=f"Your Fashion World Pro Login Code: {otp_code}",
-            recipients=[email],
-            body=text_body,
-            html=html_body,
-            sender=sender
-        )
-        send_mail_with_timeout(msg, timeout=10.0)
-        
-        # 6. Store hashed OTP and metadata in session ONLY AFTER successful email dispatch
-        session['email_otp_hash'] = generate_password_hash(otp_code, method='pbkdf2:sha256')
-        session['email_otp_target'] = email
-        session['email_otp_expires_at'] = (datetime.utcnow() + timedelta(minutes=5)).timestamp()
-        session['email_otp_attempts'] = 0
-        session['email_otp_last_sent'] = now_ts
-        
-        return jsonify({'success': True, 'message': 'Verification code sent to your email.', 'cooldown': 60}), 200
-    except (TimeoutError, socket.timeout):
-        print(f"[EMAIL OTP] SMTP connection timed out for {email}")
-        return jsonify({
-            'success': False, 
-            'message': 'Email delivery timed out while connecting to the mail server. Please try again or use another login method.'
-        }), 504
-    except smtplib.SMTPAuthenticationError as auth_err:
-        print(f"[EMAIL OTP] SMTP authentication failed: {auth_err}")
-        return jsonify({
-            'success': False, 
-            'message': 'Email service authentication failed. Please verify your Gmail address and App Password.'
-        }), 500
-    except Exception as mail_err:
-        print(f"[EMAIL OTP] SMTP send error: {mail_err}")
-        return jsonify({
-            'success': False, 
-            'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
-        }), 500
+    masked_recipient = email[:2] + '***@' + email.split('@')[1] if '@' in email else '***'
+
+    # 6. Dispatch email via configured provider
+    if brevo_api_key:
+        # Provider 1: Brevo HTTPS REST API (Port 443 - works on Render Free tier)
+        try:
+            send_brevo_email(
+                to_email=email,
+                subject=subject,
+                html_content=html_body,
+                text_content=text_body,
+                sender=sender,
+                timeout=10.0,
+                api_key=brevo_api_key
+            )
+            # Store hashed OTP and metadata in session ONLY AFTER successful email dispatch
+            session['email_otp_hash'] = generate_password_hash(otp_code, method='pbkdf2:sha256')
+            session['email_otp_target'] = email
+            session['email_otp_expires_at'] = (datetime.utcnow() + timedelta(minutes=5)).timestamp()
+            session['email_otp_attempts'] = 0
+            session['email_otp_last_sent'] = now_ts
+
+            return jsonify({'success': True, 'message': 'Verification code sent to your email.', 'cooldown': 60}), 200
+        except BrevoTimeoutError:
+            print(f"[EMAIL OTP] Brevo HTTPS request timed out for {masked_recipient}")
+            return jsonify({
+                'success': False,
+                'message': 'Email delivery timed out while connecting to the email service. Please try again or use password login.'
+            }), 504
+        except BrevoAuthError:
+            print(f"[EMAIL OTP] Brevo authentication failure")
+            return jsonify({
+                'success': False,
+                'message': 'Email service authentication failed. Please sign in with password or contact support.'
+            }), 500
+        except BrevoRateLimitError:
+            print(f"[EMAIL OTP] Brevo rate limit reached")
+            return jsonify({
+                'success': False,
+                'message': 'Email service rate limit reached. Please try again in a few minutes or sign in with password.'
+            }), 429
+        except BrevoValidationError:
+            print(f"[EMAIL OTP] Brevo request rejected for {masked_recipient}")
+            return jsonify({
+                'success': False,
+                'message': 'Email delivery was rejected by the service provider. Please verify your email address or use password login.'
+            }), 400
+        except BrevoConnectionError:
+            print(f"[EMAIL OTP] Brevo connection error")
+            return jsonify({
+                'success': False,
+                'message': 'Unable to connect to the email delivery service. Please try again or use password login.'
+            }), 502
+        except Exception as err:
+            print(f"[EMAIL OTP] Brevo delivery error for {masked_recipient}: {type(err).__name__}")
+            return jsonify({
+                'success': False,
+                'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
+            }), 500
+    else:
+        # Provider 2: Flask-Mail SMTP (Fallback for local dev or unblocked environments)
+        app.config['MAIL_USERNAME'] = mail_user
+        app.config['MAIL_PASSWORD'] = mail_pwd
+        app.config['MAIL_SERVER'] = mail_server
+        app.config['MAIL_PORT'] = mail_port
+        app.config['MAIL_USE_TLS'] = mail_use_tls
+        app.config['MAIL_USE_SSL'] = mail_use_ssl
+
+        mail.server = app.config['MAIL_SERVER']
+        mail.port = app.config['MAIL_PORT']
+        mail.use_tls = app.config['MAIL_USE_TLS']
+        mail.use_ssl = app.config['MAIL_USE_SSL']
+        mail.username = mail_user
+        mail.password = mail_pwd
+        mail.default_sender = app.config['MAIL_DEFAULT_SENDER']
+
+        try:
+            msg = Message(
+                subject=subject,
+                recipients=[email],
+                body=text_body,
+                html=html_body,
+                sender=sender
+            )
+            send_mail_with_timeout(msg, timeout=10.0)
+
+            # Store hashed OTP and metadata in session ONLY AFTER successful email dispatch
+            session['email_otp_hash'] = generate_password_hash(otp_code, method='pbkdf2:sha256')
+            session['email_otp_target'] = email
+            session['email_otp_expires_at'] = (datetime.utcnow() + timedelta(minutes=5)).timestamp()
+            session['email_otp_attempts'] = 0
+            session['email_otp_last_sent'] = now_ts
+
+            return jsonify({'success': True, 'message': 'Verification code sent to your email.', 'cooldown': 60}), 200
+        except (TimeoutError, socket.timeout, smtplib.SMTPServerDisconnected, smtplib.SMTPConnectError):
+            print(f"[EMAIL OTP] SMTP connection timed out or closed unexpectedly for {masked_recipient}")
+            return jsonify({
+                'success': False,
+                'message': 'Email delivery timed out while connecting to the mail server. Please try again or use another login method.'
+            }), 504
+        except smtplib.SMTPAuthenticationError:
+            print("[EMAIL OTP] SMTP authentication failed")
+            return jsonify({
+                'success': False,
+                'message': 'Email service authentication failed. Please verify your Gmail address and App Password.'
+            }), 500
+        except Exception as mail_err:
+            print(f"[EMAIL OTP] SMTP send error for {masked_recipient}: {type(mail_err).__name__}")
+            return jsonify({
+                'success': False,
+                'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
+            }), 500
 
 
 @app.route('/auth/email_otp/verify', methods=['POST'])
