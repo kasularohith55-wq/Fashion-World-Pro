@@ -192,6 +192,21 @@ class BrevoConnectionError(BrevoAPIError):
     """Raised when connecting to Brevo API fails"""
     pass
 
+class BrevoSSLError(BrevoConnectionError):
+    """Raised when SSL/TLS handshake or certificate verification fails with Brevo API"""
+    pass
+
+
+def is_production_environment():
+    """Detects if the application is running in a production or cloud environment (e.g., Render)"""
+    return bool(
+        os.getenv('RENDER', '').lower() in ('true', '1', 'yes') or
+        os.getenv('RENDER_SERVICE_ID') or
+        os.getenv('RENDER_INSTANCE_ID') or
+        os.getenv('FLASK_ENV') == 'production' or
+        os.getenv('ENVIRONMENT') == 'production'
+    )
+
 
 def mask_email_safe(addr):
     """Safely masks an email address for application logs without exposing recipient identity"""
@@ -205,25 +220,38 @@ def mask_email_safe(addr):
 def resolve_brevo_sender(sender=None):
     """Extracts a valid sender name and email from configuration or passed argument.
     Does not silently fall back to an unverified fabricated address.
+    Checks explicit sender argument, BREVO_SENDER_EMAIL, MAIL_DEFAULT_SENDER, and MAIL_USERNAME.
     """
-    cand = (sender or os.getenv('MAIL_DEFAULT_SENDER', '') or os.getenv('MAIL_USERNAME', '')).strip()
+    brevo_sender_email = os.getenv('BREVO_SENDER_EMAIL', '').strip()
+    brevo_sender_name = os.getenv('BREVO_SENDER_NAME', '').strip()
+
+    cand = (sender or brevo_sender_email or os.getenv('MAIL_DEFAULT_SENDER', '') or os.getenv('MAIL_USERNAME', '')).strip()
     name, email_addr = parseaddr(cand)
+
     if not email_addr or '@' not in email_addr:
         if '@' in cand:
             email_addr = cand
-            name = "Fashion World Pro"
+            name = name or brevo_sender_name or "Fashion World Pro"
+        elif brevo_sender_email and '@' in brevo_sender_email:
+            email_addr = brevo_sender_email
+            name = name or brevo_sender_name or cand or "Fashion World Pro"
         else:
             mail_user = os.getenv('MAIL_USERNAME', '').strip()
             if mail_user and '@' in mail_user:
                 email_addr = mail_user
-                name = cand or "Fashion World Pro"
+                name = name or brevo_sender_name or cand or "Fashion World Pro"
             else:
                 email_addr = ""
-                name = cand or "Fashion World Pro"
-    if not name:
+                name = name or brevo_sender_name or cand or "Fashion World Pro"
+
+    if brevo_sender_name and (not name or name == "Fashion World Pro"):
+        name = brevo_sender_name
+    elif not name:
         name = "Fashion World Pro"
+
     if not email_addr or '@' not in email_addr:
         raise BrevoValidationError("Sender email address is not configured with a valid email address.")
+
     return {"name": name, "email": email_addr}
 
 
@@ -281,6 +309,8 @@ def send_brevo_email(to_email, subject, html_content, text_content=None, sender=
         )
     except requests.exceptions.Timeout:
         raise BrevoTimeoutError(f"Brevo API request timed out after {req_timeout}s.") from None
+    except requests.exceptions.SSLError:
+        raise BrevoSSLError("SSL/TLS handshake or certificate verification failed connecting to Brevo API.") from None
     except requests.exceptions.ConnectionError:
         raise BrevoConnectionError("Could not connect to Brevo API server.") from None
     except requests.exceptions.RequestException as req_err:
@@ -2686,7 +2716,7 @@ def auth_email_otp_send():
     if not app.testing and os.path.exists(dotenv_path):
         load_dotenv(dotenv_path, override=True)
         
-    brevo_api_key = os.getenv('BREVO_API_KEY', '').strip()
+    brevo_api_key = os.getenv('BREVO_API_KEY', '').strip().strip('\'"')
     mail_user = os.getenv('MAIL_USERNAME', '').strip()
     mail_pwd = os.getenv('MAIL_PASSWORD', '').strip().replace(' ', '')
     mail_server = os.getenv('MAIL_SERVER', 'smtp.gmail.com').strip()
@@ -2696,18 +2726,54 @@ def auth_email_otp_send():
     mail_sender = os.getenv('MAIL_DEFAULT_SENDER', '').strip() or mail_user
     app.config['MAIL_DEFAULT_SENDER'] = mail_sender if ('@' in mail_sender and '<' in mail_sender) else f"Fashion World Pro <{mail_sender}>" if mail_sender else "Fashion World Pro"
 
-    # Verify if at least one email delivery service is configured
-    if not brevo_api_key and (not mail_user or not mail_pwd):
-        return jsonify({
-            'success': False, 
-            'message': 'Email delivery service is currently not configured. Please sign in with your password or Google.'
-        }), 503
+    in_production = is_production_environment()
+
+    # Provider Selection:
+    # On Render/Production, outbound SMTP (ports 25, 465, 587) is blocked by cloud platform firewalls.
+    # Therefore, production MUST use Brevo HTTPS REST API (port 443) exclusively and NEVER attempt blocked SMTP.
+    if in_production:
+        if not brevo_api_key:
+            masked_recipient_pre = mask_email_safe(email)
+            print(f"[EMAIL OTP] Production environment detected (Render/cloud) but BREVO_API_KEY is not configured for recipient {masked_recipient_pre}. Outbound SMTP is disabled on cloud platforms.", flush=True)
+            return jsonify({
+                'success': False,
+                'message': 'Email delivery service is currently not configured on production. Please sign in with your password or Google.'
+            }), 503
+        use_brevo = True
+    else:
+        # Local development / non-production:
+        # Prefer Brevo if configured; otherwise allow local SMTP if credentials are present.
+        if brevo_api_key:
+            use_brevo = True
+        elif mail_user and mail_pwd:
+            use_brevo = False
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Email delivery service is currently not configured. Please sign in with your password or Google.'
+            }), 503
+
+    # Validate sender configuration before generating OTP or initiating network dispatch
+    raw_sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_sender or mail_user or "Fashion World Pro"
+    if use_brevo:
+        try:
+            resolved_sender = resolve_brevo_sender(raw_sender)
+        except BrevoValidationError as val_err:
+            masked_recipient_pre = mask_email_safe(email)
+            status = getattr(val_err, 'status_code', None) or 400
+            print(f"[EMAIL OTP] Brevo sender validation error (HTTP {status}) for recipient {masked_recipient_pre}: {val_err}", flush=True)
+            return jsonify({
+                'success': False,
+                'message': 'Email delivery was rejected by the service provider. Please verify your email address or use password login.'
+            }), 400
+    else:
+        resolved_sender = raw_sender
 
     # 4. Generate cryptographically secure 6-digit OTP (100000 - 999999)
     otp_code = str(secrets.randbelow(900000) + 100000)
-    
+
     # 5. Compose and dispatch email
-    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_sender or mail_user or "Fashion World Pro"
+    sender = resolved_sender
     subject = f"Your Fashion World Pro Login Code: {otp_code}"
     
     html_body = f"""
@@ -2779,7 +2845,7 @@ If you did not request this code, please ignore this email.
     masked_recipient = mask_email_safe(email)
 
     # 6. Dispatch email via configured provider
-    if brevo_api_key:
+    if use_brevo:
         print(f"[EMAIL OTP] Active provider: Brevo HTTPS REST API (Port 443) for recipient {masked_recipient}", flush=True)
         # Provider 1: Brevo HTTPS REST API (Port 443 - works on Render Free tier)
         try:
@@ -2829,6 +2895,13 @@ If you did not request this code, please ignore this email.
                 'success': False,
                 'message': 'Email delivery was rejected by the service provider. Please verify your email address or use password login.'
             }), 400
+        except BrevoSSLError as err:
+            status = getattr(err, 'status_code', None) or 502
+            print(f"[EMAIL OTP] Brevo SSL/TLS error (HTTP {status}) for recipient {masked_recipient}", flush=True)
+            return jsonify({
+                'success': False,
+                'message': 'Secure connection to email service failed. Please try again or use password login.'
+            }), 502
         except BrevoConnectionError as err:
             status = getattr(err, 'status_code', None) or 502
             print(f"[EMAIL OTP] Brevo network connection error (HTTP {status})", flush=True)

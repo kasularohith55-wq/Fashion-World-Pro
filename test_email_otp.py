@@ -21,12 +21,14 @@ from app import (
     send_brevo_email,
     resolve_brevo_sender,
     mask_email_safe,
+    is_production_environment,
     BrevoAPIError,
     BrevoAuthError,
     BrevoValidationError,
     BrevoRateLimitError,
     BrevoTimeoutError,
-    BrevoConnectionError
+    BrevoConnectionError,
+    BrevoSSLError
 )
 from werkzeug.security import generate_password_hash
 
@@ -62,12 +64,27 @@ class TestBrevoHelperUnit(unittest.TestCase):
             res4 = resolve_brevo_sender(None)
             self.assertEqual(res4, {"name": "Support", "email": "help@fashionworld.pro"})
 
-        # 5. Missing or unconfigured sender raises BrevoValidationError
-        with patch.dict(os.environ, {"MAIL_DEFAULT_SENDER": "", "MAIL_USERNAME": ""}):
+        # 5. Brevo explicit environment sender (BREVO_SENDER_EMAIL / BREVO_SENDER_NAME)
+        with patch.dict(os.environ, {"BREVO_SENDER_EMAIL": "verified@domain.com", "BREVO_SENDER_NAME": "Store Verified"}):
+            res5 = resolve_brevo_sender(None)
+            self.assertEqual(res5, {"name": "Store Verified", "email": "verified@domain.com"})
+
+        # 6. Missing or unconfigured sender raises BrevoValidationError
+        with patch.dict(os.environ, {"MAIL_DEFAULT_SENDER": "", "MAIL_USERNAME": "", "BREVO_SENDER_EMAIL": ""}):
             with self.assertRaises(BrevoValidationError):
                 resolve_brevo_sender(None)
             with self.assertRaises(BrevoValidationError):
                 resolve_brevo_sender("Fashion World Pro")
+
+    def test_is_production_environment(self):
+        with patch.dict(os.environ, {"RENDER": "true"}):
+            self.assertTrue(is_production_environment())
+        with patch.dict(os.environ, {"RENDER_SERVICE_ID": "srv-prod-9988"}):
+            self.assertTrue(is_production_environment())
+        with patch.dict(os.environ, {"FLASK_ENV": "production"}):
+            self.assertTrue(is_production_environment())
+        with patch.dict(os.environ, {"RENDER": "", "RENDER_SERVICE_ID": "", "RENDER_INSTANCE_ID": "", "FLASK_ENV": "development", "ENVIRONMENT": "development"}, clear=True):
+            self.assertFalse(is_production_environment())
 
     @patch("requests.post")
     def test_send_brevo_email_success_payload_and_headers(self, mock_post):
@@ -189,6 +206,20 @@ class TestBrevoHelperUnit(unittest.TestCase):
         mock_post.side_effect = requests.exceptions.ConnectionError("Failed to establish a new connection")
 
         with self.assertRaises(BrevoConnectionError):
+            send_brevo_email("cust@example.com", "Sub", "<p>H</p>", api_key=self.canary_key)
+
+    @patch("requests.post")
+    def test_send_brevo_email_ssl_error(self, mock_post):
+        mock_post.side_effect = requests.exceptions.SSLError("SSL certificate verify failed")
+
+        with self.assertRaises(BrevoSSLError):
+            send_brevo_email("cust@example.com", "Sub", "<p>H</p>", api_key=self.canary_key)
+
+    @patch("requests.post")
+    def test_send_brevo_email_unexpected_request_exception(self, mock_post):
+        mock_post.side_effect = requests.exceptions.ChunkedEncodingError("Connection broken: chunked stream ended")
+
+        with self.assertRaises(BrevoAPIError):
             send_brevo_email("cust@example.com", "Sub", "<p>H</p>", api_key=self.canary_key)
 
 
@@ -354,6 +385,24 @@ class TestEmailOtpRoutesIntegration(unittest.TestCase):
                 self.assertIsNone(sess.get("email_otp_hash"))
 
     @patch("requests.post")
+    def test_route_send_otp_brevo_ssl_error_502(self, mock_brevo_post):
+        mock_brevo_post.side_effect = requests.exceptions.SSLError("SSL handshake failure")
+
+        with patch.dict(os.environ, {"BREVO_API_KEY": self.canary_key}):
+            with self.client.session_transaction() as sess:
+                sess.clear()
+
+            resp = self.client.post("/auth/email_otp/send", json={"email": "shopper@example.com"})
+
+            self.assertEqual(resp.status_code, 502)
+            data = resp.get_json()
+            self.assertFalse(data.get("success"))
+            self.assertIn("secure connection", data.get("message").lower())
+
+            with self.client.session_transaction() as sess:
+                self.assertIsNone(sess.get("email_otp_hash"))
+
+    @patch("requests.post")
     def test_route_send_otp_brevo_api_error_502(self, mock_brevo_post):
         """Base BrevoAPIError (e.g. 500 status code) returns 502 and does NOT activate session state"""
         mock_resp = MagicMock()
@@ -492,6 +541,51 @@ class TestEmailOtpRoutesIntegration(unittest.TestCase):
             self.assertFalse(data.get("success"))
             self.assertIn("not configured", data.get("message").lower())
             mock_smtp_send.assert_not_called()
+
+    @patch("requests.post")
+    @patch("app.send_mail_with_timeout")
+    def test_route_send_otp_production_missing_brevo_key_fails_503(self, mock_smtp_send, mock_brevo_post):
+        """When running in production (e.g. Render) and BREVO_API_KEY is not configured, returns 503 promptly without attempting SMTP"""
+        with patch.dict(os.environ, {
+            "RENDER": "true",
+            "BREVO_API_KEY": "",
+            "MAIL_USERNAME": "gmailuser@gmail.com",
+            "MAIL_PASSWORD": "apppassword123"
+        }):
+            with self.client.session_transaction() as sess:
+                sess.clear()
+
+            resp = self.client.post("/auth/email_otp/send", json={"email": "shopper@example.com"})
+
+            self.assertEqual(resp.status_code, 503)
+            data = resp.get_json()
+            self.assertFalse(data.get("success"))
+            self.assertIn("not configured on production", data.get("message").lower())
+
+            # Outbound SMTP must NEVER be called on production when Brevo key is missing
+            mock_smtp_send.assert_not_called()
+            mock_brevo_post.assert_not_called()
+
+    @patch("requests.post")
+    def test_route_send_otp_no_sensitive_data_in_error_responses(self, mock_brevo_post):
+        """Verifies that API keys, passwords, and raw provider payloads never leak into responses"""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 401
+        mock_resp.json.return_value = {
+            "code": "unauthorized",
+            "message": f"Key {self.canary_key} is invalid for account"
+        }
+        mock_brevo_post.return_value = mock_resp
+
+        with patch.dict(os.environ, {"BREVO_API_KEY": self.canary_key}):
+            with self.client.session_transaction() as sess:
+                sess.clear()
+
+            resp = self.client.post("/auth/email_otp/send", json={"email": "shopper@example.com"})
+            resp_text = resp.get_data(as_text=True)
+
+            self.assertNotIn(self.canary_key, resp_text)
+            self.assertNotIn("unauthorized", resp_text)
 
     @patch("requests.post")
     def test_route_send_otp_cooldown_enforcement(self, mock_brevo_post):
