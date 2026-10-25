@@ -5,6 +5,7 @@ All outbound network calls are strictly mocked. No real emails or HTTP requests 
 
 import os
 import sys
+import io
 import unittest
 from unittest.mock import patch, MagicMock
 import smtplib
@@ -19,6 +20,7 @@ from app import (
     app,
     send_brevo_email,
     resolve_brevo_sender,
+    mask_email_safe,
     BrevoAPIError,
     BrevoAuthError,
     BrevoValidationError,
@@ -35,6 +37,13 @@ class TestBrevoHelperUnit(unittest.TestCase):
     def setUp(self):
         self.canary_key = "xkeysib-canary-test-api-key-998877"
 
+    def test_mask_email_safe(self):
+        self.assertEqual(mask_email_safe("customer@example.com"), "cu***@example.com")
+        self.assertEqual(mask_email_safe("a@example.com"), "a***@example.com")
+        self.assertEqual(mask_email_safe("invalid-email"), "***")
+        self.assertEqual(mask_email_safe(""), "***")
+        self.assertEqual(mask_email_safe(None), "***")
+
     def test_resolve_brevo_sender_formats(self):
         # 1. Full standard RFC name <email> format
         res1 = resolve_brevo_sender("Fashion World Pro <store@fashionworld.pro>")
@@ -48,10 +57,17 @@ class TestBrevoHelperUnit(unittest.TestCase):
         res3 = resolve_brevo_sender("<store@fashionworld.pro>")
         self.assertEqual(res3, {"name": "Fashion World Pro", "email": "store@fashionworld.pro"})
 
-        # 4. None / empty fallback
+        # 4. Fallback to MAIL_DEFAULT_SENDER when passed None
         with patch.dict(os.environ, {"MAIL_DEFAULT_SENDER": "Support <help@fashionworld.pro>"}):
             res4 = resolve_brevo_sender(None)
             self.assertEqual(res4, {"name": "Support", "email": "help@fashionworld.pro"})
+
+        # 5. Missing or unconfigured sender raises BrevoValidationError
+        with patch.dict(os.environ, {"MAIL_DEFAULT_SENDER": "", "MAIL_USERNAME": ""}):
+            with self.assertRaises(BrevoValidationError):
+                resolve_brevo_sender(None)
+            with self.assertRaises(BrevoValidationError):
+                resolve_brevo_sender("Fashion World Pro")
 
     @patch("requests.post")
     def test_send_brevo_email_success_payload_and_headers(self, mock_post):
@@ -336,6 +352,75 @@ class TestEmailOtpRoutesIntegration(unittest.TestCase):
 
             with self.client.session_transaction() as sess:
                 self.assertIsNone(sess.get("email_otp_hash"))
+
+    @patch("requests.post")
+    def test_route_send_otp_brevo_api_error_502(self, mock_brevo_post):
+        """Base BrevoAPIError (e.g. 500 status code) returns 502 and does NOT activate session state"""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 500
+        mock_resp.json.return_value = {"message": "Internal gateway failure"}
+        mock_brevo_post.return_value = mock_resp
+
+        with patch.dict(os.environ, {"BREVO_API_KEY": self.canary_key}):
+            with self.client.session_transaction() as sess:
+                sess.clear()
+
+            resp = self.client.post("/auth/email_otp/send", json={"email": "shopper@example.com"})
+
+            self.assertEqual(resp.status_code, 502)
+            data = resp.get_json()
+            self.assertFalse(data.get("success"))
+            self.assertIn("unable to deliver", data.get("message").lower())
+
+            with self.client.session_transaction() as sess:
+                self.assertIsNone(sess.get("email_otp_hash"))
+
+    @patch("requests.post")
+    def test_route_send_otp_unconfigured_sender_400(self, mock_brevo_post):
+        """When Brevo sender has no valid email configured, returns 400 and does NOT call Brevo"""
+        with patch.dict(os.environ, {
+            "BREVO_API_KEY": self.canary_key,
+            "MAIL_DEFAULT_SENDER": "",
+            "MAIL_USERNAME": ""
+        }):
+            with self.client.session_transaction() as sess:
+                sess.clear()
+
+            resp = self.client.post("/auth/email_otp/send", json={"email": "shopper@example.com"})
+
+            self.assertEqual(resp.status_code, 400)
+            data = resp.get_json()
+            self.assertFalse(data.get("success"))
+            self.assertIn("rejected", data.get("message").lower())
+
+            mock_brevo_post.assert_not_called()
+            with self.client.session_transaction() as sess:
+                self.assertIsNone(sess.get("email_otp_hash"))
+
+    @patch("requests.post")
+    def test_route_safe_logging_and_provider_selection(self, mock_brevo_post):
+        """Verifies stdout logs provider selection and masked identifiers, never leaks secrets"""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 201
+        mock_resp.json.return_value = {"messageId": "<msg-logged-123>"}
+        mock_brevo_post.return_value = mock_resp
+
+        captured_output = io.StringIO()
+        with patch("sys.stdout", captured_output):
+            with patch.dict(os.environ, {
+                "BREVO_API_KEY": self.canary_key,
+                "MAIL_DEFAULT_SENDER": "Fashion World Pro <orders@fashionworld.pro>"
+            }):
+                with self.client.session_transaction() as sess:
+                    sess.clear()
+                self.client.post("/auth/email_otp/send", json={"email": "shopper@example.com"})
+
+        log_output = captured_output.getvalue()
+        self.assertIn("[EMAIL OTP] Active provider: Brevo HTTPS REST API (Port 443) for recipient sh***@example.com", log_output)
+        self.assertIn("[EMAIL OTP] Brevo sender configured: Fashion World Pro <or***@fashionworld.pro>", log_output)
+        self.assertIn("[EMAIL OTP] Verification code successfully dispatched via Brevo HTTPS for recipient sh***@example.com", log_output)
+        self.assertNotIn(self.canary_key, log_output)
+        self.assertNotIn("shopper@example.com", log_output)
 
     @patch("requests.post")
     @patch("app.send_mail_with_timeout")

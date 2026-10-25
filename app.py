@@ -193,8 +193,19 @@ class BrevoConnectionError(BrevoAPIError):
     pass
 
 
+def mask_email_safe(addr):
+    """Safely masks an email address for application logs without exposing recipient identity"""
+    if not addr or '@' not in addr:
+        return '***'
+    local, domain = addr.split('@', 1)
+    prefix = local[:2] if len(local) >= 2 else local
+    return f"{prefix}***@{domain}"
+
+
 def resolve_brevo_sender(sender=None):
-    """Extracts a valid sender name and email from configuration or passed argument"""
+    """Extracts a valid sender name and email from configuration or passed argument.
+    Does not silently fall back to an unverified fabricated address.
+    """
     cand = (sender or os.getenv('MAIL_DEFAULT_SENDER', '') or os.getenv('MAIL_USERNAME', '')).strip()
     name, email_addr = parseaddr(cand)
     if not email_addr or '@' not in email_addr:
@@ -202,10 +213,17 @@ def resolve_brevo_sender(sender=None):
             email_addr = cand
             name = "Fashion World Pro"
         else:
-            email_addr = os.getenv('MAIL_USERNAME', '').strip() or "support@fashionworld.pro"
-            name = cand or "Fashion World Pro"
+            mail_user = os.getenv('MAIL_USERNAME', '').strip()
+            if mail_user and '@' in mail_user:
+                email_addr = mail_user
+                name = cand or "Fashion World Pro"
+            else:
+                email_addr = ""
+                name = cand or "Fashion World Pro"
     if not name:
         name = "Fashion World Pro"
+    if not email_addr or '@' not in email_addr:
+        raise BrevoValidationError("Sender email address is not configured with a valid email address.")
     return {"name": name, "email": email_addr}
 
 
@@ -229,9 +247,16 @@ def send_brevo_email(to_email, subject, html_content, text_content=None, sender=
         raise BrevoAuthError("Brevo API key is not configured.")
 
     sender_payload = sender if (isinstance(sender, dict) and 'email' in sender) else resolve_brevo_sender(sender)
+    sender_email = sender_payload.get('email', '').strip()
+    if not sender_email or '@' not in sender_email:
+        raise BrevoValidationError("Sender email address is not configured with a valid email address.")
+
+    masked_sender = mask_email_safe(sender_email)
+    sender_name = sender_payload.get('name') or "Fashion World Pro"
+    print(f"[EMAIL OTP] Brevo sender configured: {sender_name} <{masked_sender}>", flush=True)
 
     payload = {
-        "sender": sender_payload,
+        "sender": {"name": sender_name, "email": sender_email},
         "to": [{"email": to_email.strip().lower()}],
         "subject": subject,
         "htmlContent": html_content
@@ -2751,10 +2776,11 @@ If you did not request this code, please ignore this email.
 (c) {datetime.utcnow().year} Fashion World Pro.
 """
 
-    masked_recipient = email[:2] + '***@' + email.split('@')[1] if '@' in email else '***'
+    masked_recipient = mask_email_safe(email)
 
     # 6. Dispatch email via configured provider
     if brevo_api_key:
+        print(f"[EMAIL OTP] Active provider: Brevo HTTPS REST API (Port 443) for recipient {masked_recipient}", flush=True)
         # Provider 1: Brevo HTTPS REST API (Port 443 - works on Render Free tier)
         try:
             send_brevo_email(
@@ -2773,44 +2799,58 @@ If you did not request this code, please ignore this email.
             session['email_otp_attempts'] = 0
             session['email_otp_last_sent'] = now_ts
 
+            print(f"[EMAIL OTP] Verification code successfully dispatched via Brevo HTTPS for recipient {masked_recipient}", flush=True)
             return jsonify({'success': True, 'message': 'Verification code sent to your email.', 'cooldown': 60}), 200
-        except BrevoTimeoutError:
-            print(f"[EMAIL OTP] Brevo HTTPS request timed out for {masked_recipient}")
+        except BrevoTimeoutError as err:
+            status = getattr(err, 'status_code', None) or 504
+            print(f"[EMAIL OTP] Brevo HTTPS request timed out (HTTP {status}) for recipient {masked_recipient}", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Email delivery timed out while connecting to the email service. Please try again or use password login.'
             }), 504
-        except BrevoAuthError:
-            print(f"[EMAIL OTP] Brevo authentication failure")
+        except BrevoAuthError as err:
+            status = getattr(err, 'status_code', None) or 500
+            print(f"[EMAIL OTP] Brevo authentication failure (HTTP {status})", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Email service authentication failed. Please sign in with password or contact support.'
             }), 500
-        except BrevoRateLimitError:
-            print(f"[EMAIL OTP] Brevo rate limit reached")
+        except BrevoRateLimitError as err:
+            status = getattr(err, 'status_code', None) or 429
+            print(f"[EMAIL OTP] Brevo rate limit reached (HTTP {status})", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Email service rate limit reached. Please try again in a few minutes or sign in with password.'
             }), 429
-        except BrevoValidationError:
-            print(f"[EMAIL OTP] Brevo request rejected for {masked_recipient}")
+        except BrevoValidationError as err:
+            status = getattr(err, 'status_code', None) or 400
+            print(f"[EMAIL OTP] Brevo request rejected (HTTP {status}) for recipient {masked_recipient}", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Email delivery was rejected by the service provider. Please verify your email address or use password login.'
             }), 400
-        except BrevoConnectionError:
-            print(f"[EMAIL OTP] Brevo connection error")
+        except BrevoConnectionError as err:
+            status = getattr(err, 'status_code', None) or 502
+            print(f"[EMAIL OTP] Brevo network connection error (HTTP {status})", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Unable to connect to the email delivery service. Please try again or use password login.'
             }), 502
+        except BrevoAPIError as err:
+            status = getattr(err, 'status_code', None) or 502
+            print(f"[EMAIL OTP] Brevo service provider error (HTTP {status}) for recipient {masked_recipient}", flush=True)
+            return jsonify({
+                'success': False,
+                'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
+            }), 502
         except Exception as err:
-            print(f"[EMAIL OTP] Brevo delivery error for {masked_recipient}: {type(err).__name__}")
+            print(f"[EMAIL OTP] Unexpected internal error during Brevo OTP dispatch for recipient {masked_recipient}: {type(err).__name__}", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
             }), 500
     else:
+        print(f"[EMAIL OTP] Active provider: SMTP fallback (BREVO_API_KEY not configured) for recipient {masked_recipient}", flush=True)
         # Provider 2: Flask-Mail SMTP (Fallback for local dev or unblocked environments)
         app.config['MAIL_USERNAME'] = mail_user
         app.config['MAIL_PASSWORD'] = mail_pwd
@@ -2844,21 +2884,22 @@ If you did not request this code, please ignore this email.
             session['email_otp_attempts'] = 0
             session['email_otp_last_sent'] = now_ts
 
+            print(f"[EMAIL OTP] Verification code successfully dispatched via SMTP for recipient {masked_recipient}", flush=True)
             return jsonify({'success': True, 'message': 'Verification code sent to your email.', 'cooldown': 60}), 200
         except (TimeoutError, socket.timeout, smtplib.SMTPServerDisconnected, smtplib.SMTPConnectError):
-            print(f"[EMAIL OTP] SMTP connection timed out or closed unexpectedly for {masked_recipient}")
+            print(f"[EMAIL OTP] SMTP connection timed out or closed unexpectedly for recipient {masked_recipient}", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Email delivery timed out while connecting to the mail server. Please try again or use another login method.'
             }), 504
         except smtplib.SMTPAuthenticationError:
-            print("[EMAIL OTP] SMTP authentication failed")
+            print("[EMAIL OTP] SMTP authentication failed", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Email service authentication failed. Please verify your Gmail address and App Password.'
             }), 500
         except Exception as mail_err:
-            print(f"[EMAIL OTP] SMTP send error for {masked_recipient}: {type(mail_err).__name__}")
+            print(f"[EMAIL OTP] SMTP send error for recipient {masked_recipient}: {type(mail_err).__name__}", flush=True)
             return jsonify({
                 'success': False,
                 'message': 'Unable to deliver verification code email right now. Please try again or use your password to sign in.'
