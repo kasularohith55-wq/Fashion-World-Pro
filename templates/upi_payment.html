@@ -1,15 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Redirecting to Secure Checkout | Fashion World Pro{% endblock %}
+{% block title %}UPI Fast Checkout | Fashion World Pro{% endblock %}
 
 {% block content %}
-<div style="text-align: center; padding: 180px 20px; min-height: 60vh;">
-    <i class="fa-solid fa-shield-halved" style="font-size: 3.5rem; color: #0f172a; margin-bottom: 20px;"></i>
-    <h2 style="font-weight: 700; color: #0f172a; margin-bottom: 10px;">Official Razorpay Secure Checkout</h2>
-    <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 25px;">All online UPI, Card, and NetBanking payments are securely processed through the official Razorpay gateway.</p>
-    <a href="{{ url_for('checkout') }}" class="btn btn-dark" style="padding: 12px 28px; border-radius: 8px; font-weight: 700;">Return to Checkout</a>
+<div style="text-align: center; padding: 160px 20px 100px; min-height: 65vh; max-width: 600px; margin: 0 auto;">
+    <div style="width: 72px; height: 72px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #059669; font-size: 2rem;">
+        <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <h2 style="font-weight: 800; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px;">Razorpay Secure Checkout</h2>
+    <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 24px; line-height: 1.6;">
+        All online payments — including UPI Apps (Google Pay, PhonePe, Paytm, BHIM), dynamic QR Code, Cards, and NetBanking — are securely initialized through official Razorpay checkout.
+    </p>
+    <a href="{{ url_for('checkout') }}" class="btn btn-dark" style="padding: 12px 28px; border-radius: 8px; font-weight: 700; background: #0f172a; color: #fff; text-decoration: none; display: inline-block;">
+        Proceed to Checkout
+    </a>
     <script>
-        window.location.href = "{{ url_for('checkout') }}";
+        setTimeout(function() {
+            window.location.href = "{{ url_for('checkout') }}";
+        }, 300);
     </script>
 </div>
 {% endblock %}

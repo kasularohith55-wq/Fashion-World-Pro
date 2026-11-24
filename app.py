@@ -85,16 +85,22 @@ google = oauth.register(
 # Razorpay & Stripe Configuration (Dynamic .env integration)
 def get_razorpay_client():
     """Dynamically initializes and returns Razorpay client, keys, and status with .env fallback"""
-    if os.path.exists(dotenv_path):
+    if not app.testing and os.path.exists(dotenv_path):
         load_dotenv(dotenv_path, override=True)
     key_id = (os.getenv('RAZORPAY_KEY_ID') or '').strip()
     key_secret = (os.getenv('RAZORPAY_KEY_SECRET') or '').strip()
     
+    placeholders = {
+        'rzp_test_your_key_id', 'rzp_test_yourkeyidhere', 'rzp_live_yourkeyidhere',
+        'your_key_id', 'your_key_secret', 'yourrazorpaysecrethere', 'dummy_secret'
+    }
+
     is_configured = bool(
         key_id and key_secret and 
-        key_id != 'rzp_test_your_key_id' and 
-        key_secret != 'your_key_secret' and
-        not key_id.startswith('YOUR_')
+        key_id.lower() not in placeholders and
+        key_secret.lower() not in placeholders and
+        not key_id.upper().startswith('YOUR_') and
+        not key_secret.upper().startswith('YOUR_')
     )
     
     client = None
@@ -104,12 +110,7 @@ def get_razorpay_client():
         except Exception as e:
             print(f"[RAZORPAY CLIENT ERROR] Could not initialize client: {e}")
             client = None
-    elif key_id:
-        # Fallback test instance if key is present
-        try:
-            client = razorpay.Client(auth=(key_id, key_secret or 'dummy_secret'))
-        except Exception:
-            client = None
+            is_configured = False
             
     return client, key_id, key_secret, is_configured
 
@@ -3466,6 +3467,8 @@ def checkout():
     
     # Get dynamic Razorpay client configuration status
     _, key_id, _, is_configured = get_razorpay_client()
+    is_test_mode = bool(is_configured and key_id.startswith('rzp_test_'))
+    is_live_mode = bool(is_configured and key_id.startswith('rzp_live_'))
     
     if request.method == 'POST':
         # Fallback direct submission handler for COD or standard forms
@@ -3530,7 +3533,9 @@ def checkout():
         items=cart_items, 
         stripe_key=STRIPE_PUBLISHABLE_KEY, 
         razorpay_key=key_id,
-        razorpay_configured=is_configured
+        razorpay_configured=is_configured,
+        is_test_mode=is_test_mode,
+        is_live_mode=is_live_mode
     )
 
 @app.route('/api/pincode/<pincode>')
@@ -3648,10 +3653,10 @@ def create_order():
         return jsonify({'success': False, 'error': 'Minimum checkout amount is ₹1.00.'}), 400
     
     client, key_id, key_secret, is_configured = get_razorpay_client()
-    if not client or not key_id:
+    if not is_configured or not client or not key_id:
         return jsonify({
             'success': False, 
-            'error': 'Razorpay payment gateway is not configured in .env. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable online checkout.'
+            'error': 'Razorpay payment gateway is not configured. Please select Cash on Delivery or contact store support.'
         }), 503
     
     try:
@@ -3675,6 +3680,7 @@ def create_order():
             'amount': amount_paise,
             'currency': 'INR',
             'key': key_id,
+            'is_test_mode': key_id.startswith('rzp_test_'),
             'name': f"{current_user.first_name or current_user.username or ''} {current_user.last_name or ''}".strip() or current_user.username,
             'email': current_user.email,
             'phone': current_user.phone or ''
@@ -3715,7 +3721,7 @@ def verify_payment():
     
     # 2. Server-side Razorpay Signature Verification
     client, key_id, key_secret, is_configured = get_razorpay_client()
-    if not client or not key_secret:
+    if not is_configured or not client or not key_secret:
         return jsonify({'status': 'failure', 'error': 'Razorpay gateway credentials missing or unconfigured.'}), 500
         
     params_dict = {
@@ -5607,6 +5613,14 @@ def seed_db():
             db.session.add(admin_user)
             db.session.commit()
             print("[INFO] Default admin initialized.")
+        db.session.remove()
+
+# Safe database initialization at module startup for Gunicorn / Render production deployments
+if not app.testing:
+    try:
+        seed_db()
+    except Exception as seed_err:
+        print(f"[STARTUP DB INIT WARNING] Database initialization bypassed or deferred: {seed_err}")
 
 if __name__ == '__main__':
     seed_db()

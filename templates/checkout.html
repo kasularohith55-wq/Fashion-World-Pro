@@ -337,6 +337,18 @@
         border: 1px solid #e2e8f0;
     }
 
+    .pay-badge-test {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .pay-badge-unconfigured {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
     /* Selected Payment Message Panels */
     .pay-info-panel {
         border-radius: 12px;
@@ -673,8 +685,8 @@
                     
                     <div class="pay-grid">
                         <!-- Razorpay Card -->
-                        <label class="pay-btn-box active" onclick="selectPay(this)">
-                            <input type="radio" name="payment_method" value="razorpay" checked>
+                        <label class="pay-btn-box {% if razorpay_configured %}active{% endif %}" onclick="selectPay(this)">
+                            <input type="radio" name="payment_method" value="razorpay" {% if razorpay_configured %}checked{% endif %}>
                             <span class="pay-custom-radio"></span>
                             <div class="pay-icon-box">
                                 <i class="fa-solid fa-credit-card"></i>
@@ -682,7 +694,15 @@
                             <div class="pay-card-info">
                                 <div class="pay-card-title">
                                     <span>Razorpay Secure</span>
+                                    {% if not razorpay_configured %}
+                                    <span class="pay-badge pay-badge-unconfigured">UNCONFIGURED</span>
+                                    {% elif is_test_mode %}
+                                    <span class="pay-badge pay-badge-test">TEST MODE</span>
+                                    {% elif is_live_mode %}
+                                    <span class="pay-badge pay-badge-secure">SECURE LIVE</span>
+                                    {% else %}
                                     <span class="pay-badge pay-badge-secure">SECURE</span>
+                                    {% endif %}
                                 </div>
                                 <div class="pay-card-desc">
                                     UPI, Cards, NetBanking, Wallets
@@ -691,8 +711,8 @@
                         </label>
 
                         <!-- COD Card -->
-                        <label class="pay-btn-box" onclick="selectPay(this)">
-                            <input type="radio" name="payment_method" value="cod">
+                        <label class="pay-btn-box {% if not razorpay_configured %}active{% endif %}" onclick="selectPay(this)">
+                            <input type="radio" name="payment_method" value="cod" {% if not razorpay_configured %}checked{% endif %}>
                             <span class="pay-custom-radio"></span>
                             <div class="pay-icon-box">
                                 <i class="fa-solid fa-truck-fast"></i>
@@ -710,7 +730,7 @@
                     </div>
 
                     <!-- Razorpay Info Box -->
-                    <div id="razorpay-info-card" class="pay-info-panel pay-info-panel-razorpay">
+                    <div id="razorpay-info-card" class="pay-info-panel pay-info-panel-razorpay" style="{% if not razorpay_configured %}display: none;{% endif %}">
                         <div class="pay-info-header">
                             <div class="pay-info-title">
                                 <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
@@ -725,12 +745,55 @@
                             </div>
                         </div>
                         <p class="pay-info-text">
-                            You’ll be redirected to secure Razorpay Checkout to complete your payment via UPI, Cards, NetBanking, or Wallets.
+                            You’ll be redirected to official Razorpay Checkout to complete your payment via UPI, QR Code, Cards, NetBanking, or Wallets.
                         </p>
+
+                        {% if not razorpay_configured %}
+                        <!-- Gateway Not Configured Notice -->
+                        <div class="pay-alert-box" style="margin-top: 14px; padding: 14px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b; font-size: 0.88rem; line-height: 1.5;">
+                            <div style="font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i>
+                                <span>Online Payment Gateway Unconfigured</span>
+                            </div>
+                            <p style="margin: 0 0 6px 0;">
+                                Razorpay credentials (<code>RAZORPAY_KEY_ID</code> / <code>RAZORPAY_KEY_SECRET</code>) are not configured in the environment. Online checkout is currently unavailable.
+                            </p>
+                            <p style="margin: 0; font-weight: 600; color: #7f1d1d;">
+                                <i class="fa-solid fa-arrow-right"></i> Please select <strong>Cash on Delivery (COD)</strong> to place your order.
+                            </p>
+                        </div>
+                        {% elif is_test_mode %}
+                        <!-- Test Mode Notice & UPI Instructions -->
+                        <div class="pay-alert-box" style="margin-top: 14px; padding: 14px 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; font-size: 0.875rem; line-height: 1.5;">
+                            <div style="font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-flask-vial" style="color: #d97706;"></i>
+                                <span>Razorpay Test Mode Active (Sandbox)</span>
+                            </div>
+                            <div style="margin-bottom: 8px; color: #78350f;">
+                                <strong>Why Mobile UPI App Scans Fail:</strong> If you scan the test QR code using a real mobile banking app (Google Pay, PhonePe, Paytm, BHIM), your app will show <em>"You are trying to send money to an invalid UPI ID"</em> because Razorpay test VPAs are simulated sandboxes and do not route on the production NPCI banking network.
+                            </div>
+                            <div style="background: rgba(255,255,255,0.75); border: 1px dashed #fcd34d; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px;">
+                                <strong style="color: #78350f;">How to Test UPI Successfully:</strong>
+                                <ul style="margin: 4px 0 0 0; padding-left: 20px;">
+                                    <li>When Razorpay opens, choose <strong>UPI</strong>.</li>
+                                    <li>Enter test VPA: <code style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700;">success@razorpay</code> or select simulated success in the modal.</li>
+                                </ul>
+                            </div>
+                            <div style="font-size: 0.82rem; color: #b45309;">
+                                <i class="fa-solid fa-circle-info"></i> For live customer UPI QR scanning &amp; real payments, configure Razorpay Live Keys (<code>rzp_live_...</code>) in production.
+                            </div>
+                        </div>
+                        {% elif is_live_mode %}
+                        <!-- Live Mode Confirmed -->
+                        <div class="pay-alert-box" style="margin-top: 12px; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
+                            <span><strong>Live Gateway Connected:</strong> Instant UPI QR Code scanning (Google Pay, PhonePe, Paytm), Cards, and NetBanking enabled.</span>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- COD Info Box -->
-                    <div id="cod-info-card" class="pay-info-panel pay-info-panel-cod" style="display: none;">
+                    <div id="cod-info-card" class="pay-info-panel pay-info-panel-cod" style="{% if razorpay_configured %}display: none;{% endif %}">
                         <div class="pay-info-header">
                             <div class="pay-info-title" style="color: #065f46;">
                                 <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
@@ -772,7 +835,11 @@
                 </div>
 
                 <button type="submit" class="btn-place" id="submit-btn-real">
+                    {% if razorpay_configured %}
                     <i class="fa-solid fa-lock"></i> Pay ₹{{ "{:,.2f}".format(total) }} & Place Order
+                    {% else %}
+                    <i class="fa-solid fa-truck-ramp-box"></i> Place Order (Cash on Delivery)
+                    {% endif %}
                 </button>
             </form>
         </div>
@@ -896,6 +963,9 @@
         startReservationTimer();
     }
 
+    const isRazorpayConfigured = {{ 'true' if razorpay_configured else 'false' }};
+    const isRazorpayTestMode = {{ 'true' if is_test_mode else 'false' }};
+
     function selectPay(el) {
         document.querySelectorAll('.pay-btn-box').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
@@ -910,7 +980,11 @@
             if (razorpayCard) razorpayCard.style.display = 'block';
             if (codCard) codCard.style.display = 'none';
             if (submitBtn) {
-                submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Pay ₹{{ "{:,.2f}".format(total) }} & Place Order';
+                if (isRazorpayConfigured) {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Pay ₹{{ "{:,.2f}".format(total) }} & Place Order';
+                } else {
+                    submitBtn.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Online Unavailable — Choose COD';
+                }
             }
         } else {
             if (razorpayCard) razorpayCard.style.display = 'none';
@@ -1196,6 +1270,15 @@
                 e.preventDefault();
                 e.stopPropagation();
 
+                if (!isRazorpayConfigured) {
+                    alert('Online payment gateway is not configured. Please select Cash on Delivery (COD) to place your order.');
+                    const codRadio = document.querySelector('input[name="payment_method"][value="cod"]');
+                    if (codRadio && codRadio.closest('.pay-btn-box')) {
+                        selectPay(codRadio.closest('.pay-btn-box'));
+                    }
+                    return false;
+                }
+
                 // Validate required fields
                 const fnameEl = document.getElementById('fname');
                 const lnameEl = document.getElementById('lname');
@@ -1245,6 +1328,10 @@
 
                     if (typeof Razorpay === 'undefined') {
                         throw new Error('Razorpay Checkout SDK could not be loaded. Please check your internet connection.');
+                    }
+
+                    if (data.is_test_mode && typeof showToast === 'function') {
+                        showToast('Test Mode Active: Use UPI ID "success@razorpay" to simulate payment.');
                     }
 
                     const options = {
