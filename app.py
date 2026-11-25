@@ -3681,6 +3681,7 @@ def create_order():
             'currency': 'INR',
             'key': key_id,
             'is_test_mode': key_id.startswith('rzp_test_'),
+            'is_live_mode': key_id.startswith('rzp_live_'),
             'name': f"{current_user.first_name or current_user.username or ''} {current_user.last_name or ''}".strip() or current_user.username,
             'email': current_user.email,
             'phone': current_user.phone or ''
