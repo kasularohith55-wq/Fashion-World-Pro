@@ -219,6 +219,16 @@
     </div>
     {% endif %}
 
+    {% if current_category == 'Women' %}
+    <div class="women-sub-filter-bar" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 35px 0; padding: 14px 18px; background: #faf9f6; border: 1px solid #e2d9cc; border-radius: 12px;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: #7a5c29; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; margin-right: 6px;"><i class="fa-solid fa-filter" style="margin-right: 5px;"></i> Filter:</span>
+        <a href="{{ url_for('products', category='Women', sort=request.args.get('sort', '')) }}" class="btn btn-sm" style="font-size: 0.72rem; padding: 5px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; border: 1px solid #c8a355; background: {% if not current_sub %}#1c1813{% else %}#ffffff{% endif %}; color: {% if not current_sub %}#ffffff{% else %}#2d2d2d{% endif %};">All Women</a>
+        {% for filter_name, filter_key in [('Ethnic & Sarees', 'ethnic'), ('Party Wear', 'party'), ('Kurtas & Sets', 'kurta'), ('Dresses & Gowns', 'dresses'), ('Bottom Wear', 'bottom'), ('Tops & Shirts', 'tops'), ('Accessories', 'accessories')] %}
+        <a href="{{ url_for('products', category='Women', sub=filter_key, sort=request.args.get('sort', '')) }}" class="btn btn-sm" style="font-size: 0.72rem; padding: 5px 14px; border-radius: 20px; text-decoration: none; font-weight: 600; border: 1px solid #c8a355; background: {% if current_sub == filter_key %}#1c1813{% else %}#ffffff{% endif %}; color: {% if current_sub == filter_key %}#ffffff{% else %}#2d2d2d{% endif %};">{{ filter_name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% if current_category == 'Kids' %}
     <div class="kids-sub-filter-bar" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 35px 0; padding: 14px 18px; background: #faf8f5; border: 1px solid #ebd9c2; border-radius: 12px;">
         <span style="font-size: 0.75rem; font-weight: 700; color: #8c6d32; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; margin-right: 6px;"><i class="fa-solid fa-filter" style="margin-right: 5px;"></i> Filter:</span>

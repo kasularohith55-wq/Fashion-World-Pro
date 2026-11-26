@@ -959,11 +959,58 @@ def products():
                 products_query = products_query.filter((Product.name.ilike(f'%{sub}%')) | (Product.description.ilike(f'%{sub}%')))
                 title = f"Men's {sub.replace('_', ' ').title()} Collection"
         elif current_category == "Kids":
-            products_query = products_query.filter((Product.name.ilike(f'%{sub}%')) | (Product.description.ilike(f'%{sub}%')))
-            title = f"Kids {sub.capitalize()} Collection"
+            if sub_l in ['party', 'party_wear', 'evening']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Party%')) | (Product.name.ilike('%Suit%')) | (Product.name.ilike('%Tuxedo%')) |
+                    (Product.name.ilike('%Gown%')) | (Product.name.ilike('%Velvet%')) | (Product.name.ilike('%Festive%')) |
+                    (Product.name.ilike('%Sequin%')) | (Product.name.ilike('%Tulle%')) | (Product.description.ilike('%Party%'))
+                )
+                title = "Kids' Party & Celebration Wear"
+            else:
+                products_query = products_query.filter((Product.name.ilike(f'%{sub}%')) | (Product.description.ilike(f'%{sub}%')))
+                title = f"Kids {sub.capitalize()} Collection"
+        elif current_category == "Women":
+            if sub_l in ['party', 'party_wear', 'evening']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Party%')) | (Product.name.ilike('%Gown%')) | (Product.name.ilike('%Cocktail%')) |
+                    (Product.name.ilike('%Evening%')) | (Product.name.ilike('%Sequin%')) | (Product.name.ilike('%Velvet%')) |
+                    (Product.name.ilike('%Saree%')) | (Product.description.ilike('%Party%'))
+                )
+                title = "Women's Party & Evening Wear"
+            elif sub_l in ['ethnic', 'saree', 'sarees']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Saree%')) | (Product.name.ilike('%Lehenga%')) | (Product.name.ilike('%Anarkali%')) |
+                    (Product.name.ilike('%Kurta%')) | (Product.name.ilike('%Kurti%'))
+                )
+                title = "Women's Ethnic Collection"
+            elif sub_l in ['kurta', 'kurtas', 'kurti', 'kurtis']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Kurta%')) | (Product.name.ilike('%Kurti%')) | (Product.name.ilike('%Anarkali%'))
+                )
+                title = "Women's Kurtas & Sets"
+            elif sub_l in ['dresses', 'dress', 'gowns', 'gown']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Dress%')) | (Product.name.ilike('%Gown%')) | (Product.name.ilike('%Maxi%'))
+                )
+                title = "Women's Dresses & Gowns"
+            elif sub_l in ['bottom', 'bottoms', 'jeans', 'pants']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Jeans%')) | (Product.name.ilike('%Palazzo%')) | (Product.name.ilike('%Bottom%')) | (Product.name.ilike('%Salwar%'))
+                )
+                title = "Women's Bottom Wear"
+            else:
+                products_query = products_query.filter((Product.name.ilike(f'%{sub}%')) | (Product.description.ilike(f'%{sub}%')))
+                title = f"Women's {sub.replace('_', ' ').title()} Collection"
         else:
-            products_query = products_query.filter((Product.name.ilike(f'%{sub}%')) | (Product.description.ilike(f'%{sub}%')))
-            title = f"{sub.replace('_', ' ').title()} Collection"
+            if sub_l in ['party', 'party_wear', 'evening']:
+                products_query = products_query.filter(
+                    (Product.name.ilike('%Party%')) | (Product.name.ilike('%Velvet%')) | (Product.name.ilike('%Tuxedo%')) |
+                    (Product.name.ilike('%Gown%')) | (Product.name.ilike('%Cocktail%')) | (Product.name.ilike('%Sequin%'))
+                )
+                title = "Party & Evening Wear Collection"
+            else:
+                products_query = products_query.filter((Product.name.ilike(f'%{sub}%')) | (Product.description.ilike(f'%{sub}%')))
+                title = f"{sub.replace('_', ' ').title()} Collection"
 
     if query:
         norm_q = re.sub(r"[^a-zA-Z0-9\s]", "", query.lower()).strip()
@@ -5521,7 +5568,95 @@ def subscribe():
         flash(f'Thank you! {email} has been subscribed to our newsletter.', 'success')
     return redirect(url_for('home'))
 
-# Database initialization script
+# Database initialization & catalog cleanup
+def deduplicate_and_clean_products():
+    """
+    Cleans up old auto-generated dummy products with '#' in name
+    and deduplicates duplicate records sharing normalized (name, category).
+    Safely re-points OrderItem foreign keys to preserve customer order integrity.
+    """
+    # 1. Deduplicate records sharing the same normalized name and category
+    all_products = Product.query.order_by(Product.id.asc()).all()
+    groups = defaultdict(list)
+    for p in all_products:
+        norm_key = ((p.name or '').strip().lower(), (p.category or '').strip().lower())
+        groups[norm_key].append(p)
+
+    dedup_count = 0
+    for (norm_name, norm_cat), prods in groups.items():
+        if len(prods) > 1:
+            def score_prod(prod):
+                s = 0
+                if '#' not in (prod.name or ''):
+                    s += 10000
+                if prod.image_url and os.path.exists(os.path.join(BASE_DIR, prod.image_url.lstrip('/'))):
+                    s += 1000
+                if prod.description and len(prod.description) > 30:
+                    s += 100
+                if prod.size and len(prod.size) > 1:
+                    s += 50
+                if prod.color and len(prod.color) > 1:
+                    s += 50
+                if (prod.stock or 0) > 0:
+                    s += 50
+                return (s, -prod.id)
+
+            sorted_prods = sorted(prods, key=score_prod, reverse=True)
+            keeper = sorted_prods[0]
+            duplicates = sorted_prods[1:]
+
+            for dup in duplicates:
+                OrderItem.query.filter_by(product_id=dup.id).update({'product_id': keeper.id})
+                for ci in CartItem.query.filter_by(product_id=dup.id).all():
+                    existing_ci = CartItem.query.filter_by(user_id=ci.user_id, product_id=keeper.id).first()
+                    if existing_ci:
+                        existing_ci.quantity = (existing_ci.quantity or 1) + (ci.quantity or 1)
+                        db.session.delete(ci)
+                    else:
+                        ci.product_id = keeper.id
+                for wi in WishlistItem.query.filter_by(product_id=dup.id).all():
+                    existing_wi = WishlistItem.query.filter_by(user_id=wi.user_id, product_id=keeper.id).first()
+                    if existing_wi:
+                        db.session.delete(wi)
+                    else:
+                        wi.product_id = keeper.id
+                for rev in Review.query.filter_by(product_id=dup.id).all():
+                    existing_rev = Review.query.filter_by(user_id=rev.user_id, product_id=keeper.id).first()
+                    if existing_rev:
+                        db.session.delete(rev)
+                    else:
+                        rev.product_id = keeper.id
+                db.session.delete(dup)
+                dedup_count += 1
+
+    if dedup_count > 0:
+        db.session.commit()
+        print(f"[CLEANUP] Deduplicated {dedup_count} duplicate product records.")
+
+    # 2. Remove dummy products with '#' in their name
+    dummy_products = Product.query.filter(Product.name.like('%#%')).all()
+    if dummy_products:
+        clean_fallbacks = {}
+        for cat in ['Men', 'Women', 'Kids']:
+            clean_fallbacks[cat.lower()] = Product.query.filter(
+                ~Product.name.like('%#%'),
+                func.lower(Product.category) == cat.lower()
+            ).order_by(Product.id.asc()).first()
+        generic_fallback = Product.query.filter(~Product.name.like('%#%')).order_by(Product.id.asc()).first()
+
+        for dummy in dummy_products:
+            cat_key = (dummy.category or '').strip().lower()
+            fallback = clean_fallbacks.get(cat_key) or generic_fallback
+            if fallback:
+                OrderItem.query.filter_by(product_id=dummy.id).update({'product_id': fallback.id})
+            CartItem.query.filter_by(product_id=dummy.id).delete()
+            WishlistItem.query.filter_by(product_id=dummy.id).delete()
+            Review.query.filter_by(product_id=dummy.id).delete()
+            db.session.delete(dummy)
+
+        db.session.commit()
+        print(f"[CLEANUP] Removed {len(dummy_products)} legacy dummy '#' products.")
+
 def seed_db():
     with app.app_context():
         # Non-destructive schema migration for SQLite
@@ -5543,22 +5678,25 @@ def seed_db():
                 conn.close()
             except Exception as e:
                 print(f"Schema migration note: {e}")
-                
+
         db.create_all()
 
         try:
-            # 1. Ensure core categories exist in the Category table
+            # 1. Automatic catalog deduplication & cleanup of legacy dummy products
+            deduplicate_and_clean_products()
+
+            # 2. Ensure core categories exist in the Category table
             default_categories = [
-                {"name": "Men", "description": "Men's Luxury & Contemporary Fashion Collection"},
-                {"name": "Women", "description": "Women's Designer Apparel, Ethnic & Western Wear"},
-                {"name": "Kids", "description": "Kids' Apparel, Party Wear, Casuals & Ethnic Outfits"}
+                {"name": "Men", "description": "Men's Luxury, Party Wear & Contemporary Fashion Collection"},
+                {"name": "Women", "description": "Women's Designer Apparel, Party Gowns, Ethnic & Western Wear"},
+                {"name": "Kids", "description": "Kids' Apparel, Party Wear, Celebration Outfits & Casuals"}
             ]
             for cat_data in default_categories:
                 if not Category.query.filter(func.lower(Category.name) == cat_data["name"].lower()).first():
                     db.session.add(Category(name=cat_data["name"], description=cat_data["description"], is_active=True))
             db.session.commit()
 
-            # 2. Rich curated catalog (at least 8-10 realistic products each for Men, Women, and Kids)
+            # 3. Rich curated catalog (including dedicated Party Wear collection for Men, Women, Kids)
             curated_catalog = {
                 "Men": [
                     {
@@ -5688,6 +5826,59 @@ def seed_db():
                         "stock": 15,
                         "size": "38, 40, 42, 44",
                         "color": "Ivory & Antique Gold",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    # Men's Dedicated Party Wear Collection
+                    {
+                        "name": "Midnight Velvet Tuxedo Blazer",
+                        "price": 9499.00,
+                        "discount_price": 6999.00,
+                        "description": "Opulent midnight black micro-velvet tuxedo blazer styled with satin peak lapels, single-button closure, and piped besom pockets for black-tie soirees.",
+                        "image_url": "/static/images/products/men/men_party_black_velvet_blazer.jpg",
+                        "category": "Men",
+                        "stock": 25,
+                        "size": "38, 40, 42, 44",
+                        "color": "Midnight Velvet Black",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Silk Jacquard Festive Bandhgala Jacket",
+                        "price": 6899.00,
+                        "discount_price": 4999.00,
+                        "description": "Contemporary charcoal grey Indo-Western bandhgala jacket crafted from rich woven silk jacquard with metal crest buttons and structured mandarin collar.",
+                        "image_url": "/static/images/products/men/men_ethnic_charcoal_indowestern_set.jpg",
+                        "category": "Men",
+                        "stock": 30,
+                        "size": "38, 40, 42, 44",
+                        "color": "Charcoal & Gunmetal",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Satin Slim-Fit Cocktail Party Shirt",
+                        "price": 2799.00,
+                        "discount_price": 1999.00,
+                        "description": "Lustrous pure satin dress shirt tailored in a modern slim fit with hidden front placket and French cuff detailing for evening celebrations.",
+                        "image_url": "/static/images/products/men/men_party_black_satin_shirt.jpg",
+                        "category": "Men",
+                        "stock": 40,
+                        "size": "38, 40, 42, 44",
+                        "color": "Gloss Black Satin",
+                        "is_featured": False,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Regal Midnight Blue Tuxedo Dinner Suit",
+                        "price": 14999.00,
+                        "discount_price": 11999.00,
+                        "description": "Luxurious two-piece evening tuxedo in royal midnight blue, accented with satin shawl collar and tailored side-striped dress trousers.",
+                        "image_url": "/static/images/products/men/men_party_midnight_tuxedo.jpg",
+                        "category": "Men",
+                        "stock": 20,
+                        "size": "38, 40, 42, 44",
+                        "color": "Midnight Blue",
                         "is_featured": True,
                         "is_new_arrival": False
                     }
@@ -5822,6 +6013,59 @@ def seed_db():
                         "color": "Gold & Ivory",
                         "is_featured": False,
                         "is_new_arrival": False
+                    },
+                    # Women's Dedicated Party Wear Collection
+                    {
+                        "name": "Sequin Georgette Cocktail Gown",
+                        "price": 7499.00,
+                        "discount_price": 5499.00,
+                        "description": "Mesmerizing floor-sweeping evening gown tailored in sheer midnight georgette, drenched in micro-sequins with a flattering sweetheart neckline.",
+                        "image_url": "/static/images/products/women/women_anarkali_02.jpg",
+                        "category": "Women",
+                        "stock": 25,
+                        "size": "S, M, L, XL",
+                        "color": "Starlight Navy",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Embellished Satin Evening Party Saree",
+                        "price": 6999.00,
+                        "discount_price": 4999.00,
+                        "description": "Glamorous Italian satin saree featuring crystal stone borders, a fluid cocktail drape, and an unstitched heavy sequin bustier blouse piece.",
+                        "image_url": "/static/images/products/women/women_saree_02.jpg",
+                        "category": "Women",
+                        "stock": 30,
+                        "size": "Free Size",
+                        "color": "Champagne Blush",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Velvet & Zari Party Wear Anarkali Suit",
+                        "price": 8999.00,
+                        "discount_price": 6499.00,
+                        "description": "Regal party-wear Anarkali tailored from royal micro-velvet, lavished with antique metallic zari threadwork, paired with churidar and scallop net dupatta.",
+                        "image_url": "/static/images/products/women/women_anarkali_03.jpg",
+                        "category": "Women",
+                        "stock": 20,
+                        "size": "S, M, L, XL",
+                        "color": "Royal Emerald",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Mirror-Work Cocktail Lehenga Set",
+                        "price": 13999.00,
+                        "discount_price": 9999.00,
+                        "description": "Exquisite celebratory cocktail lehenga ensemble featuring cascading mirror-embellished panels, sweetheart choli, and crystal-bordered dupatta.",
+                        "image_url": "/static/images/products/women/women_lehenga_02.jpg",
+                        "category": "Women",
+                        "stock": 15,
+                        "size": "S, M, L, XL",
+                        "color": "Festive Magenta",
+                        "is_featured": True,
+                        "is_new_arrival": False
                     }
                 ],
                 "Kids": [
@@ -5954,41 +6198,92 @@ def seed_db():
                         "color": "Maroon & Antique Gold",
                         "is_featured": True,
                         "is_new_arrival": False
+                    },
+                    # Kids' Dedicated Party Wear Collection
+                    {
+                        "name": "Boys 3-Piece Velvet Party Suit Set",
+                        "price": 2999.00,
+                        "discount_price": 2199.00,
+                        "description": "Dapper 3-piece formal party outfit including a plush velvet blazer, crisp cotton button-up shirt, matching trousers, and satin bowtie.",
+                        "image_url": "/static/images/products/kids/kids_boys_wedding_party_suit.jpg",
+                        "category": "Kids",
+                        "stock": 35,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9-10Y, 11-12Y",
+                        "color": "Midnight Velvet Navy",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Girls Sequin & Tulle Birthday Party Gown",
+                        "price": 2499.00,
+                        "discount_price": 1799.00,
+                        "description": "Princess celebration gown featuring sparkling micro-sequin bodice, multi-tiered pastel tulle skirt, and satin waist bow with comfortable cotton lining.",
+                        "image_url": "/static/images/products/kids/kids_girls_birthday_party_dress.jpg",
+                        "category": "Kids",
+                        "stock": 30,
+                        "size": "2-3Y, 4-5Y, 6-7Y, 8-9Y, 10-12Y",
+                        "color": "Rose Gold & Blush",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Boys Embroidered Silk Festive Jacket Set",
+                        "price": 2699.00,
+                        "discount_price": 1899.00,
+                        "description": "Festive celebration 3-piece ethnic set featuring a gold-embroidered Nehru jacket, silk-blend kurta, and comfortable pajama trousers.",
+                        "image_url": "/static/images/products/kids/kids_boys_ethnic_wedding_set.jpg",
+                        "category": "Kids",
+                        "stock": 30,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9-10Y",
+                        "color": "Royal Blue & Gold",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Girls Shimmering Princess Celebration Dress",
+                        "price": 2199.00,
+                        "discount_price": 1599.00,
+                        "description": "Dazzling sequined party frock with layered crinoline twirl skirt, scalloped lace trim, and soft cotton underskirt.",
+                        "image_url": "/static/images/products/kids/kids_girls_sequin_party_dress.jpg",
+                        "category": "Kids",
+                        "stock": 25,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9-10Y",
+                        "color": "Lavender Shimmer",
+                        "is_featured": True,
+                        "is_new_arrival": True
                     }
                 ]
             }
 
-            # 3. Seed products per category if empty or missing (< 8 items) without creating duplicates
+            # 4. Seed missing curated/party wear products per category without creating duplicates
             for cat_name, cat_products in curated_catalog.items():
-                existing_count = Product.query.filter(func.lower(Product.category) == cat_name.lower()).count()
-                if existing_count < 8:
-                    existing_names = {
-                        (p.name or '').strip().lower()
-                        for p in Product.query.filter(func.lower(Product.category) == cat_name.lower()).all()
-                    }
-                    new_items = []
-                    for p_data in cat_products:
-                        if p_data["name"].strip().lower() not in existing_names:
-                            new_items.append(Product(
-                                name=p_data["name"],
-                                price=p_data["price"],
-                                discount_price=p_data.get("discount_price"),
-                                description=p_data["description"],
-                                image_url=p_data["image_url"],
-                                category=p_data["category"],
-                                stock=p_data.get("stock", 50),
-                                size=p_data.get("size", "M, L, XL"),
-                                color=p_data.get("color", "Standard"),
-                                is_active=True,
-                                is_featured=p_data.get("is_featured", False),
-                                is_new_arrival=p_data.get("is_new_arrival", False)
-                            ))
-                    if new_items:
-                        db.session.add_all(new_items)
-                        db.session.commit()
-                        print(f"[SEED] Successfully seeded {len(new_items)} curated products for '{cat_name}'.")
+                existing_names = {
+                    (p.name or '').strip().lower()
+                    for p in Product.query.filter(func.lower(Product.category) == cat_name.lower()).all()
+                }
+                new_items = []
+                for p_data in cat_products:
+                    if p_data["name"].strip().lower() not in existing_names:
+                        new_items.append(Product(
+                            name=p_data["name"],
+                            price=p_data["price"],
+                            discount_price=p_data.get("discount_price"),
+                            description=p_data["description"],
+                            image_url=p_data["image_url"],
+                            category=p_data["category"],
+                            stock=p_data.get("stock", 50),
+                            size=p_data.get("size", "M, L, XL"),
+                            color=p_data.get("color", "Standard"),
+                            is_active=True,
+                            is_featured=p_data.get("is_featured", False),
+                            is_new_arrival=p_data.get("is_new_arrival", False)
+                        ))
+                if new_items:
+                    db.session.add_all(new_items)
+                    db.session.commit()
+                    print(f"[SEED] Successfully seeded {len(new_items)} new curated/party wear products for '{cat_name}'.")
 
-            # 4. Admin Account - Only create default admin if NO administrator exists at all in the database
+            # 5. Admin Account - Only create default admin if NO administrator exists at all in the database
             if not User.query.filter_by(is_admin=True).first():
                 admin_email = "admin@fashionworld.pro"
                 hashed_admin_pass = generate_password_hash("admin123", method='pbkdf2:sha256')
