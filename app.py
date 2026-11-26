@@ -5545,77 +5545,462 @@ def seed_db():
                 print(f"Schema migration note: {e}")
                 
         db.create_all()
-        # Only seed products if database has no products
-        if not Product.query.first():
-            # Core curated products for Men and Women
-            products = [
-                Product(name="Silk Satin Blouse", price=4599.00, discount_price=3599.00, description="Luxurious silk satin blouse with a sophisticated drape.", image_url="/static/images/p1.jpg", category="Women"),
-                Product(name="Minimalist Wool Coat", price=7990.00, discount_price=5990.00, description="A timeless minimalist wool coat for everyday elegancy.", image_url="/static/images/p2.jpg", category="Women"),
-                Product(name="Slim Fit Denim", price=3450.00, description="Classic slim-fit denim jeans with high durability.", image_url="/static/images/p3.jpg", category="Women"),
-                Product(name="Oversized Knit Sweater", price=3990.00, description="Cozy oversized knit sweater for chilly days.", image_url="/static/images/p5.jpg", category="Women"),
-                Product(name="Linen Wrap Dress", price=5450.00, description="Breathable linen dress with a flattering wrap silhouette.", image_url="/static/images/p6.jpg", category="Women"),
-                Product(name="Premium Linen Shirt", price=3190.00, description="A breathable cream linen shirt for casual or semi-formal looks.", image_url="/static/images/p7.jpg", category="Men"),
-                Product(name="Charcoal Cashmere Sweater", price=6250.00, discount_price=4450.00, description="Exquisite charcoal grey cashmere for pure luxury.", image_url="/static/images/p8.jpg", category="Men"),
-                Product(name="Executive Navy Suit", price=15490.00, discount_price=12990.00, description="A perfectly tailored navy blue suit for the board room or weddings.", image_url="/static/images/p1.jpg", category="Men"),
-                # New Under 500 items from earlier
-                Product(name="Essential White Tee", price=499.00, discount_price=299.00, description="100% organic cotton basic white tee.", image_url="/static/images/m1.png", category="Men"),
-                Product(name="Classic Leather Belt", price=899.00, discount_price=499.00, description="Durable brown leather belt.", image_url="/static/images/m2.png", category="Men"),
-                Product(name="Performance Crew Socks", price=399.00, discount_price=199.00, description="Moisture-wicking cushion socks.", image_url="/static/images/m3.png", category="Men"),
-                Product(name="Casual Cotton Shorts", price=990.00, discount_price=450.00, description="Lightweight cotton chine shorts.", image_url="/static/images/m4.png", category="Men")
+
+        try:
+            # 1. Ensure core categories exist in the Category table
+            default_categories = [
+                {"name": "Men", "description": "Men's Luxury & Contemporary Fashion Collection"},
+                {"name": "Women", "description": "Women's Designer Apparel, Ethnic & Western Wear"},
+                {"name": "Kids", "description": "Kids' Apparel, Party Wear, Casuals & Ethnic Outfits"}
             ]
-            
-            # Bulk generation for "2000+ items" (Men and Women only)
-            import random
-            m_categories = ["Regular Fit Tee", "Pure Cotton Shirt", "Essential Chinos", "Signature Polos", "Modern Knit Sweatshirt", "Cargo Joggers", "Summer Linen Shirt", "Bamboo Fiber Socks", "Eco-friendly Mask", "Canvas Web Belt"]
-            w_categories = ["Elegant Ribbed Top", "Minimalist Midi Skirt", "Straight Leg Jeans", "Lightweight Cardigan", "Silk Blend Scarf", "Boho Maxi Dress", "Classic Biker Jacket", "Organic Headband", "Fabric Clutch Bag", "Soft Cotton Camisole"]
-            colors = ["Jet Black", "Cloud White", "Sage Green", "Desert Sand", "Navy Night", "Heather Grey", "Crimson Red", "Forest Green", "Royal Blue", "Slate Grey", "Pale Lavender", "Terracotta", "Olive Drab", "Midnight Blue"]
-            
-            m_images = ["m1.png", "m2.png", "m3.png", "m4.png", "m5.png", "m6.png", "mw1.png", "mw2.png", "mw3.png", "mw4.png", "u1.png", "u2.png", "u3.png"]
-            w_images = ["p1.jpg", "p2.jpg", "p3.jpg", "p5.jpg", "p6.jpg", "p7.jpg", "ww1.png", "ww2.png", "ww3.png", "u1.png", "u2.png", "u3.png", "u4.png"]
-            
-            bulk_items = []
-            for i in range(2200): # Expanding the catalog significantly
-                is_men = (i % 2 == 0)
-                category = "Men" if is_men else "Women"
-                name_options = m_categories if is_men else w_categories
-                color = colors[random.randint(0, len(colors)-1)]
-                
-                # Massive focus on "Under 500" - 70% chance of price being under 500
-                if i < 1500 or random.random() < 0.7:
-                    price = float(random.randint(99, 499))
-                else:
-                    price = float(random.randint(500, 999))
-                    
-                discount = None
-                if random.random() > 0.7: # 30% items on sale
-                    discount = price * 0.75 # 25% off
-                    if discount < 99: discount = 99
-                    
-                img = random.choice(m_images if is_men else w_images)
-                item_name = f"{color} {random.choice(name_options)} #{i+1000}"
-                
-                bulk_items.append(Product(
-                    name=item_name,
-                    price=price,
-                    discount_price=discount,
-                    description=f"High-quality sustainable {category.lower()}'s piece in {color}. Designed for durability and minimalist aesthetic.",
-                    image_url=f"/static/images/{img}",
-                    category=category
-                ))
-                
-            db.session.add_all(products)
-            db.session.bulk_save_objects(bulk_items)
+            for cat_data in default_categories:
+                if not Category.query.filter(func.lower(Category.name) == cat_data["name"].lower()).first():
+                    db.session.add(Category(name=cat_data["name"], description=cat_data["description"], is_active=True))
             db.session.commit()
-            
-        # Admin Account - Only create default admin if NO administrator exists at all in the database
-        if not User.query.filter_by(is_admin=True).first():
-            admin_email = "admin@fashionworld.pro"
-            hashed_admin_pass = generate_password_hash("admin123", method='pbkdf2:sha256')
-            admin_user = User(username="Admin", email=admin_email, password=hashed_admin_pass, is_admin=True)
-            db.session.add(admin_user)
-            db.session.commit()
-            print("[INFO] Default admin initialized.")
-        db.session.remove()
+
+            # 2. Rich curated catalog (at least 8-10 realistic products each for Men, Women, and Kids)
+            curated_catalog = {
+                "Men": [
+                    {
+                        "name": "Executive White Oxford Cotton Shirt",
+                        "price": 2499.00,
+                        "discount_price": 1899.00,
+                        "description": "Impeccably woven from 100% long-staple Egyptian cotton, offering a crisp, breathable structured finish suitable for business or evening occasions.",
+                        "image_url": "/static/images/products/men/men_formal_white_oxford_shirt.jpg",
+                        "category": "Men",
+                        "stock": 45,
+                        "size": "38, 40, 42, 44",
+                        "color": "Pristine White",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Italian Tailored Navy Wool Blazer",
+                        "price": 7999.00,
+                        "discount_price": 5999.00,
+                        "description": "Hand-finished tailored blazer crafted with Italian wool blend fabric, notched lapels, and soft shoulder construction for effortless sophistication.",
+                        "image_url": "/static/images/products/men/men_formal_classic_navy_blazer.jpg",
+                        "category": "Men",
+                        "stock": 30,
+                        "size": "38, 40, 42, 44",
+                        "color": "Midnight Navy",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Pure Linen Charcoal Casual Shirt",
+                        "price": 2999.00,
+                        "discount_price": 2299.00,
+                        "description": "Airy, breathable French linen shirt featuring a relaxed spread collar and mother-of-pearl buttons for premium smart-casual style.",
+                        "image_url": "/static/images/products/men/men_linen_charcoal_grey_shirt_06.jpg",
+                        "category": "Men",
+                        "stock": 50,
+                        "size": "S, M, L, XL, XXL",
+                        "color": "Charcoal Grey",
+                        "is_featured": False,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Royal Blue Embroidered Kurta Set",
+                        "price": 3899.00,
+                        "discount_price": 2899.00,
+                        "description": "Luxurious royal blue silk blend kurta adorned with intricate thread embroidery around the mandarin collar, paired with tapered churidar pants.",
+                        "image_url": "/static/images/products/men/men_ethnic_royal_blue_embroidered_kurta.jpg",
+                        "category": "Men",
+                        "stock": 35,
+                        "size": "S, M, L, XL",
+                        "color": "Royal Blue",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Essential Organic Heavyweight White T-Shirt",
+                        "price": 799.00,
+                        "discount_price": 499.00,
+                        "description": "Crafted from 240 GSM combed organic cotton with a durable ribbed crewneck, delivering ultimate comfort and everyday versatility.",
+                        "image_url": "/static/images/products/men/men_tee_classic_white_01.jpg",
+                        "category": "Men",
+                        "stock": 60,
+                        "size": "S, M, L, XL",
+                        "color": "Cloud White",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Selvedge Stretch Slim-Fit Denim Jeans",
+                        "price": 3499.00,
+                        "discount_price": 2599.00,
+                        "description": "Premium Japanese selvedge denim woven with a touch of elastane for maximum flexibility, finished with authentic copper rivets.",
+                        "image_url": "/static/images/products/men/men_bottom_dark_indigo_jeans.jpg",
+                        "category": "Men",
+                        "stock": 40,
+                        "size": "30, 32, 34, 36",
+                        "color": "Dark Indigo",
+                        "is_featured": False,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Handcrafted Cognac Leather Oxford Shoes",
+                        "price": 4999.00,
+                        "discount_price": 3999.00,
+                        "description": "Blake-stitched genuine leather formal shoes featuring burnished cognac patina, cushioned insole, and Goodyear welted rubber soles.",
+                        "image_url": "/static/images/products/men/men_shoes_cognac_brown_oxford.jpg",
+                        "category": "Men",
+                        "stock": 25,
+                        "size": "7, 8, 9, 10, 11",
+                        "color": "Cognac Brown",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Heritage Caramel Suede Bomber Jacket",
+                        "price": 8999.00,
+                        "discount_price": 6999.00,
+                        "description": "Supple faux suede bomber featuring ribbed athletic collar and cuffs, dual exterior zip pockets, and satin quilted interior lining.",
+                        "image_url": "/static/images/products/men/men_outerwear_caramel_suede_jacket.jpg",
+                        "category": "Men",
+                        "stock": 20,
+                        "size": "M, L, XL",
+                        "color": "Caramel Tan",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Classic Full-Grain Leather Reversible Belt",
+                        "price": 1299.00,
+                        "discount_price": 899.00,
+                        "description": "Versatile dual-sided leather belt featuring polished brushed nickel buckle, easily rotatable between sleek black and warm cognac brown.",
+                        "image_url": "/static/images/products/men/men_acc_classic_black_leather_belt.jpg",
+                        "category": "Men",
+                        "stock": 55,
+                        "size": "32, 34, 36, 38, 40",
+                        "color": "Black & Brown",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Regal Ivory Silk Groom Sherwani Set",
+                        "price": 18999.00,
+                        "discount_price": 14999.00,
+                        "description": "Opulent raw silk wedding sherwani richly embellished with hand-embroidered zardozi artistry, jeweled buttons, matching stole, and churidar.",
+                        "image_url": "/static/images/products/men/men_wedding_ivory_groom_sherwani.jpg",
+                        "category": "Men",
+                        "stock": 15,
+                        "size": "38, 40, 42, 44",
+                        "color": "Ivory & Antique Gold",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    }
+                ],
+                "Women": [
+                    {
+                        "name": "Embroidered Georgette Anarkali Gown",
+                        "price": 5999.00,
+                        "discount_price": 4499.00,
+                        "description": "Flowing floor-length Anarkali silhouette tailored in premium georgette, embellished with delicate zari embroidery and matching organza dupatta.",
+                        "image_url": "/static/images/products/women/women_anarkali_01.jpg",
+                        "category": "Women",
+                        "stock": 30,
+                        "size": "S, M, L, XL",
+                        "color": "Blush Rose",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Banarasi Silk Heritage Saree",
+                        "price": 8499.00,
+                        "discount_price": 6499.00,
+                        "description": "Timeless handcrafted Banarasi woven silk saree featuring opulent gold brocade borders and a matching unstitched designer blouse piece.",
+                        "image_url": "/static/images/products/women/women_saree_01.jpg",
+                        "category": "Women",
+                        "stock": 25,
+                        "size": "Free Size",
+                        "color": "Crimson Red",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Bridal Velvet Embroidered Lehenga Choli",
+                        "price": 16999.00,
+                        "discount_price": 12999.00,
+                        "description": "Magnificent bridal lehenga set tailored in plush micro-velvet, heavily embroidered with floral sequin motifs and stone embellishments.",
+                        "image_url": "/static/images/products/women/women_lehenga_01.jpg",
+                        "category": "Women",
+                        "stock": 15,
+                        "size": "S, M, L, XL",
+                        "color": "Deep Wine",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Floral Printed Cotton Short Kurti",
+                        "price": 1199.00,
+                        "discount_price": 799.00,
+                        "description": "Casual everyday A-line kurti printed with pastel botanicals on lightweight pure cotton fabric, perfect for work or collegiate styling.",
+                        "image_url": "/static/images/products/women/women_kurti_01.jpg",
+                        "category": "Women",
+                        "stock": 50,
+                        "size": "S, M, L, XL, XXL",
+                        "color": "Pastel Mint",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Bohemian Tiered Linen Maxi Dress",
+                        "price": 3899.00,
+                        "discount_price": 2799.00,
+                        "description": "Breezy tiered maxi dress cut from organic European linen, featuring flutter sleeves, a self-tie waist belt, and discreet side pockets.",
+                        "image_url": "/static/images/products/women/women_maxi_dress.jpg",
+                        "category": "Women",
+                        "stock": 35,
+                        "size": "XS, S, M, L",
+                        "color": "Desert Beige",
+                        "is_featured": False,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "High-Waist Wide-Leg Vintage Denim",
+                        "price": 2899.00,
+                        "discount_price": 2199.00,
+                        "description": "Classic vintage wash high-rise denim with wide sweeping legs, comfort stretch blend, and structured 5-pocket styling.",
+                        "image_url": "/static/images/products/women/women_wide_leg_jeans.jpg",
+                        "category": "Women",
+                        "stock": 45,
+                        "size": "26, 28, 30, 32",
+                        "color": "Vintage Blue",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Chanderi Silk Straight Kurta & Palazzo Set",
+                        "price": 4299.00,
+                        "discount_price": 3299.00,
+                        "description": "Elegant Chanderi silk straight-fit kurta detailed with gota patti handwork, paired with wide-leg culotte palazzos and printed dupatta.",
+                        "image_url": "/static/images/products/women/women_kurta_set_01.jpg",
+                        "category": "Women",
+                        "stock": 30,
+                        "size": "S, M, L, XL",
+                        "color": "Turquoise Teal",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Ribbed Knit Cotton Crop Top",
+                        "price": 899.00,
+                        "discount_price": 499.00,
+                        "description": "Form-fitting ribbed stretch knit crop top featuring a square neckline, cap sleeves, and clean minimalist aesthetic.",
+                        "image_url": "/static/images/products/women/women_crop_top.jpg",
+                        "category": "Women",
+                        "stock": 55,
+                        "size": "XS, S, M, L",
+                        "color": "Ivory White",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Embroidered Punjabi Patiala Salwar Suit",
+                        "price": 3999.00,
+                        "discount_price": 2999.00,
+                        "description": "Authentic Punjabi suit featuring mirror-work embroidered kameez, pleated balloon Patiala salwar, and phulkari-inspired chiffon dupatta.",
+                        "image_url": "/static/images/products/women/women_punjabi_01.jpg",
+                        "category": "Women",
+                        "stock": 35,
+                        "size": "S, M, L, XL",
+                        "color": "Mustard Yellow",
+                        "is_featured": False,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Artisan Kundan & Pearl Statement Necklace Set",
+                        "price": 2499.00,
+                        "discount_price": 1799.00,
+                        "description": "Handcrafted traditional bridal jewelry set featuring semi-precious Kundan stones, freshwater pearl drops, and matching jhumka earrings.",
+                        "image_url": "/static/images/products/women/women_acc_01.jpg",
+                        "category": "Women",
+                        "stock": 40,
+                        "size": "Adjustable",
+                        "color": "Gold & Ivory",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    }
+                ],
+                "Kids": [
+                    {
+                        "name": "Kids Organic Cotton Graphic T-Shirt",
+                        "price": 599.00,
+                        "discount_price": 399.00,
+                        "description": "Super-soft 100% hypoallergenic organic cotton t-shirt featuring fun playful illustrations and skin-safe non-toxic prints.",
+                        "image_url": "/static/images/products/kids/kids_tshirt_01.jpg",
+                        "category": "Kids",
+                        "stock": 50,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9-10Y",
+                        "color": "Sage Green / Cloud White",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Boys Classic Checkered Linen Shirt",
+                        "price": 999.00,
+                        "discount_price": 699.00,
+                        "description": "Lightweight, breathable linen cotton blend button-down shirt with roll-up sleeve tabs, perfect for family festivities.",
+                        "image_url": "/static/images/products/kids/kids_shirt_01.jpg",
+                        "category": "Kids",
+                        "stock": 40,
+                        "size": "4-5Y, 6-7Y, 8-9Y, 10-12Y",
+                        "color": "Navy & White Check",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Girls Pastel Floral Summer Dress",
+                        "price": 1199.00,
+                        "discount_price": 799.00,
+                        "description": "Charming fit-and-flare cotton frock featuring delicate watercolor floral prints, bow detail back, and soft inner lining.",
+                        "image_url": "/static/images/products/kids/kids_dress_01.jpg",
+                        "category": "Kids",
+                        "stock": 45,
+                        "size": "2-3Y, 4-5Y, 6-7Y, 8Y",
+                        "color": "Pastel Pink Floral",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Kids Flex-Stretch Comfort Denim Jeans",
+                        "price": 1299.00,
+                        "discount_price": 899.00,
+                        "description": "Durable reinforced flex-stretch jeans with an adjustable interior waistband, tailored for active movement and playground adventures.",
+                        "image_url": "/static/images/products/kids/kids_jeans_01.jpg",
+                        "category": "Kids",
+                        "stock": 50,
+                        "size": "4-5Y, 6-7Y, 8-9Y, 10-12Y",
+                        "color": "Classic Indigo Denim",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Boys Graphic Tee & Cargo Shorts Set",
+                        "price": 1299.00,
+                        "discount_price": 899.00,
+                        "description": "Coordinated two-piece summer outfit including a breathable cotton graphic tee and multi-pocket utility cargo shorts.",
+                        "image_url": "/static/images/products/kids/kids_set_01.jpg",
+                        "category": "Kids",
+                        "stock": 35,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9Y",
+                        "color": "Olive & Charcoal",
+                        "is_featured": False,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Girls Ribbed Top & Wide-Leg Denim Set",
+                        "price": 1499.00,
+                        "discount_price": 999.00,
+                        "description": "Trend-setting two-piece outfit pairing a cozy lavender ribbed knit top with light-wash wide-leg denim trousers.",
+                        "image_url": "/static/images/products/kids/kids_set_02.jpg",
+                        "category": "Kids",
+                        "stock": 30,
+                        "size": "5-6Y, 7-8Y, 9-10Y, 11-12Y",
+                        "color": "Soft Lavender & Light Wash",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Kids Cozy Fleece Kangaroo Pocket Hoodie",
+                        "price": 1249.00,
+                        "discount_price": 849.00,
+                        "description": "Plush brushed fleece pullover hoodie featuring ribbed trims, roomy kangaroo hand-warmer pocket, and double-lined hood.",
+                        "image_url": "/static/images/products/kids/kids_hoodie_01.jpg",
+                        "category": "Kids",
+                        "stock": 40,
+                        "size": "4-5Y, 6-7Y, 8-9Y, 10-12Y",
+                        "color": "Heather Charcoal Grey",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Girls Shimmering Tulle Party Dress",
+                        "price": 1799.00,
+                        "discount_price": 1299.00,
+                        "description": "Dazzling celebration gown with sequined bodice, multi-layer sparkling tulle skirt, and skin-friendly satin inner lining.",
+                        "image_url": "/static/images/products/kids/kids_dress_02.jpg",
+                        "category": "Kids",
+                        "stock": 25,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9-10Y",
+                        "color": "Champagne Gold / Rose",
+                        "is_featured": True,
+                        "is_new_arrival": True
+                    },
+                    {
+                        "name": "Girls Tiered Butterfly Floral Twirl Frock",
+                        "price": 1099.00,
+                        "discount_price": 749.00,
+                        "description": "Breathable pure cotton twirl frock designed with tiered ruffles, butterfly flutter sleeves, and whimsical garden prints.",
+                        "image_url": "/static/images/products/kids/kids_girls_floral_dress.jpg",
+                        "category": "Kids",
+                        "stock": 40,
+                        "size": "3-4Y, 5-6Y, 7-8Y",
+                        "color": "Sunshine Yellow Floral",
+                        "is_featured": False,
+                        "is_new_arrival": False
+                    },
+                    {
+                        "name": "Boys Festive Brocade Kurta & Pajama Set",
+                        "price": 1699.00,
+                        "discount_price": 1199.00,
+                        "description": "Festive celebration ethnic ensemble featuring an embroidered brocade mandarin collar kurta and comfortable silk blend pajama.",
+                        "image_url": "/static/images/products/kids/kids_ethnic_01.jpg",
+                        "category": "Kids",
+                        "stock": 30,
+                        "size": "3-4Y, 5-6Y, 7-8Y, 9-10Y",
+                        "color": "Maroon & Antique Gold",
+                        "is_featured": True,
+                        "is_new_arrival": False
+                    }
+                ]
+            }
+
+            # 3. Seed products per category if empty or missing (< 8 items) without creating duplicates
+            for cat_name, cat_products in curated_catalog.items():
+                existing_count = Product.query.filter(func.lower(Product.category) == cat_name.lower()).count()
+                if existing_count < 8:
+                    existing_names = {
+                        (p.name or '').strip().lower()
+                        for p in Product.query.filter(func.lower(Product.category) == cat_name.lower()).all()
+                    }
+                    new_items = []
+                    for p_data in cat_products:
+                        if p_data["name"].strip().lower() not in existing_names:
+                            new_items.append(Product(
+                                name=p_data["name"],
+                                price=p_data["price"],
+                                discount_price=p_data.get("discount_price"),
+                                description=p_data["description"],
+                                image_url=p_data["image_url"],
+                                category=p_data["category"],
+                                stock=p_data.get("stock", 50),
+                                size=p_data.get("size", "M, L, XL"),
+                                color=p_data.get("color", "Standard"),
+                                is_active=True,
+                                is_featured=p_data.get("is_featured", False),
+                                is_new_arrival=p_data.get("is_new_arrival", False)
+                            ))
+                    if new_items:
+                        db.session.add_all(new_items)
+                        db.session.commit()
+                        print(f"[SEED] Successfully seeded {len(new_items)} curated products for '{cat_name}'.")
+
+            # 4. Admin Account - Only create default admin if NO administrator exists at all in the database
+            if not User.query.filter_by(is_admin=True).first():
+                admin_email = "admin@fashionworld.pro"
+                hashed_admin_pass = generate_password_hash("admin123", method='pbkdf2:sha256')
+                admin_user = User(username="Admin", email=admin_email, password=hashed_admin_pass, is_admin=True)
+                db.session.add(admin_user)
+                db.session.commit()
+                print("[INFO] Default admin initialized.")
+        except Exception as seed_err:
+            db.session.rollback()
+            print(f"[SEED ERROR] Error during database seeding: {seed_err}")
+        finally:
+            db.session.remove()
 
 # Safe database initialization at module startup for Gunicorn / Render production deployments
 if not app.testing:
