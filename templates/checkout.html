@@ -1353,33 +1353,6 @@
                         "theme": {
                             "color": "#0f172a"
                         },
-                        "config": {
-                            "display": {
-                                "blocks": {
-                                    "upi_collect": {
-                                        "name": "Pay via UPI ID (Recommended)",
-                                        "instruments": [
-                                            {
-                                                "method": "upi",
-                                                "flows": ["collect"]
-                                            }
-                                        ]
-                                    },
-                                    "other_methods": {
-                                        "name": "Cards, Netbanking & Wallets",
-                                        "instruments": [
-                                            { "method": "card" },
-                                            { "method": "netbanking" },
-                                            { "method": "wallet" }
-                                        ]
-                                    }
-                                },
-                                "sequence": ["block.upi_collect", "block.other_methods"],
-                                "preferences": {
-                                    "show_default_blocks": false
-                                }
-                            }
-                        },
                         "modal": {
                             "ondismiss": function() {
                                 btn.disabled = false;
