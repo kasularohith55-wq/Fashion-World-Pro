@@ -173,6 +173,24 @@ class PaymentCheckoutTestCase(unittest.TestCase):
             self.assertIn('Why Mobile UPI App Scans Fail', html)
             self.assertIn('success@razorpay', html)
 
+    def test_checkout_page_shows_live_mode_banner_and_upi_recommendation(self):
+        """In live mode, checkout HTML must display live gateway banner and recommended UPI advice"""
+        self.login_test_user()
+        cart_item = CartItem(user_id=self.test_user.id, product_id=self.test_product.id, quantity=1, size='M')
+        db.session.add(cart_item)
+        db.session.commit()
+
+        with patch.dict(os.environ, {
+            'RAZORPAY_KEY_ID': 'rzp_live_LiveKey12345678',
+            'RAZORPAY_KEY_SECRET': 'LiveSecretKey12345678'
+        }, clear=False):
+            response = self.client.get('/checkout')
+            self.assertEqual(response.status_code, 200)
+            html = response.data.decode('utf-8')
+            self.assertIn('SECURE LIVE', html)
+            self.assertIn('Live Gateway Connected', html)
+            self.assertIn('Recommended: Enter your UPI ID (e.g., name@okicici or name@ybl)', html)
+
     def test_checkout_page_shows_unconfigured_when_no_keys(self):
         """When unconfigured, checkout HTML must display unconfigured warning and default to COD"""
         self.login_test_user()

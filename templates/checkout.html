@@ -698,7 +698,7 @@
                                     <span class="pay-badge pay-badge-unconfigured">UNCONFIGURED</span>
                                     {% elif is_test_mode %}
                                     <span class="pay-badge pay-badge-test">TEST MODE</span>
-                                    {% elif is_live_mode %}
+                                    {% elif is_live_mode or razorpay_is_live %}
                                     <span class="pay-badge pay-badge-secure">SECURE LIVE</span>
                                     {% else %}
                                     <span class="pay-badge pay-badge-secure">SECURE</span>
@@ -783,11 +783,17 @@
                                 <i class="fa-solid fa-circle-info"></i> For live customer UPI QR scanning &amp; real payments, configure Razorpay Live Keys (<code>rzp_live_...</code>) in production.
                             </div>
                         </div>
-                        {% elif is_live_mode %}
-                        <!-- Live Mode Confirmed -->
-                        <div class="pay-alert-box" style="margin-top: 12px; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
-                            <span><strong>Live Gateway Connected:</strong> Instant UPI QR Code scanning (Google Pay, PhonePe, Paytm), Cards, and NetBanking enabled.</span>
+                        {% elif is_live_mode or razorpay_is_live %}
+                        <!-- Live Mode Confirmed & Recommended UPI Collect Advice -->
+                        <div class="pay-alert-box" style="margin-top: 14px; padding: 14px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 0.875rem; line-height: 1.5;">
+                            <div style="font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
+                                <span>Live Gateway Connected (Cards, UPI, NetBanking)</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.85); border: 1px dashed #86efac; border-radius: 6px; padding: 8px 12px; color: #166534;">
+                                <i class="fa-solid fa-mobile-screen-button" style="color: #16a34a; margin-right: 4px;"></i>
+                                <strong>Recommended: Enter your UPI ID (e.g., name@okicici or name@ybl) in the popup and approve the request on your UPI app.</strong>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -1394,6 +1400,37 @@
                             }
                         }
                     };
+
+                    // When in Live Mode, prioritize UPI ID collect and traditional payment methods to avoid unprovisioned dynamic QR scan errors
+                    if (data.is_live_mode) {
+                        options.config = {
+                            display: {
+                                blocks: {
+                                    upi_collect: {
+                                        name: 'Pay via UPI ID (Recommended)',
+                                        instruments: [
+                                            {
+                                                method: 'upi',
+                                                flows: ['collect']
+                                            }
+                                        ]
+                                    },
+                                    other_methods: {
+                                        name: 'Cards, Netbanking & Wallets',
+                                        instruments: [
+                                            { method: 'card' },
+                                            { method: 'netbanking' },
+                                            { method: 'wallet' }
+                                        ]
+                                    }
+                                },
+                                sequence: ['block.upi_collect', 'block.other_methods'],
+                                preferences: {
+                                    show_default_blocks: false
+                                }
+                            }
+                        };
+                    }
 
                     const rzp = new Razorpay(options);
                     rzp.on('payment.failed', function(resp) {

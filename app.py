@@ -3535,7 +3535,8 @@ def checkout():
         razorpay_key=key_id,
         razorpay_configured=is_configured,
         is_test_mode=is_test_mode,
-        is_live_mode=is_live_mode
+        is_live_mode=is_live_mode,
+        razorpay_is_live=is_live_mode
     )
 
 @app.route('/api/pincode/<pincode>')
